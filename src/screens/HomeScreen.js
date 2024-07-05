@@ -1,21 +1,44 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import DailyVerse from '../components/DailyVerse';
+import { useUserPreferences } from '../context/UserPreferencesContext';
 
 const HomeScreen = ({ navigation }) => {
+  const { nightMode, fontSize, fontFamily } = useUserPreferences();
+
+  const getFontSize = () => {
+    switch (fontSize) {
+      case 'small': return 14;
+      case 'medium': return 16;
+      case 'large': return 18;
+      default: return 16;
+    }
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Eternal Stone Bible App</Text>
-      <Text style={styles.subtitle}>Explora la Palabra Eterna</Text>
+    <ScrollView contentContainerStyle={[styles.container, nightMode && styles.containerDark]}>
+      <Text style={[styles.title, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() + 12 }]}>
+        Eternal Stone Bible App
+      </Text>
+      <Text style={[styles.subtitle, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() + 2 }]}>
+        Explora la Palabra Eterna
+      </Text>
       
       <DailyVerse navigation={navigation} />
       
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Bible')}
-      >
-        <Text style={styles.buttonText}>Explorar la Biblia</Text>
-      </TouchableOpacity>
+      {['Bible', 'Bookmarks', 'Search', 'Settings'].map((screen) => (
+        <TouchableOpacity
+          key={screen}
+          style={[styles.button, nightMode && styles.buttonDark]}
+          onPress={() => navigation.navigate(screen)}
+        >
+          <Text style={[styles.buttonText, { fontFamily, fontSize: getFontSize() }]}>
+            {screen === 'Bible' ? 'Explorar la Biblia' :
+             screen === 'Bookmarks' ? 'Mis Marcadores' :
+             screen === 'Search' ? 'Buscar en la Biblia' : 'Configuración'}
+          </Text>
+        </TouchableOpacity>
+      ))}
     </ScrollView>
   );
 };
@@ -28,26 +51,33 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
   title: {
-    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#333',
   },
   subtitle: {
-    fontSize: 18,
     color: '#666',
     marginBottom: 30,
+  },
+  textDark: {
+    color: '#fff',
   },
   button: {
     backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 10,
     width: '100%',
+    marginBottom: 10,
+  },
+  buttonDark: {
+    backgroundColor: '#1a3f6c',
   },
   buttonText: {
     color: 'white',
-    fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
   },

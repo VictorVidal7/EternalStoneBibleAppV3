@@ -1,45 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useUserPreferences } from '../context/UserPreferencesContext';
 import DailyVerseService from '../services/DailyVerseService';
 
 const DailyVerse = ({ navigation }) => {
   const [dailyVerse, setDailyVerse] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { nightMode, fontSize, fontFamily } = useUserPreferences();
 
   useEffect(() => {
     loadDailyVerse();
   }, []);
 
   const loadDailyVerse = async () => {
-    setLoading(true);
-    try {
-      const verse = await DailyVerseService.getDailyVerse();
-      setDailyVerse(verse);
-    } catch (error) {
-      console.error('Error al cargar el versículo diario:', error);
-    } finally {
-      setLoading(false);
-    }
+    const verse = await DailyVerseService.getDailyVerse();
+    setDailyVerse(verse);
   };
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
 
   if (!dailyVerse) return null;
 
+  const getFontSize = () => {
+    switch (fontSize) {
+      case 'small': return 14;
+      case 'medium': return 16;
+      case 'large': return 18;
+      default: return 16;
+    }
+  };
+
   return (
     <TouchableOpacity 
-      style={styles.container}
+      style={[styles.container, nightMode && styles.containerDark]}
       onPress={() => navigation.navigate('Verse', { book: dailyVerse.book, chapter: dailyVerse.chapter, verseNumber: dailyVerse.number })}
     >
-      <Text style={styles.title}>Versículo del Día</Text>
-      <Text style={styles.verse}>{dailyVerse.text}</Text>
-      <Text style={styles.reference}>{dailyVerse.book} {dailyVerse.chapter}:{dailyVerse.number}</Text>
+      <Text style={[styles.title, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() + 2 }]}>Versículo del Día</Text>
+      <Text style={[styles.verse, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() }]}>{dailyVerse.text}</Text>
+      <Text style={[styles.reference, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() - 2 }]}>
+        {dailyVerse.book} {dailyVerse.chapter}:{dailyVerse.number}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -50,22 +47,26 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 20,
-    minHeight: 150,
-    justifyContent: 'center',
+  },
+  containerDark: {
+    backgroundColor: '#2a2a2a',
   },
   title: {
-    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: '#333',
   },
   verse: {
-    fontSize: 16,
     fontStyle: 'italic',
     marginBottom: 5,
+    color: '#333',
   },
   reference: {
-    fontSize: 14,
     textAlign: 'right',
+    color: '#666',
+  },
+  textDark: {
+    color: '#fff',
   },
 });
 
