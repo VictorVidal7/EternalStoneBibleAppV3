@@ -38,13 +38,41 @@ const AppNavigator = () => {
         },
       }}
     >
-      <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Inicio' }} />
-      <Stack.Screen name="Bible" component={BibleListScreen} options={{ title: 'Libros de la Biblia' }} />
-      <Stack.Screen name="Chapter" component={ChapterScreen} options={{ title: 'Capítulos' }} />
-      <Stack.Screen name="Verse" component={VerseScreen} options={{ title: 'Versículos' }} />
-      <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ title: 'Mis Marcadores' }} />
-      <Stack.Screen name="Search" component={SearchScreen} options={{ title: 'Buscar' }} />
-      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Configuración' }} />
+      <Stack.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{ title: 'Inicio' }}
+      />
+      <Stack.Screen 
+        name="Bible" 
+        component={BibleListScreen} 
+        options={{ title: 'Libros de la Biblia' }}
+      />
+      <Stack.Screen 
+        name="Chapter" 
+        component={ChapterScreen} 
+        options={{ title: 'Capítulos' }}
+      />
+      <Stack.Screen 
+        name="Verse" 
+        component={VerseScreen} 
+        options={{ title: 'Versículos' }}
+      />
+      <Stack.Screen 
+        name="Bookmarks" 
+        component={BookmarksScreen} 
+        options={{ title: 'Mis Marcadores' }}
+      />
+      <Stack.Screen 
+        name="Search" 
+        component={SearchScreen} 
+        options={{ title: 'Buscar' }}
+      />
+      <Stack.Screen 
+        name="Settings" 
+        component={SettingsScreen} 
+        options={{ title: 'Configuración' }}
+      />
     </Stack.Navigator>
   );
 };

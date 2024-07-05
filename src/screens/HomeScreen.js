@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import DailyVerse from '../components/DailyVerse';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 
@@ -15,6 +15,12 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  const navigateToScreen = (screenName) => {
+    console.log(`Attempting to navigate to: ${screenName}`);
+    Alert.alert('Navigation', `Attempting to navigate to: ${screenName}`);
+    navigation.navigate(screenName);
+  };
+
   return (
     <ScrollView contentContainerStyle={[styles.container, nightMode && styles.containerDark]}>
       <Text style={[styles.title, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() + 12 }]}>
@@ -26,16 +32,19 @@ const HomeScreen = ({ navigation }) => {
       
       <DailyVerse navigation={navigation} />
       
-      {['Bible', 'Bookmarks', 'Search', 'Settings'].map((screen) => (
+      {[
+        { name: 'Bible', title: 'Explorar la Biblia' },
+        { name: 'Bookmarks', title: 'Mis Marcadores' },
+        { name: 'Search', title: 'Buscar en la Biblia' },
+        { name: 'Settings', title: 'Configuración' }
+      ].map((screen) => (
         <TouchableOpacity
-          key={screen}
+          key={screen.name}
           style={[styles.button, nightMode && styles.buttonDark]}
-          onPress={() => navigation.navigate(screen)}
+          onPress={() => navigateToScreen(screen.name)}
         >
           <Text style={[styles.buttonText, { fontFamily, fontSize: getFontSize() }]}>
-            {screen === 'Bible' ? 'Explorar la Biblia' :
-             screen === 'Bookmarks' ? 'Mis Marcadores' :
-             screen === 'Search' ? 'Buscar en la Biblia' : 'Configuración'}
+            {screen.title}
           </Text>
         </TouchableOpacity>
       ))}
