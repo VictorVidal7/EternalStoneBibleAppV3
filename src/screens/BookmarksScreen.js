@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useUserPreferences } from '../context/UserPreferencesContext';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const BookmarksScreen = ({ navigation }) => {
   const { bookmarks, removeBookmark } = useBookmarks();
@@ -9,44 +10,41 @@ const BookmarksScreen = ({ navigation }) => {
 
   const getFontSize = () => {
     switch (fontSize) {
-      case 'small': return 14;
-      case 'medium': return 16;
-      case 'large': return 18;
-      default: return 16;
+      case 'small': return 16;
+      case 'medium': return 18;
+      case 'large': return 20;
+      default: return 18;
     }
   };
 
   const renderBookmark = ({ item }) => (
     <View style={[styles.bookmarkItem, nightMode && styles.bookmarkItemDark]}>
       <TouchableOpacity
-        onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter })}
+        style={styles.bookmarkText}
+        onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.verse })}
       >
-        <Text style={[styles.bookmarkText, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() }]}>
+        <Text style={[styles.bookmarkReference, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() }]}>
           {item.book} {item.chapter}:{item.verse}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => removeBookmark(item.book, item.chapter, item.verse)}>
-        <Text style={[styles.removeButton, { fontFamily, fontSize: getFontSize() - 2 }]}>Eliminar</Text>
+        <Icon name="delete" size={24} color={nightMode ? "#FFD700" : "#007AFF"} />
       </TouchableOpacity>
     </View>
   );
 
   return (
     <View style={[styles.container, nightMode && styles.containerDark]}>
-      <Text style={[styles.title, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() + 8 }]}>
-        Mis Marcadores
-      </Text>
-      {bookmarks.length === 0 ? (
-        <Text style={[styles.emptyMessage, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() }]}>
-          No tienes marcadores guardados.
-        </Text>
-      ) : (
-        <FlatList
-          data={bookmarks}
-          renderItem={renderBookmark}
-          keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`}
-        />
-      )}
+      <FlatList
+        data={bookmarks}
+        renderItem={renderBookmark}
+        keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`}
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() }]}>
+            No tienes marcadores guardados.
+          </Text>
+        }
+      />
     </View>
   );
 };
@@ -54,46 +52,36 @@ const BookmarksScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
   },
   containerDark: {
     backgroundColor: '#121212',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#333',
   },
   bookmarkItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: 'white',
-    borderRadius: 5,
-    marginBottom: 10,
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
   bookmarkItemDark: {
-    backgroundColor: '#1e1e1e',
+    borderBottomColor: '#333',
   },
   bookmarkText: {
+    flex: 1,
+  },
+  bookmarkReference: {
     fontSize: 16,
     color: '#333',
   },
-  removeButton: {
-    color: 'red',
+  textDark: {
+    color: '#FFFFFF',
   },
-  emptyMessage: {
+  emptyText: {
     textAlign: 'center',
     marginTop: 20,
-    fontSize: 16,
     color: '#666',
-  },
-  textDark: {
-    color: '#fff',
   },
 });
 

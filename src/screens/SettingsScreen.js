@@ -127,7 +127,7 @@ const SettingsScreen = () => {
       <View style={[styles.section, nightMode && styles.sectionDark]}>
         <Text style={[styles.sectionTitle, nightMode && styles.textDark]}>Acerca de</Text>
         <Text style={[styles.aboutText, nightMode && styles.textDark]}>Eternal Stone Bible App v1.0</Text>
-        <Text style={[styles.aboutText, nightMode && styles.textDark]}>Desarrollado con ❤️ por Tu Nombre</Text>
+        <Text style={[styles.aboutText, nightMode && styles.textDark]}>Desarrollado con ❤️ por Eternal Stone</Text>
       </View>
     </ScrollView>
   );

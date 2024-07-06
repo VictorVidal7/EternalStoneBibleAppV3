@@ -1,28 +1,19 @@
 import React from 'react';
-import { SafeAreaView, StatusBar } from 'react-native';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import AppNavigator from './src/navigation/AppNavigator';
+import { NavigationContainer } from '@react-navigation/native';
+import { UserPreferencesProvider } from './src/context/UserPreferencesContext';
 import { BookmarksProvider } from './src/context/BookmarksContext';
-import { UserPreferencesProvider, useUserPreferences } from './src/context/UserPreferencesContext';
-
-const AppContent = () => {
-  const { nightMode } = useUserPreferences();
-
-  return (
-    <NavigationContainer theme={nightMode ? DarkTheme : DefaultTheme}>
-      <StatusBar barStyle={nightMode ? "light-content" : "dark-content"} />
-      <SafeAreaView style={{ flex: 1 }}>
-        <AppNavigator />
-      </SafeAreaView>
-    </NavigationContainer>
-  );
-};
+import { ReadingPlanProvider } from './src/context/ReadingPlanContext';
+import AppNavigator from './src/navigation/AppNavigator';
 
 const App = () => {
   return (
     <UserPreferencesProvider>
       <BookmarksProvider>
-        <AppContent />
+        <ReadingPlanProvider>
+          <NavigationContainer>
+            <AppNavigator />
+          </NavigationContainer>
+        </ReadingPlanProvider>
       </BookmarksProvider>
     </UserPreferencesProvider>
   );

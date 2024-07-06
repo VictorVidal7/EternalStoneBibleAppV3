@@ -1,38 +1,57 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { getVersesForChapter } from '../data/bibleVerses';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useUserPreferences } from '../context/UserPreferencesContext';
+import { useBookmarks } from '../context/BookmarksContext';
+import { getVersesForChapter } from '../data/bibleVerses';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const VerseScreen = ({ route }) => {
   const { book, chapter } = route.params;
-  const verses = getVersesForChapter(book, chapter);
   const { nightMode, fontSize, fontFamily } = useUserPreferences();
+  const { bookmarks, addBookmark, removeBookmark } = useBookmarks();
 
-  const getFontSize = () => {
-    switch (fontSize) {
-      case 'small': return 14;
-      case 'medium': return 16;
-      case 'large': return 18;
-      default: return 16;
+  const verses = getVersesForChapter(book, chapter);
+
+  const isBookmarked = (verse) => {
+    return bookmarks.some(b => b.book === book && b.chapter === chapter && b.verse === verse);
+  };
+
+  const toggleBookmark = (verse) => {
+    if (isBookmarked(verse)) {
+      removeBookmark(book, chapter, verse);
+    } else {
+      addBookmark(book, chapter, verse);
     }
   };
 
   const renderVerse = ({ item }) => (
     <View style={styles.verseContainer}>
-      <Text style={[styles.verseNumber, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() - 2 }]}>
+      <Text style={[
+        styles.verseNumber, 
+        nightMode && styles.textDark,
+        { fontFamily, fontSize: fontSize === 'small' ? 12 : fontSize === 'large' ? 16 : 14 }
+      ]}>
         {item.number}
       </Text>
-      <Text style={[styles.verseText, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() }]}>
+      <Text style={[
+        styles.verseText, 
+        nightMode && styles.textDark,
+        { fontFamily, fontSize: fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16 }
+      ]}>
         {item.text}
       </Text>
+      <TouchableOpacity onPress={() => toggleBookmark(item.number)}>
+        <Icon 
+          name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
+          size={24} 
+          color={nightMode ? "#FFD700" : "#007AFF"}
+        />
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <View style={[styles.container, nightMode && styles.containerDark]}>
-      <Text style={[styles.header, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() + 4 }]}>
-        {book} - Capítulo {chapter}
-      </Text>
       <FlatList
         data={verses}
         renderItem={renderVerse}
@@ -45,28 +64,20 @@ const VerseScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#f5f5f5',
   },
   containerDark: {
     backgroundColor: '#121212',
   },
-  header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#333',
-  },
   verseContainer: {
     flexDirection: 'row',
-    marginBottom: 10,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   verseNumber: {
-    fontWeight: 'bold',
     marginRight: 10,
-    minWidth: 30,
-    color: '#333',
+    color: '#666',
   },
   verseText: {
     flex: 1,
