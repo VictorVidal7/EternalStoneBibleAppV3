@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, Switch, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Switch, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import { useStyles } from '../hooks/useStyles';
 import NotificationService from '../services/NotificationService';
@@ -18,22 +18,44 @@ const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTimeInput, setNotificationTimeInput] = useState('12:00');
 
-  const toggleNotifications = (value) => {
-    setNotificationsEnabled(value);
-    if (value) {
-      const [hours, minutes] = notificationTimeInput.split(':').map(Number);
-      NotificationService.scheduleNotification(hours, minutes);
-    } else {
-      NotificationService.cancelAllNotifications();
+  useEffect(() => {
+    loadNotificationSettings();
+  }, []);
+
+  const loadNotificationSettings = async () => {
+    const scheduledTime = await NotificationService.getScheduledNotificationTime();
+    if (scheduledTime) {
+      setNotificationsEnabled(true);
+      setNotificationTimeInput(`${scheduledTime.hour}:${scheduledTime.minute.toString().padStart(2, '0')}`);
     }
   };
 
-  const handleTimeChange = (text) => {
+  const toggleNotifications = async (value) => {
+    try {
+      setNotificationsEnabled(value);
+      if (value) {
+        const [hours, minutes] = notificationTimeInput.split(':').map(Number);
+        await NotificationService.scheduleNotification(hours, minutes);
+      } else {
+        await NotificationService.cancelAllNotifications();
+      }
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      Alert.alert('Error', 'No se pudo configurar la notificación. Por favor, inténtalo de nuevo.');
+    }
+  };
+
+  const handleTimeChange = async (text) => {
     setNotificationTimeInput(text);
     if (notificationsEnabled) {
       const [hours, minutes] = text.split(':').map(Number);
       if (!isNaN(hours) && !isNaN(minutes)) {
-        NotificationService.scheduleNotification(hours, minutes);
+        try {
+          await NotificationService.scheduleNotification(hours, minutes);
+        } catch (error) {
+          console.error('Error scheduling notification:', error);
+          Alert.alert('Error', 'No se pudo programar la notificación. Por favor, inténtalo de nuevo.');
+        }
       }
     }
   };
