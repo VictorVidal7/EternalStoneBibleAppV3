@@ -1,91 +1,87 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import { useBookmarks } from '../context/BookmarksContext';
 import { getVersesForChapter } from '../data/bibleVerses';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useStyles } from '../hooks/useStyles';
 
 const VerseScreen = ({ route }) => {
   const { book, chapter } = route.params;
-  const { nightMode, fontSize, fontFamily } = useUserPreferences();
   const { bookmarks, addBookmark, removeBookmark } = useBookmarks();
+  const styles = useStyles(createStyles);
 
   const verses = getVersesForChapter(book, chapter);
 
-  const isBookmarked = (verse) => {
+  const isBookmarked = useCallback((verse) => {
     return bookmarks.some(b => b.book === book && b.chapter === chapter && b.verse === verse);
-  };
+  }, [bookmarks, book, chapter]);
 
-  const toggleBookmark = (verse) => {
+  const toggleBookmark = useCallback((verse) => {
     if (isBookmarked(verse)) {
       removeBookmark(book, chapter, verse);
     } else {
       addBookmark(book, chapter, verse);
     }
-  };
+  }, [isBookmarked, addBookmark, removeBookmark, book, chapter]);
 
-  const renderVerse = ({ item }) => (
+  const renderVerse = useCallback(({ item }) => (
     <View style={styles.verseContainer}>
-      <Text style={[
-        styles.verseNumber, 
-        nightMode && styles.textDark,
-        { fontFamily, fontSize: fontSize === 'small' ? 12 : fontSize === 'large' ? 16 : 14 }
-      ]}>
-        {item.number}
-      </Text>
-      <Text style={[
-        styles.verseText, 
-        nightMode && styles.textDark,
-        { fontFamily, fontSize: fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16 }
-      ]}>
-        {item.text}
-      </Text>
+      <Text style={styles.verseNumber}>{item.number}</Text>
+      <Text style={styles.verseText}>{item.text}</Text>
       <TouchableOpacity onPress={() => toggleBookmark(item.number)}>
         <Icon 
           name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
           size={24} 
-          color={nightMode ? "#FFD700" : "#007AFF"}
+          color={styles.bookmarkColor}
         />
       </TouchableOpacity>
     </View>
-  );
+  ), [styles, isBookmarked, toggleBookmark]);
 
   return (
-    <View style={[styles.container, nightMode && styles.containerDark]}>
+    <View style={styles.container}>
       <FlatList
         data={verses}
         renderItem={renderVerse}
         keyExtractor={(item) => item.number.toString()}
+        initialNumToRender={20}
+        maxToRenderPerBatch={20}
+        windowSize={21}
       />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  containerDark: {
-    backgroundColor: '#121212',
-  },
-  verseContainer: {
-    flexDirection: 'row',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  verseNumber: {
-    marginRight: 10,
-    color: '#666',
-  },
-  verseText: {
-    flex: 1,
-    color: '#333',
-  },
-  textDark: {
-    color: '#fff',
-  },
-});
+const createStyles = (nightMode, fontSize, fontFamily) => {
+  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+
+  return {
+    container: {
+      flex: 1,
+      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
+    },
+    verseContainer: {
+      flexDirection: 'row',
+      padding: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: nightMode ? '#333' : '#e0e0e0',
+      alignItems: 'center',
+    },
+    verseNumber: {
+      marginRight: 10,
+      color: nightMode ? '#888' : '#666',
+      fontFamily,
+      fontSize: dynamicFontSize - 2,
+    },
+    verseText: {
+      flex: 1,
+      color: nightMode ? '#fff' : '#333',
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+    bookmarkColor: nightMode ? "#FFD700" : "#007AFF",
+  };
+};
 
 export default VerseScreen;

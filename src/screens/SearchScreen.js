@@ -1,23 +1,14 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
 import { searchBible } from '../data/bibleVerses';
-import { useUserPreferences } from '../context/UserPreferencesContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useStyles } from '../hooks/useStyles';
 
 const SearchScreen = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
-  const [searchType, setSearchType] = useState('all'); // 'all', 'ot', 'nt'
-  const { nightMode, fontSize, fontFamily } = useUserPreferences();
-
-  const getFontSize = () => {
-    switch (fontSize) {
-      case 'small': return 14;
-      case 'medium': return 16;
-      case 'large': return 18;
-      default: return 16;
-    }
-  };
+  const [searchType, setSearchType] = useState('all');
+  const styles = useStyles(createStyles);
 
   const handleSearch = useCallback(() => {
     if (query.length < 3) {
@@ -30,56 +21,57 @@ const SearchScreen = ({ navigation }) => {
 
   const renderSearchResult = useCallback(({ item }) => (
     <TouchableOpacity
-      style={[styles.resultItem, nightMode && styles.resultItemDark]}
+      style={styles.resultItem}
       onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verseNumber: item.verseNumber })}
     >
-      <Text style={[styles.resultReference, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() - 2 }]}>
+      <Text style={styles.resultReference}>
         {item.book} {item.chapter}:{item.verseNumber}
       </Text>
-      <Text style={[styles.resultText, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() }]}>
+      <Text style={styles.resultText} numberOfLines={2}>
         {item.text}
       </Text>
     </TouchableOpacity>
-  ), [nightMode, fontFamily, fontSize, navigation]);
+  ), [styles, navigation]);
+
+  const searchTypeButtons = useMemo(() => ['all', 'ot', 'nt'].map((type) => (
+    <TouchableOpacity
+      key={type}
+      style={[
+        styles.searchTypeButton,
+        searchType === type && styles.activeSearchType
+      ]}
+      onPress={() => setSearchType(type)}
+    >
+      <Text style={[styles.searchTypeText, searchType === type && styles.activeSearchTypeText]}>
+        {type === 'all' ? 'Toda' : type === 'ot' ? 'A.T.' : 'N.T.'}
+      </Text>
+    </TouchableOpacity>
+  )), [searchType, styles]);
 
   return (
-    <View style={[styles.container, nightMode && styles.containerDark]}>
+    <View style={styles.container}>
       <View style={styles.searchInputContainer}>
         <TextInput
-          style={[styles.searchInput, nightMode && styles.searchInputDark, { fontFamily, fontSize: getFontSize() }]}
+          style={styles.searchInput}
           value={query}
           onChangeText={setQuery}
           placeholder="Buscar en la Biblia..."
-          placeholderTextColor={nightMode ? '#999999' : '#666666'}
+          placeholderTextColor={styles.placeholderColor}
           onSubmitEditing={handleSearch}
         />
         <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
-          <Icon name="search" size={24} color={nightMode ? '#fff' : '#007AFF'} />
+          <Icon name="search" size={24} color={styles.iconColor} />
         </TouchableOpacity>
       </View>
       <View style={styles.searchTypeContainer}>
-        {['all', 'ot', 'nt'].map((type) => (
-          <TouchableOpacity
-            key={type}
-            style={[
-              styles.searchTypeButton,
-              searchType === type && styles.activeSearchType,
-              nightMode && styles.searchTypeButtonDark
-            ]}
-            onPress={() => setSearchType(type)}
-          >
-            <Text style={[styles.searchTypeText, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() - 2 }]}>
-              {type === 'all' ? 'Toda la Biblia' : type === 'ot' ? 'Antiguo Testamento' : 'Nuevo Testamento'}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {searchTypeButtons}
       </View>
       <FlatList
         data={results}
         renderItem={renderSearchResult}
         keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verseNumber}-${index}`}
         ListEmptyComponent={
-          <Text style={[styles.emptyResult, nightMode && styles.textDark, { fontFamily, fontSize: getFontSize() }]}>
+          <Text style={styles.emptyResult}>
             {query.length < 3 ? "Ingresa al menos 3 caracteres para buscar" : "No se encontraron resultados"}
           </Text>
         }
@@ -88,85 +80,87 @@ const SearchScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#f5f5f5',
-  },
-  containerDark: {
-    backgroundColor: '#121212',
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    backgroundColor: 'white',
-  },
-  searchInputDark: {
-    backgroundColor: '#333',
-    color: 'white',
-    borderColor: '#666',
-  },
-  searchButton: {
-    padding: 10,
-  },
-  searchTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  searchTypeButton: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
-    marginHorizontal: 2,
-    alignItems: 'center',
-  },
-  searchTypeButtonDark: {
-    backgroundColor: '#333',
-  },
-  activeSearchType: {
-    backgroundColor: '#007AFF',
-  },
-  searchTypeText: {
-    fontSize: 12,
-    color: '#333',
-  },
-  resultItem: {
-    marginBottom: 10,
-    padding: 10,
-    backgroundColor: 'white',
-    borderRadius: 5,
-  },
-  resultItemDark: {
-    backgroundColor: '#1e1e1e',
-  },
-  resultReference: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#333',
-  },
-  resultText: {
-    color: '#666',
-  },
-  emptyResult: {
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#666',
-  },
-  textDark: {
-    color: '#fff',
-  },
-});
+const createStyles = (nightMode, fontSize, fontFamily) => {
+  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+
+  return {
+    container: {
+      flex: 1,
+      padding: 10,
+      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
+    },
+    searchInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    searchInput: {
+      flex: 1,
+      height: 40,
+      borderColor: nightMode ? '#666' : 'gray',
+      borderWidth: 1,
+      borderRadius: 5,
+      paddingHorizontal: 10,
+      backgroundColor: nightMode ? '#333' : 'white',
+      color: nightMode ? 'white' : 'black',
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+    placeholderColor: nightMode ? '#999999' : '#666666',
+    iconColor: nightMode ? '#fff' : '#007AFF',
+    searchButton: {
+      padding: 10,
+    },
+    searchTypeContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    },
+    searchTypeButton: {
+      flex: 1,
+      padding: 10,
+      backgroundColor: nightMode ? '#333' : '#e0e0e0',
+      borderRadius: 5,
+      marginHorizontal: 2,
+      alignItems: 'center',
+    },
+    activeSearchType: {
+      backgroundColor: '#007AFF',
+    },
+    searchTypeText: {
+      fontSize: dynamicFontSize - 2,
+      color: nightMode ? '#fff' : '#333',
+      fontFamily,
+    },
+    activeSearchTypeText: {
+      color: 'white',
+    },
+    resultItem: {
+      marginBottom: 10,
+      padding: 10,
+      backgroundColor: nightMode ? '#1e1e1e' : 'white',
+      borderRadius: 5,
+    },
+    resultReference: {
+      fontWeight: 'bold',
+      marginBottom: 5,
+      color: nightMode ? '#fff' : '#333',
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+    resultText: {
+      color: nightMode ? '#ccc' : '#666',
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+    emptyResult: {
+      textAlign: 'center',
+      marginTop: 20,
+      color: nightMode ? '#ccc' : '#666',
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+  };
+};
 
 export default SearchScreen;

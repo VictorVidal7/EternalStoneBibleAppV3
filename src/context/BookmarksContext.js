@@ -1,10 +1,9 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BookmarksContext = createContext();
 
 export const BookmarksProvider = ({ children }) => {
-  console.log('BookmarksProvider iniciado');
   const [bookmarks, setBookmarks] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -12,54 +11,56 @@ export const BookmarksProvider = ({ children }) => {
     loadBookmarks();
   }, []);
 
-  const loadBookmarks = async () => {
+  const loadBookmarks = useCallback(async () => {
     try {
-      console.log('Cargando marcadores...');
       const savedBookmarks = await AsyncStorage.getItem('bookmarks');
       if (savedBookmarks !== null) {
         setBookmarks(JSON.parse(savedBookmarks));
       }
-      console.log('Marcadores cargados:', bookmarks);
       setIsLoaded(true);
     } catch (error) {
       console.error('Error al cargar marcadores:', error);
       setIsLoaded(true);
     }
-  };
+  }, []);
 
-  const saveBookmarks = async (newBookmarks) => {
+  const saveBookmarks = useCallback(async (newBookmarks) => {
     try {
       await AsyncStorage.setItem('bookmarks', JSON.stringify(newBookmarks));
       setBookmarks(newBookmarks);
     } catch (error) {
       console.error('Error al guardar marcadores:', error);
     }
-  };
+  }, []);
 
-  const addBookmark = (book, chapter, verse) => {
+  const addBookmark = useCallback((book, chapter, verse) => {
     const newBookmark = { book, chapter, verse };
-    const newBookmarks = [...bookmarks, newBookmark];
-    saveBookmarks(newBookmarks);
-  };
+    setBookmarks(prevBookmarks => {
+      const updatedBookmarks = [...prevBookmarks, newBookmark];
+      saveBookmarks(updatedBookmarks);
+      return updatedBookmarks;
+    });
+  }, [saveBookmarks]);
 
-  const removeBookmark = (book, chapter, verse) => {
-    const newBookmarks = bookmarks.filter(
-      b => !(b.book === book && b.chapter === chapter && b.verse === verse)
-    );
-    saveBookmarks(newBookmarks);
-  };
+  const removeBookmark = useCallback((book, chapter, verse) => {
+    setBookmarks(prevBookmarks => {
+      const updatedBookmarks = prevBookmarks.filter(
+        b => !(b.book === book && b.chapter === chapter && b.verse === verse)
+      );
+      saveBookmarks(updatedBookmarks);
+      return updatedBookmarks;
+    });
+  }, [saveBookmarks]);
 
-  console.log('BookmarksProvider renderizando');
+  const value = {
+    bookmarks,
+    addBookmark,
+    removeBookmark,
+    isLoaded,
+  };
 
   return (
-    <BookmarksContext.Provider
-      value={{
-        bookmarks,
-        addBookmark,
-        removeBookmark,
-        isLoaded,
-      }}
-    >
+    <BookmarksContext.Provider value={value}>
       {children}
     </BookmarksContext.Provider>
   );
@@ -68,8 +69,7 @@ export const BookmarksProvider = ({ children }) => {
 export const useBookmarks = () => {
   const context = useContext(BookmarksContext);
   if (context === undefined) {
-    console.error('useBookmarks debe ser usado dentro de un BookmarksProvider');
-    return { bookmarks: [], addBookmark: () => {}, removeBookmark: () => {}, isLoaded: true };
+    throw new Error('useBookmarks debe ser usado dentro de un BookmarksProvider');
   }
   return context;
 };

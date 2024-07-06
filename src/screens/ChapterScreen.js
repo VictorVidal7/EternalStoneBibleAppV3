@@ -1,31 +1,26 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { useUserPreferences } from '../context/UserPreferencesContext';
+import React, { useCallback } from 'react';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { useStyles } from '../hooks/useStyles';
 import { bibleBooks } from '../data/bibleVerses';
 
 const ChapterScreen = ({ route, navigation }) => {
   const { book } = route.params;
-  const { nightMode, fontSize, fontFamily } = useUserPreferences();
+  const styles = useStyles(createStyles);
 
   const chapters = Array.from({ length: bibleBooks[book] }, (_, i) => i + 1);
 
-  const renderChapter = ({ item }) => (
+  const renderChapter = useCallback(({ item }) => (
     <TouchableOpacity
-      style={[styles.chapterItem, nightMode && styles.chapterItemDark]}
+      style={styles.chapterItem}
       onPress={() => navigation.navigate('Verse', { book, chapter: item })}
     >
-      <Text style={[
-        styles.chapterText, 
-        nightMode && styles.textDark,
-        { fontFamily, fontSize: fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16 }
-      ]}>
-        Capítulo {item}
-      </Text>
+      <Text style={styles.chapterText}>Capítulo {item}</Text>
     </TouchableOpacity>
-  );
+  ), [styles, navigation, book]);
 
   return (
-    <View style={[styles.container, nightMode && styles.containerDark]}>
+    <View style={styles.container}>
+      <Text style={styles.bookTitle}>{book}</Text>
       <FlatList
         data={chapters}
         renderItem={renderChapter}
@@ -36,33 +31,38 @@ const ChapterScreen = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 10,
-  },
-  containerDark: {
-    backgroundColor: '#121212',
-  },
-  chapterItem: {
-    flex: 1,
-    margin: 5,
-    padding: 20,
-    backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-  },
-  chapterItemDark: {
-    backgroundColor: '#333',
-  },
-  chapterText: {
-    color: '#333',
-  },
-  textDark: {
-    color: '#fff',
-  },
-});
+const createStyles = (nightMode, fontSize, fontFamily) => {
+  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+
+  return {
+    container: {
+      flex: 1,
+      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
+      padding: 10,
+    },
+    bookTitle: {
+      fontSize: dynamicFontSize + 4,
+      fontWeight: 'bold',
+      color: nightMode ? '#fff' : '#333',
+      marginBottom: 10,
+      textAlign: 'center',
+      fontFamily,
+    },
+    chapterItem: {
+      flex: 1,
+      margin: 5,
+      padding: 20,
+      backgroundColor: nightMode ? '#1e1e1e' : 'white',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 5,
+    },
+    chapterText: {
+      color: nightMode ? '#fff' : '#333',
+      fontSize: dynamicFontSize,
+      fontFamily,
+    },
+  };
+};
 
 export default ChapterScreen;

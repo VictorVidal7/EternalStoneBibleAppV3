@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const ReadingPlanContext = createContext();
 
 export const ReadingPlanProvider = ({ children }) => {
-  console.log('ReadingPlanProvider iniciado');
   const [currentPlan, setCurrentPlan] = useState(null);
   const [progress, setProgress] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
@@ -15,12 +14,10 @@ export const ReadingPlanProvider = ({ children }) => {
 
   const loadReadingPlan = async () => {
     try {
-      console.log('Cargando plan de lectura...');
       const savedPlan = await AsyncStorage.getItem('currentReadingPlan');
       const savedProgress = await AsyncStorage.getItem('readingPlanProgress');
       if (savedPlan) setCurrentPlan(JSON.parse(savedPlan));
       if (savedProgress) setProgress(JSON.parse(savedProgress));
-      console.log('Plan de lectura cargado:', { currentPlan, progress });
       setIsLoaded(true);
     } catch (error) {
       console.error('Error al cargar el plan de lectura:', error);
@@ -30,9 +27,11 @@ export const ReadingPlanProvider = ({ children }) => {
 
   const savePlan = async (plan) => {
     try {
-      console.log('Saving plan:', plan);
       await AsyncStorage.setItem('currentReadingPlan', JSON.stringify(plan));
       setCurrentPlan(plan);
+      // Reiniciar el progreso al seleccionar un nuevo plan
+      setProgress({});
+      await AsyncStorage.setItem('readingPlanProgress', JSON.stringify({}));
     } catch (error) {
       console.error('Error al guardar el plan de lectura:', error);
     }
@@ -47,8 +46,6 @@ export const ReadingPlanProvider = ({ children }) => {
       console.error('Error al actualizar el progreso:', error);
     }
   };
-
-  console.log('ReadingPlanProvider renderizando');
 
   return (
     <ReadingPlanContext.Provider
@@ -68,8 +65,7 @@ export const ReadingPlanProvider = ({ children }) => {
 export const useReadingPlan = () => {
   const context = useContext(ReadingPlanContext);
   if (context === undefined) {
-    console.error('useReadingPlan debe ser usado dentro de un ReadingPlanProvider');
-    return { currentPlan: null, progress: {}, savePlan: () => {}, updateProgress: () => {}, isLoaded: true };
+    throw new Error('useReadingPlan debe ser usado dentro de un ReadingPlanProvider');
   }
   return context;
 };

@@ -14,19 +14,17 @@ class DailyVerseService {
         }
       }
 
-      const newVerse = await this.generateDailyVerse();
+      const newVerse = this.generateDailyVerse();
       await this.storeDailyVerse(today, newVerse);
       return newVerse;
     } catch (error) {
       console.error('Error al obtener el versículo diario:', error);
-      // En caso de error, devolvemos un versículo aleatorio sin almacenarlo
-      return getRandomVerse();
+      return this.generateDailyVerse();
     }
   }
 
-  async generateDailyVerse() {
-    // Aquí puedes implementar la lógica para seleccionar un versículo basado en los intereses del usuario
-    // Por ahora, usaremos un versículo aleatorio
+  generateDailyVerse() {
+    // Por ahora, usamos un versículo aleatorio
     return getRandomVerse();
   }
 
