@@ -1,11 +1,14 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useError } from './ErrorContext';
 
 const BookmarksContext = createContext();
 
 export const BookmarksProvider = ({ children }) => {
   const [bookmarks, setBookmarks] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { showError } = useError();
+
 
   useEffect(() => {
     loadBookmarks();
@@ -52,11 +55,34 @@ export const BookmarksProvider = ({ children }) => {
     });
   }, [saveBookmarks]);
 
+  const exportBookmarks = useCallback(async () => {
+    try {
+      const bookmarksString = JSON.stringify(bookmarks);
+      return bookmarksString;
+    } catch (error) {
+      showError('Error al exportar marcadores');
+      console.error('Error exporting bookmarks:', error);
+    }
+  }, [bookmarks, showError]);
+
+  const importBookmarks = useCallback(async (bookmarksString) => {
+    try {
+      const newBookmarks = JSON.parse(bookmarksString);
+      await saveBookmarks(newBookmarks);
+      showError('Marcadores importados exitosamente');
+    } catch (error) {
+      showError('Error al importar marcadores');
+      console.error('Error importing bookmarks:', error);
+    }
+  }, [saveBookmarks, showError]);
+
   const value = {
     bookmarks,
     addBookmark,
     removeBookmark,
     isLoaded,
+    exportBookmarks,
+    importBookmarks,
   };
 
   return (

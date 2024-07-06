@@ -3,17 +3,25 @@ import { View, FlatList, TouchableOpacity, Text } from 'react-native';
 import { bibleBooks } from '../data/bibleVerses';
 import { useStyles } from '../hooks/useStyles';
 
+const BookItem = React.memo(({ item, onPress, styles }) => (
+  <TouchableOpacity
+    style={styles.bookItem}
+    onPress={onPress}
+  >
+    <Text style={styles.bookName}>{item}</Text>
+  </TouchableOpacity>
+));
+
 const BibleListScreen = ({ navigation }) => {
   const styles = useStyles(createStyles);
 
   const renderBookItem = useCallback(({ item }) => (
-    <TouchableOpacity
-      style={styles.bookItem}
+    <BookItem
+      item={item}
       onPress={() => navigation.navigate('Chapter', { book: item })}
-    >
-      <Text style={styles.bookName}>{item}</Text>
-    </TouchableOpacity>
-  ), [styles, navigation]);
+      styles={styles}
+    />
+  ), [navigation, styles]);
 
   return (
     <View style={styles.container}>
