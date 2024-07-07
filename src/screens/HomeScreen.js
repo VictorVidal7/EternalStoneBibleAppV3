@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useReadingPlan } from '../context/ReadingPlanContext';
 import { useStyles } from '../hooks/useStyles';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
+  const navigation = useNavigation();
   const { bookmarks } = useBookmarks();
   const { currentPlan } = useReadingPlan();
   const styles = useStyles(createStyles);
