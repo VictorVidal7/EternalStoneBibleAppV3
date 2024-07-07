@@ -1,9 +1,11 @@
 import React, { useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useStyles } from '../hooks/useStyles';
 import { bibleBooks } from '../data/bibleVerses';
 
-const ChapterScreen = ({ route, navigation }) => {
+const ChapterScreen = ({ route }) => {
+  const navigation = useNavigation();
   const { book } = route.params;
   const styles = useStyles(createStyles);
 
@@ -16,7 +18,7 @@ const ChapterScreen = ({ route, navigation }) => {
     >
       <Text style={styles.chapterText}>Capítulo {item}</Text>
     </TouchableOpacity>
-  ), [styles, navigation, book]);
+  ), [navigation, book, styles]);
 
   return (
     <View style={styles.container}>
@@ -26,6 +28,7 @@ const ChapterScreen = ({ route, navigation }) => {
         renderItem={renderChapter}
         keyExtractor={(item) => item.toString()}
         numColumns={3}
+        initialNumToRender={bibleBooks[book]}
       />
     </View>
   );

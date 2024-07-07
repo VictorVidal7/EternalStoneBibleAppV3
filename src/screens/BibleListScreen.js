@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { View, FlatList, TouchableOpacity, Text } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { bibleBooks } from '../data/bibleVerses';
 import { useStyles } from '../hooks/useStyles';
 
@@ -12,7 +13,8 @@ const BookItem = React.memo(({ item, onPress, styles }) => (
   </TouchableOpacity>
 ));
 
-const BibleListScreen = ({ navigation }) => {
+const BibleListScreen = () => {
+  const navigation = useNavigation();
   const styles = useStyles(createStyles);
 
   const renderBookItem = useCallback(({ item }) => (
