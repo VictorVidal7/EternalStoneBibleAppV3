@@ -1,79 +1,166 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Eternal Stone Bible App
 
-# Getting Started
+## Descripción del Proyecto
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+Eternal Stone Bible App es una aplicación móvil desarrollada con React Native que ofrece una experiencia interactiva y enriquecedora para la lectura y estudio de la Biblia. La aplicación incorpora una amplia gama de características diseñadas para facilitar la lectura diaria, el estudio en profundidad y la interacción personal con las Escrituras.
 
-## Step 1: Start the Metro Server
+## Características Principales
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+1. **Lectura de la Biblia**
 
-To start Metro, run the following command from the _root_ of your React Native project:
+   - Múltiples versiones y traducciones disponibles
+   - Navegación fluida entre libros, capítulos y versículos
 
-```bash
-# using npm
-npm start
+2. **Planes de Lectura**
 
-# OR using Yarn
-yarn start
+   - Planes personalizados con seguimiento de progreso
+   - Notificaciones diarias para mantener la consistencia
+
+3. **Sistema de Marcadores**
+
+   - Guardado de versículos favoritos
+   - Exportación e importación de marcadores
+
+4. **Búsqueda Avanzada**
+
+   - Búsqueda por palabras clave en toda la Biblia
+   - Filtros por Antiguo y Nuevo Testamento
+
+5. **Personalización de la Interfaz**
+
+   - Modo oscuro para lectura nocturna
+   - Ajustes de tamaño de fuente y tipo de letra
+
+6. **Versículo del Día**
+
+   - Muestra un versículo aleatorio diariamente
+
+7. **Sistema de Notificaciones**
+   - Recordatorios de lectura personalizables
+
+## Requisitos del Sistema
+
+- Node.js (versión 14 o superior)
+- Yarn (versión 1.22 o superior)
+- React Native CLI
+- Xcode (para desarrollo en iOS)
+- Android Studio (para desarrollo en Android)
+
+## Instalación
+
+1. Clone el repositorio:
+
+   ```
+   git clone https://github.com/tu-usuario/eternal-stone-bible-app.git
+   ```
+
+2. Navegue al directorio del proyecto:
+
+   ```
+   cd eternal-stone-bible-app
+   ```
+
+3. Instale las dependencias:
+
+   ```
+   yarn install
+   ```
+
+4. Para iOS, instale los pods:
+   ```
+   cd ios && pod install && cd ..
+   ```
+
+## Ejecución
+
+1. Para iniciar el servidor de Metro:
+
+   ```
+   yarn start
+   ```
+
+2. Para ejecutar en iOS:
+
+   ```
+   yarn ios
+   ```
+
+3. Para ejecutar en Android:
+   ```
+   yarn android
+   ```
+
+## Pruebas
+
+El proyecto utiliza Jest para las pruebas unitarias y de integración. Para ejecutar las pruebas:
+
+```
+yarn test
 ```
 
-## Step 2: Start your Application
+Para ver la cobertura de las pruebas:
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
-
-```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```
+yarn test --coverage
 ```
 
-### For iOS
+## Estructura del Proyecto
 
-```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+```
+EternalStoneBibleApp/
+├── android/                    # Configuración para Android
+├── ios/                        # Configuración para iOS
+├── node_modules/               # Dependencias del proyecto
+├── src/
+│   ├── components/             # Componentes reutilizables
+│   ├── context/                # Contextos de React
+│   ├── data/                   # Datos estáticos y configuraciones
+│   ├── hooks/                  # Hooks personalizados
+│   ├── navigation/             # Configuración de navegación
+│   ├── screens/                # Componentes de pantalla
+│   ├── services/               # Servicios y APIs
+│   ├── styles/                 # Estilos globales
+│   └── utils/                  # Utilidades y helpers
+├── __tests__/                  # Pruebas
+├── .gitignore
+├── App.js                      # Componente raíz
+├── app.json
+├── babel.config.js
+├── index.js
+├── metro.config.js
+├── package.json
+└── README.md
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+## Dependencias Principales
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+- React Native: ^0.74.3
+- @react-navigation/native: ^6.1.17
+- @react-navigation/stack: ^6.4.0
+- react-native-gesture-handler: ^2.17.1
+- react-native-reanimated: ^3.7.2
+- react-native-safe-area-context: ^4.10.7
+- react-native-screens: ^3.32.0
+- react-native-vector-icons: ^10.1.0
+- @react-native-async-storage/async-storage: ^1.23.1
+- react-native-push-notification: ^8.1.1
 
-## Step 3: Modifying your App
+## Contribución
 
-Now that you have successfully run the app, let's modify it.
+Si deseas contribuir al proyecto, por favor:
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+1. Haz un fork del repositorio
+2. Crea una nueva rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Haz commit de tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+## Licencia
 
-## Congratulations! :tada:
+Este proyecto está licenciado bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
 
-You've successfully run and modified your React Native App. :partying_face:
+## Contacto
 
-### Now what?
+Tu Nombre - tu.email@ejemplo.com
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+Link del Proyecto: [https://github.com/tu-usuario/eternal-stone-bible-app](https://github.com/tu-usuario/eternal-stone-bible-app)
