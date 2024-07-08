@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { searchBible } from '../data/bibleVerses';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useStyles } from '../hooks/useStyles';
 
-const SearchScreen = ({ navigation }) => {
+const SearchScreen = () => {
+  const navigation = useNavigation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searchType, setSearchType] = useState('all');
@@ -15,9 +17,17 @@ const SearchScreen = ({ navigation }) => {
       setResults([]);
       return;
     }
+    console.log('Searching for:', query, 'with type:', searchType);
     const searchResults = searchBible(query, searchType);
+    console.log('Search results:', searchResults);
     setResults(searchResults);
   }, [query, searchType]);
+
+  useEffect(() => {
+    if (query.length >= 3) {
+      handleSearch();
+    }
+  }, [query, searchType, handleSearch]);
 
   const renderSearchResult = useCallback(({ item }) => (
     <TouchableOpacity
@@ -49,7 +59,7 @@ const SearchScreen = ({ navigation }) => {
   )), [searchType, styles]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="search-screen">
       <View style={styles.searchInputContainer}>
         <TextInput
           style={styles.searchInput}
@@ -58,8 +68,9 @@ const SearchScreen = ({ navigation }) => {
           placeholder="Buscar en la Biblia..."
           placeholderTextColor={styles.placeholderColor}
           onSubmitEditing={handleSearch}
+          testID="search-input"
         />
-        <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
+        <TouchableOpacity onPress={handleSearch} style={styles.searchButton} testID="search-icon">
           <Icon name="search" size={24} color={styles.iconColor} />
         </TouchableOpacity>
       </View>
