@@ -1,10 +1,12 @@
 import React, { useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useReadingPlan } from '../context/ReadingPlanContext';
 import { readingPlans } from '../data/readingPlans';
 import { useStyles } from '../hooks/useStyles';
 
-const ReadingPlanScreen = ({ navigation }) => {
+const ReadingPlanScreen = () => {
+  const navigation = useNavigation();
   const { currentPlan, savePlan } = useReadingPlan();
   const styles = useStyles(createStyles);
 
@@ -15,6 +17,7 @@ const ReadingPlanScreen = ({ navigation }) => {
         savePlan(item);
         navigation.navigate('Home');
       }}
+      testID={`plan-item-${item.id}`}
     >
       <Text style={styles.planName}>{item.name}</Text>
       <Text style={styles.planDescription}>{item.description}</Text>
@@ -23,11 +26,11 @@ const ReadingPlanScreen = ({ navigation }) => {
   ), [styles, savePlan, navigation]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="reading-plan-screen">
       {currentPlan && (
-        <View style={styles.currentPlanContainer}>
+        <View style={styles.currentPlanContainer} testID="current-plan-container">
           <Text style={styles.currentPlanTitle}>Plan Actual:</Text>
-          <Text style={styles.currentPlanName}>{currentPlan.name}</Text>
+          <Text style={styles.currentPlanName} testID="current-plan-name">{currentPlan.name}</Text>
         </View>
       )}
       <FlatList
