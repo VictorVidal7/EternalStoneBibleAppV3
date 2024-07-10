@@ -1,10 +1,12 @@
 import React, { useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useStyles } from '../hooks/useStyles';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const BookmarksScreen = ({ navigation }) => {
+const BookmarksScreen = () => {
+  const navigation = useNavigation();
   const { bookmarks, removeBookmark } = useBookmarks();
   const styles = useStyles(createStyles);
 
@@ -13,16 +15,25 @@ const BookmarksScreen = ({ navigation }) => {
       <TouchableOpacity
         style={styles.bookmarkText}
         onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.verse })}
+        testID="bookmark-item"
       >
         <Text style={styles.bookmarkReference}>
           {item.book} {item.chapter}:{item.verse}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => removeBookmark(item.book, item.chapter, item.verse)}>
+      <TouchableOpacity onPress={() => removeBookmark(item.book, item.chapter, item.verse)} testID="delete-bookmark">
         <Icon name="delete" size={24} color={styles.iconColor} />
       </TouchableOpacity>
     </View>
   ), [styles, navigation, removeBookmark]);
+
+  if (bookmarks.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.emptyText}>No tienes marcadores guardados.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -30,11 +41,6 @@ const BookmarksScreen = ({ navigation }) => {
         data={bookmarks}
         renderItem={renderBookmark}
         keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            No tienes marcadores guardados.
-          </Text>
-        }
       />
     </View>
   );
