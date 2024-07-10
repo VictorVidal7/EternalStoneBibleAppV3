@@ -1,14 +1,15 @@
 import React, { useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { useUserPreferences } from '../context/UserPreferencesContext';
-import { useBookmarks } from '../context/BookmarksContext';
-import { getVersesForChapter } from '../data/bibleVerses';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useBookmarks } from '../context/BookmarksContext';
+import { useUserPreferences } from '../context/UserPreferencesContext';
+import { getVersesForChapter } from '../data/bibleVerses';
 import { useStyles } from '../hooks/useStyles';
 
 const VerseScreen = ({ route }) => {
   const { book, chapter } = route.params;
   const { bookmarks, addBookmark, removeBookmark } = useBookmarks();
+  const { nightMode, fontSize, fontFamily } = useUserPreferences();
   const styles = useStyles(createStyles);
 
   const verses = getVersesForChapter(book, chapter);
@@ -28,8 +29,8 @@ const VerseScreen = ({ route }) => {
   const renderVerse = useCallback(({ item }) => (
     <View style={styles.verseContainer}>
       <Text style={styles.verseNumber}>{item.number}</Text>
-      <Text style={styles.verseText}>{item.text}</Text>
-      <TouchableOpacity onPress={() => toggleBookmark(item.number)}>
+      <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
+      <TouchableOpacity onPress={() => toggleBookmark(item.number)} testID="bookmark-icon">
         <Icon 
           name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
           size={24} 
@@ -40,7 +41,7 @@ const VerseScreen = ({ route }) => {
   ), [styles, isBookmarked, toggleBookmark]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="verse-screen-container">
       <FlatList
         data={verses}
         renderItem={renderVerse}
