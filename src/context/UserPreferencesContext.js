@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserPreferencesContext = createContext();
@@ -40,20 +40,23 @@ export const UserPreferencesProvider = ({ children }) => {
     }
   };
 
-  const toggleNightMode = () => {
-    setNightMode(prevMode => !prevMode);
-    savePreferences(!nightMode, fontSize, fontFamily);
-  };
+  const toggleNightMode = useCallback(() => {
+    setNightMode(prevMode => {
+      const newMode = !prevMode;
+      savePreferences(newMode, fontSize, fontFamily);
+      return newMode;
+    });
+  }, [fontSize, fontFamily]);
 
-  const changeFontSize = (size) => {
+  const changeFontSize = useCallback((size) => {
     setFontSize(size);
     savePreferences(nightMode, size, fontFamily);
-  };
+  }, [nightMode, fontFamily]);
 
-  const changeFontFamily = (family) => {
+  const changeFontFamily = useCallback((family) => {
     setFontFamily(family);
     savePreferences(nightMode, fontSize, family);
-  };
+  }, [nightMode, fontSize]);
 
   return (
     <UserPreferencesContext.Provider

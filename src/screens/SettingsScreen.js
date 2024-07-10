@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, Switch, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet } from 'react-native';
 import { useUserPreferences } from '../context/UserPreferencesContext';
-import { useStyles } from '../hooks/useStyles';
 import NotificationService from '../services/NotificationService';
+import { FONT_SIZES, FONT_FAMILIES } from '../constants/appConstants';
 
 const SettingsScreen = () => {
   const { 
@@ -13,7 +13,6 @@ const SettingsScreen = () => {
     changeFontSize, 
     changeFontFamily 
   } = useUserPreferences();
-  const styles = useStyles(createStyles);
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTimeInput, setNotificationTimeInput] = useState('12:00');
@@ -22,15 +21,15 @@ const SettingsScreen = () => {
     loadNotificationSettings();
   }, []);
 
-  const loadNotificationSettings = async () => {
+  const loadNotificationSettings = useCallback(async () => {
     const scheduledTime = await NotificationService.getScheduledNotificationTime();
     if (scheduledTime) {
       setNotificationsEnabled(true);
-      setNotificationTimeInput(`${scheduledTime.hour}:${scheduledTime.minute.toString().padStart(2, '0')}`);
+      setNotificationTimeInput(`${scheduledTime.hour.toString().padStart(2, '0')}:${scheduledTime.minute.toString().padStart(2, '0')}`);
     }
-  };
+  }, []);
 
-  const toggleNotifications = async (value) => {
+  const toggleNotifications = useCallback(async (value) => {
     try {
       setNotificationsEnabled(value);
       if (value) {
@@ -43,9 +42,9 @@ const SettingsScreen = () => {
       console.error('Error toggling notifications:', error);
       Alert.alert('Error', 'No se pudo configurar la notificación. Por favor, inténtalo de nuevo.');
     }
-  };
+  }, [notificationTimeInput]);
 
-  const handleTimeChange = async (text) => {
+  const handleTimeChange = useCallback(async (text) => {
     setNotificationTimeInput(text);
     if (notificationsEnabled) {
       const [hours, minutes] = text.split(':').map(Number);
@@ -58,7 +57,7 @@ const SettingsScreen = () => {
         }
       }
     }
-  };
+  }, [notificationsEnabled]);
 
   return (
     <ScrollView style={styles.container}>
@@ -67,29 +66,23 @@ const SettingsScreen = () => {
         <View style={styles.setting}>
           <Text style={styles.settingLabel}>Modo Nocturno</Text>
           <Switch
+            testID="night-mode-switch"
             value={nightMode}
             onValueChange={toggleNightMode}
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={nightMode ? "#f5dd4b" : "#f4f3f4"}
           />
         </View>
 
         <View style={styles.setting}>
           <Text style={styles.settingLabel}>Tamaño de Fuente</Text>
           <View style={styles.buttonGroup}>
-            {['small', 'medium', 'large'].map((size) => (
-              <TouchableOpacity 
+            {Object.values(FONT_SIZES).map((size) => (
+              <TouchableOpacity
                 key={size}
-                style={[
-                  styles.button, 
-                  fontSize === size && styles.selectedButton
-                ]} 
+                testID={`font-size-${size}`}
+                style={[styles.button, fontSize === size && styles.selectedButton]}
                 onPress={() => changeFontSize(size)}
               >
-                <Text style={[
-                  styles.buttonText,
-                  { fontSize: size === 'small' ? 14 : size === 'medium' ? 18 : 24 }
-                ]}>A</Text>
+                <Text style={styles.buttonText}>{size}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -98,19 +91,14 @@ const SettingsScreen = () => {
         <View style={styles.setting}>
           <Text style={styles.settingLabel}>Tipo de Fuente</Text>
           <View style={styles.buttonGroup}>
-            {['default', 'serif'].map((family) => (
-              <TouchableOpacity 
+            {Object.values(FONT_FAMILIES).map((family) => (
+              <TouchableOpacity
                 key={family}
-                style={[
-                  styles.button, 
-                  fontFamily === family && styles.selectedButton
-                ]} 
+                testID={`font-family-${family}`}
+                style={[styles.button, fontFamily === family && styles.selectedButton]}
                 onPress={() => changeFontFamily(family)}
               >
-                <Text style={[
-                  styles.buttonText,
-                  { fontFamily: family === 'serif' ? 'serif' : undefined }
-                ]}>{family}</Text>
+                <Text style={styles.buttonText}>{family}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -122,10 +110,9 @@ const SettingsScreen = () => {
         <View style={styles.setting}>
           <Text style={styles.settingLabel}>Notificaciones de Lectura Diaria</Text>
           <Switch
+            testID="notifications-switch"
             value={notificationsEnabled}
             onValueChange={toggleNotifications}
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={notificationsEnabled ? "#f5dd4b" : "#f4f3f4"}
           />
         </View>
 
@@ -133,6 +120,7 @@ const SettingsScreen = () => {
           <View style={styles.timePicker}>
             <Text style={styles.timePickerText}>Hora de notificación:</Text>
             <TextInput
+              testID="notification-time-input"
               style={styles.timeInput}
               value={notificationTimeInput}
               onChangeText={handleTimeChange}
@@ -142,92 +130,62 @@ const SettingsScreen = () => {
           </View>
         )}
       </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Acerca de</Text>
-        <Text style={styles.aboutText}>Eternal Stone Bible App v1.0</Text>
-        <Text style={styles.aboutText}>Desarrollado con ❤️ por Eternal Stone</Text>
-      </View>
     </ScrollView>
   );
 };
 
-const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
-
-  return {
-    container: {
-      flex: 1,
-      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
-    },
-    section: {
-      backgroundColor: nightMode ? '#1e1e1e' : 'white',
-      marginBottom: 20,
-      padding: 15,
-    },
-    sectionTitle: {
-      fontSize: dynamicFontSize + 2,
-      fontWeight: 'bold',
-      marginBottom: 10,
-      color: nightMode ? '#fff' : '#333',
-      fontFamily,
-    },
-    setting: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 15,
-    },
-    settingLabel: {
-      fontSize: dynamicFontSize,
-      color: nightMode ? '#ccc' : '#444',
-      fontFamily,
-    },
-    buttonGroup: {
-      flexDirection: 'row',
-    },
-    button: {
-      padding: 10,
-      marginRight: 10,
-      backgroundColor: nightMode ? '#333' : '#e0e0e0',
-      borderRadius: 5,
-    },
-    selectedButton: {
-      backgroundColor: '#007AFF',
-    },
-    buttonText: {
-      color: nightMode ? '#fff' : '#000000',
-      fontFamily,
-    },
-    timePicker: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 10,
-    },
-    timePickerText: {
-      fontSize: dynamicFontSize,
-      marginRight: 10,
-      color: nightMode ? '#ccc' : '#444',
-      fontFamily,
-    },
-    timeInput: {
-      borderWidth: 1,
-      borderColor: nightMode ? '#666' : '#ccc',
-      padding: 5,
-      width: 80,
-      textAlign: 'center',
-      color: nightMode ? '#fff' : '#000',
-      backgroundColor: nightMode ? '#333' : '#fff',
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    aboutText: {
-      fontSize: dynamicFontSize,
-      color: nightMode ? '#ccc' : '#666',
-      marginBottom: 5,
-      fontFamily,
-    },
-  };
-};
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  section: {
+    marginBottom: 20,
+    padding: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  setting: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  settingLabel: {
+    fontSize: 16,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+  },
+  button: {
+    padding: 10,
+    marginRight: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+  },
+  selectedButton: {
+    backgroundColor: '#007AFF',
+  },
+  buttonText: {
+    color: '#000000',
+  },
+  timePicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  timePickerText: {
+    marginRight: 10,
+  },
+  timeInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 5,
+    width: 80,
+    textAlign: 'center',
+  },
+});
 
 export default SettingsScreen;
