@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { searchBible } from '../data/bibleVerses';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useStyles } from '../hooks/useStyles';
+import { debounce } from 'lodash';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
@@ -23,16 +24,28 @@ const SearchScreen = () => {
     setResults(searchResults);
   }, [query, searchType]);
 
+  const debouncedSearch = useMemo(
+    () => debounce(handleSearch, 300),
+    [handleSearch]
+  );
+
   useEffect(() => {
     if (query.length >= 3) {
-      handleSearch();
+      debouncedSearch();
+    } else {
+      setResults([]);
     }
-  }, [query, searchType, handleSearch]);
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [query, searchType, debouncedSearch]);
 
   const renderSearchResult = useCallback(({ item }) => (
     <TouchableOpacity
       style={styles.resultItem}
       onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verseNumber: item.verseNumber })}
+      accessibilityLabel={`Resultado de búsqueda: ${item.book} ${item.chapter}:${item.verseNumber}`}
+      accessibilityHint="Pulse para ver el versículo completo"
     >
       <Text style={styles.resultReference}>
         {item.book} {item.chapter}:{item.verseNumber}
@@ -51,6 +64,8 @@ const SearchScreen = () => {
         searchType === type && styles.activeSearchType
       ]}
       onPress={() => setSearchType(type)}
+      accessibilityLabel={`Buscar en ${type === 'all' ? 'toda la Biblia' : type === 'ot' ? 'Antiguo Testamento' : 'Nuevo Testamento'}`}
+      accessibilityHint={`Pulse para cambiar el tipo de búsqueda a ${type === 'all' ? 'toda la Biblia' : type === 'ot' ? 'Antiguo Testamento' : 'Nuevo Testamento'}`}
     >
       <Text style={[styles.searchTypeText, searchType === type && styles.activeSearchTypeText]}>
         {type === 'all' ? 'Toda' : type === 'ot' ? 'A.T.' : 'N.T.'}
@@ -69,8 +84,16 @@ const SearchScreen = () => {
           placeholderTextColor={styles.placeholderColor}
           onSubmitEditing={handleSearch}
           testID="search-input"
+          accessibilityLabel="Campo de búsqueda bíblica"
+          accessibilityHint="Ingrese texto para buscar en la Biblia"
         />
-        <TouchableOpacity onPress={handleSearch} style={styles.searchButton} testID="search-icon">
+        <TouchableOpacity 
+          onPress={handleSearch} 
+          style={styles.searchButton} 
+          testID="search-icon"
+          accessibilityLabel="Botón de búsqueda"
+          accessibilityHint="Presione para realizar la búsqueda"
+        >
           <Icon name="search" size={24} color={styles.iconColor} />
         </TouchableOpacity>
       </View>
