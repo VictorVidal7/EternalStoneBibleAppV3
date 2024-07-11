@@ -1,26 +1,52 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { searchBible } from '../data/bibleVerses';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useStyles } from '../hooks/useStyles';
 import { debounce } from 'lodash';
+import { searchBible } from '../services/bibleDataManager';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searchType, setSearchType] = useState('all');
+  const [searchHistory, setSearchHistory] = useState([]);
   const styles = useStyles(createStyles);
+
+  useEffect(() => {
+    loadSearchHistory();
+  }, []);
+
+  const loadSearchHistory = async () => {
+    try {
+      const history = await AsyncStorage.getItem('searchHistory');
+      if (history) {
+        setSearchHistory(JSON.parse(history));
+      }
+    } catch (error) {
+      console.error('Error loading search history:', error);
+    }
+  };
+
+  const saveSearchHistory = async (newQuery) => {
+    try {
+      const updatedHistory = [newQuery, ...searchHistory.filter(q => q !== newQuery)].slice(0, 10);
+      setSearchHistory(updatedHistory);
+      await AsyncStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Error saving search history:', error);
+    }
+  };
 
   const handleSearch = useCallback(() => {
     if (query.length < 3) {
       setResults([]);
       return;
     }
-    console.log('Searching for:', query, 'with type:', searchType);
+    saveSearchHistory(query);
     const searchResults = searchBible(query, searchType);
-    console.log('Search results:', searchResults);
     setResults(searchResults);
   }, [query, searchType]);
 
@@ -43,12 +69,12 @@ const SearchScreen = () => {
   const renderSearchResult = useCallback(({ item }) => (
     <TouchableOpacity
       style={styles.resultItem}
-      onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verseNumber: item.verseNumber })}
-      accessibilityLabel={`Resultado de búsqueda: ${item.book} ${item.chapter}:${item.verseNumber}`}
+      onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verseNumber: item.number })}
+      accessibilityLabel={`Resultado de búsqueda: ${item.book} ${item.chapter}:${item.number}`}
       accessibilityHint="Pulse para ver el versículo completo"
     >
       <Text style={styles.resultReference}>
-        {item.book} {item.chapter}:{item.verseNumber}
+        {item.book} {item.chapter}:{item.number}
       </Text>
       <Text style={styles.resultText} numberOfLines={2}>
         {item.text}
@@ -100,10 +126,21 @@ const SearchScreen = () => {
       <View style={styles.searchTypeContainer}>
         {searchTypeButtons}
       </View>
+      {query.length < 3 && searchHistory.length > 0 && (
+        <FlatList
+          data={searchHistory}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => setQuery(item)}>
+              <Text style={styles.historyItem}>{item}</Text>
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item, index) => `history-${index}`}
+        />
+      )}
       <FlatList
         data={results}
         renderItem={renderSearchResult}
-        keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verseNumber}-${index}`}
+        keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.number}-${index}`}
         ListEmptyComponent={
           <Text style={styles.emptyResult}>
             {query.length < 3 ? "Ingresa al menos 3 caracteres para buscar" : "No se encontraron resultados"}
@@ -194,7 +231,13 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       fontFamily,
       fontSize: dynamicFontSize,
     },
+    historyItem: {
+      padding: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: nightMode ? '#333' : '#e0e0e0',
+      color: nightMode ? '#ccc' : '#666',
+    },
   };
 };
 
-export default SearchScreen;
+export default React.memo(SearchScreen);

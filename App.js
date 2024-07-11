@@ -4,10 +4,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { UserPreferencesProvider } from './src/context/UserPreferencesContext';
 import { BookmarksProvider } from './src/context/BookmarksContext';
 import { ReadingPlanProvider } from './src/context/ReadingPlanContext';
+import { ReadingProgressProvider } from './src/context/ReadingProgressContext';
+import { NotesProvider } from './src/context/NotesContext';
 import { ErrorProvider } from './src/context/ErrorContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorDisplay from './src/components/ErrorDisplay';
 import NotificationService from './src/services/NotificationService';
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -37,11 +40,11 @@ class ErrorBoundary extends React.Component {
 }
 
 const App = () => {
-  const [error, setError] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const showError = (message) => {
-    setError(message);
-    setTimeout(() => setError(null), 5000); // Auto-dismiss after 5 seconds
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(null), 5000); // Auto-dismiss after 5 seconds
   };
 
   useEffect(() => {
@@ -51,7 +54,6 @@ const App = () => {
           await NotificationService.requestPermissions();
         } catch (error) {
           console.error('Error setting up notifications:', error);
-          // No mostramos el error al usuario aquí, ya que puede ser normal en algunas versiones de Android
         }
       }
     };
@@ -60,15 +62,19 @@ const App = () => {
   }, []);
 
   return (
-    <ErrorProvider value={{ error, showError }}>
+    <ErrorProvider value={{ error: errorMessage, showError }}>
       <ErrorBoundary showError={showError}>
         <UserPreferencesProvider>
           <BookmarksProvider>
             <ReadingPlanProvider>
-              <NavigationContainer>
-                <AppNavigator />
-                <ErrorDisplay />
-              </NavigationContainer>
+              <ReadingProgressProvider>
+                <NotesProvider>
+                  <NavigationContainer>
+                    <AppNavigator />
+                    <ErrorDisplay />
+                  </NavigationContainer>
+                </NotesProvider>
+              </ReadingProgressProvider>
             </ReadingPlanProvider>
           </BookmarksProvider>
         </UserPreferencesProvider>

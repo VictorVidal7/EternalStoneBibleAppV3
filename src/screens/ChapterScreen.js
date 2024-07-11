@@ -1,24 +1,35 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useStyles } from '../hooks/useStyles';
 import { bibleBooks } from '../data/bibleVerses';
+import { useReadingProgress } from '../context/ReadingProgressContext';
 
 const ChapterScreen = ({ route }) => {
   const navigation = useNavigation();
   const { book } = route.params;
   const styles = useStyles(createStyles);
+  const { getChapterProgress } = useReadingProgress();
 
-  const chapters = Array.from({ length: bibleBooks[book] }, (_, i) => i + 1);
+  const chapters = useMemo(() => 
+    Array.from({ length: bibleBooks[book] }, (_, i) => i + 1),
+    [book]
+  );
 
-  const renderChapter = useCallback(({ item }) => (
-    <TouchableOpacity
-      style={styles.chapterItem}
-      onPress={() => navigation.navigate('Verse', { book, chapter: item })}
-    >
-      <Text style={styles.chapterText}>Capítulo {item}</Text>
-    </TouchableOpacity>
-  ), [navigation, book, styles]);
+  const renderChapter = useCallback(({ item }) => {
+    const progress = getChapterProgress ? getChapterProgress(book, item) : 0;
+    return (
+      <TouchableOpacity
+        style={styles.chapterItem}
+        onPress={() => navigation.navigate('Verse', { book, chapter: item })}
+      >
+        <Text style={styles.chapterText}>Capítulo {item}</Text>
+        {progress > 0 && (
+          <View style={[styles.progressIndicator, { width: `${progress * 100}%` }]} />
+        )}
+      </TouchableOpacity>
+    );
+  }, [navigation, book, styles, getChapterProgress]);
 
   return (
     <View style={styles.container}>
@@ -28,7 +39,10 @@ const ChapterScreen = ({ route }) => {
         renderItem={renderChapter}
         keyExtractor={(item) => item.toString()}
         numColumns={3}
-        initialNumToRender={bibleBooks[book]}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={5}
+        removeClippedSubviews={true}
       />
     </View>
   );
@@ -59,13 +73,22 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 5,
+      position: 'relative',
+      overflow: 'hidden',
     },
     chapterText: {
       color: nightMode ? '#fff' : '#333',
       fontSize: dynamicFontSize,
       fontFamily,
     },
+    progressIndicator: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      height: 3,
+      backgroundColor: nightMode ? '#0a84ff' : '#007AFF',
+    },
   };
 };
 
-export default ChapterScreen;
+export default React.memo(ChapterScreen);

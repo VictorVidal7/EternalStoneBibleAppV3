@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useReadingPlan } from '../context/ReadingPlanContext';
 import { useStyles } from '../hooks/useStyles';
+import DailyVerse from '../components/DailyVerse';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -26,7 +27,9 @@ const HomeScreen = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Eternal Stone Bible App</Text>
       
-      {renderButton('Explorar la Biblia', () => navigation.navigate('Bible'))}
+      <DailyVerse />
+      
+      {renderButton('Explorar la Biblia', () => navigation.navigate('BibleList'))}
       {renderButton(`Mis Marcadores (${bookmarks.length})`, () => navigation.navigate('Bookmarks'))}
       {renderButton(
         currentPlan ? 'Ver Plan de Lectura' : 'Seleccionar Plan de Lectura',
@@ -92,4 +95,4 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
   };
 };
 
-export default HomeScreen;
+export default React.memo(HomeScreen);

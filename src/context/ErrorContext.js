@@ -1,19 +1,10 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext } from 'react';
 
 const ErrorContext = createContext();
 
-export const ErrorProvider = ({ children }) => {
-  const [error, setError] = useState(null);
-
-  const showError = (message) => {
-    setError(message);
-    setTimeout(() => setError(null), 5000); // Auto-dismiss after 5 seconds
-  };
-
-  const clearError = () => setError(null);
-
+export const ErrorProvider = ({ children, value }) => {
   return (
-    <ErrorContext.Provider value={{ error, showError, clearError }}>
+    <ErrorContext.Provider value={value}>
       {children}
     </ErrorContext.Provider>
   );

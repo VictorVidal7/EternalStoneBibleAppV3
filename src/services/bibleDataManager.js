@@ -27,3 +27,28 @@ export const getBookChapters = (book) => {
 export const getAllBooks = () => {
   return Object.keys(currentVersion);
 };
+
+export const searchBible = (query, searchType = 'all') => {
+  const results = [];
+  const lowercaseQuery = query.toLowerCase();
+
+  Object.entries(currentVersion).forEach(([book, chapters]) => {
+    if (searchType === 'ot' && book.indexOf('Nuevo') !== -1) return;
+    if (searchType === 'nt' && book.indexOf('Antiguo') !== -1) return;
+
+    Object.entries(chapters).forEach(([chapter, verses]) => {
+      verses.forEach((verse) => {
+        if (verse.text.toLowerCase().includes(lowercaseQuery)) {
+          results.push({
+            book,
+            chapter: parseInt(chapter),
+            number: verse.number,
+            text: verse.text
+          });
+        }
+      });
+    });
+  });
+
+  return results;
+};

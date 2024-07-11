@@ -1,48 +1,49 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, FlatList, TouchableOpacity, Text } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { View, Text, SectionList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAllBooks } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 
-const BookItem = React.memo(({ item, onPress, styles }) => (
-  <TouchableOpacity
-    style={styles.bookItem}
-    onPress={onPress}
-  >
-    <Text style={styles.bookName}>{item}</Text>
-  </TouchableOpacity>
-));
-
 const BibleListScreen = () => {
   const navigation = useNavigation();
   const styles = useStyles(createStyles);
-  const [books, setBooks] = useState([]);
 
-  useEffect(() => {
-    const loadBooks = async () => {
-      const allBooks = await getAllBooks();
-      setBooks(allBooks);
-    };
-    loadBooks();
+  const sections = useMemo(() => {
+    const allBooks = getAllBooks();
+    const oldTestament = allBooks.slice(0, 39);
+    const newTestament = allBooks.slice(39);
+    return [
+      { title: 'Antiguo Testamento', data: oldTestament },
+      { title: 'Nuevo Testamento', data: newTestament },
+    ];
   }, []);
 
   const renderBookItem = useCallback(({ item }) => (
-    <BookItem
-      item={item}
+    <TouchableOpacity
+      style={styles.bookItem}
       onPress={() => navigation.navigate('Chapter', { book: item })}
-      styles={styles}
-    />
+    >
+      <Text style={styles.bookName}>{item}</Text>
+    </TouchableOpacity>
   ), [navigation, styles]);
+
+  const renderSectionHeader = useCallback(({ section: { title } }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>{title}</Text>
+    </View>
+  ), [styles]);
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={books}
+      <SectionList
+        sections={sections}
         renderItem={renderBookItem}
+        renderSectionHeader={renderSectionHeader}
         keyExtractor={(item) => item}
         initialNumToRender={20}
         maxToRenderPerBatch={20}
-        windowSize={21}
+        windowSize={5}
+        stickySectionHeadersEnabled={false}
       />
     </View>
   );
@@ -66,7 +67,17 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       fontFamily,
       fontSize: dynamicFontSize,
     },
+    sectionHeader: {
+      backgroundColor: nightMode ? '#1e1e1e' : '#e0e0e0',
+      padding: 10,
+    },
+    sectionHeaderText: {
+      color: nightMode ? '#fff' : '#333',
+      fontFamily,
+      fontSize: dynamicFontSize + 2,
+      fontWeight: 'bold',
+    },
   };
 };
 
-export default BibleListScreen;
+export default React.memo(BibleListScreen);

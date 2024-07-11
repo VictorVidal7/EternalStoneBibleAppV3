@@ -9,9 +9,11 @@ const SettingsScreen = () => {
     nightMode, 
     fontSize, 
     fontFamily, 
+    lineSpacing,
     toggleNightMode, 
     changeFontSize, 
-    changeFontFamily 
+    changeFontFamily,
+    changeLineSpacing,
   } = useUserPreferences();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -103,6 +105,22 @@ const SettingsScreen = () => {
             ))}
           </View>
         </View>
+
+        <View style={styles.setting}>
+          <Text style={styles.settingLabel}>Espaciado de Línea</Text>
+          <View style={styles.buttonGroup}>
+            {['1.0', '1.5', '2.0'].map((spacing) => (
+              <TouchableOpacity
+                key={spacing}
+                testID={`line-spacing-${spacing}`}
+                style={[styles.button, lineSpacing === spacing && styles.selectedButton]}
+                onPress={() => changeLineSpacing(spacing)}
+              >
+                <Text style={styles.buttonText}>{spacing}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -137,15 +155,27 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
   },
   section: {
     marginBottom: 20,
     padding: 15,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 15,
+    color: '#333',
   },
   setting: {
     flexDirection: 'row',
@@ -155,6 +185,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
+    color: '#555',
   },
   buttonGroup: {
     flexDirection: 'row',
@@ -169,7 +200,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
   },
   buttonText: {
-    color: '#000000',
+    color: '#333',
   },
   timePicker: {
     flexDirection: 'row',
@@ -178,6 +209,8 @@ const styles = StyleSheet.create({
   },
   timePickerText: {
     marginRight: 10,
+    fontSize: 16,
+    color: '#555',
   },
   timeInput: {
     borderWidth: 1,
@@ -185,7 +218,8 @@ const styles = StyleSheet.create({
     padding: 5,
     width: 80,
     textAlign: 'center',
+    fontSize: 16,
   },
 });
 
-export default SettingsScreen;
+export default React.memo(SettingsScreen);

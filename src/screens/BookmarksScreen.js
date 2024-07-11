@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useStyles } from '../hooks/useStyles';
@@ -10,24 +10,49 @@ const BookmarksScreen = () => {
   const { bookmarks, removeBookmark } = useBookmarks();
   const styles = useStyles(createStyles);
 
+  const sortedBookmarks = useMemo(() => {
+    return [...bookmarks].sort((a, b) => {
+      if (a.book !== b.book) return a.book.localeCompare(b.book);
+      if (a.chapter !== b.chapter) return a.chapter - b.chapter;
+      return a.verse - b.verse;
+    });
+  }, [bookmarks]);
+
+  const handleRemoveBookmark = useCallback((bookmark) => {
+    Alert.alert(
+      "Eliminar marcador",
+      `¿Estás seguro de que quieres eliminar el marcador de ${bookmark.book} ${bookmark.chapter}:${bookmark.verse}?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar", onPress: () => removeBookmark(bookmark.book, bookmark.chapter, bookmark.verse) }
+      ]
+    );
+  }, [removeBookmark]);
+
   const renderBookmark = useCallback(({ item }) => (
     <View style={styles.bookmarkItem}>
       <TouchableOpacity
         style={styles.bookmarkText}
         onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.verse })}
-        testID="bookmark-item"
+        testID={`bookmark-item-${item.book}-${item.chapter}-${item.verse}`}
       >
         <Text style={styles.bookmarkReference}>
           {item.book} {item.chapter}:{item.verse}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => removeBookmark(item.book, item.chapter, item.verse)} testID="delete-bookmark">
+      <TouchableOpacity 
+        onPress={() => handleRemoveBookmark(item)} 
+        testID={`delete-bookmark-${item.book}-${item.chapter}-${item.verse}`}
+        accessibilityLabel={`Eliminar marcador de ${item.book} ${item.chapter}:${item.verse}`}
+      >
         <Icon name="delete" size={24} color={styles.iconColor} />
       </TouchableOpacity>
     </View>
-  ), [styles, navigation, removeBookmark]);
+  ), [styles, navigation, handleRemoveBookmark]);
 
-  if (bookmarks.length === 0) {
+  const keyExtractor = useCallback((item) => `${item.book}-${item.chapter}-${item.verse}`, []);
+
+  if (sortedBookmarks.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.emptyText}>No tienes marcadores guardados.</Text>
@@ -38,9 +63,16 @@ const BookmarksScreen = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={bookmarks}
+        data={sortedBookmarks}
         renderItem={renderBookmark}
-        keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`}
+        keyExtractor={keyExtractor}
+        initialNumToRender={10}
+        maxToRenderPerBatch={20}
+        windowSize={21}
+        removeClippedSubviews={true}
+        ListHeaderComponent={
+          <Text style={styles.headerText}>Tus Marcadores</Text>
+        }
       />
     </View>
   );
@@ -53,6 +85,14 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
     container: {
       flex: 1,
       backgroundColor: nightMode ? '#121212' : '#f5f5f5',
+      padding: 10,
+    },
+    headerText: {
+      fontSize: dynamicFontSize + 4,
+      fontWeight: 'bold',
+      color: nightMode ? '#fff' : '#333',
+      marginBottom: 15,
+      fontFamily,
     },
     bookmarkItem: {
       flexDirection: 'row',
@@ -61,6 +101,9 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       padding: 15,
       borderBottomWidth: 1,
       borderBottomColor: nightMode ? '#333' : '#E0E0E0',
+      backgroundColor: nightMode ? '#1E1E1E' : '#FFFFFF',
+      borderRadius: 5,
+      marginBottom: 10,
     },
     bookmarkText: {
       flex: 1,
@@ -81,4 +124,4 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
   };
 };
 
-export default BookmarksScreen;
+export default React.memo(BookmarksScreen);

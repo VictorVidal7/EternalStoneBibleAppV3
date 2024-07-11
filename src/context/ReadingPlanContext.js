@@ -6,44 +6,48 @@ const ReadingPlanContext = createContext();
 export const ReadingPlanProvider = ({ children }) => {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [progress, setProgress] = useState({});
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    loadReadingPlan();
+    loadProgress();
   }, []);
 
-  const loadReadingPlan = async () => {
+  const loadProgress = async () => {
     try {
-      const savedPlan = await AsyncStorage.getItem('currentReadingPlan');
       const savedProgress = await AsyncStorage.getItem('readingPlanProgress');
-      if (savedPlan) setCurrentPlan(JSON.parse(savedPlan));
-      if (savedProgress) setProgress(JSON.parse(savedProgress));
-      setIsLoaded(true);
+      if (savedProgress) {
+        setProgress(JSON.parse(savedProgress));
+      }
     } catch (error) {
-      console.error('Error al cargar el plan de lectura:', error);
-      setIsLoaded(true);
+      console.error('Error loading reading progress:', error);
     }
   };
 
   const savePlan = async (plan) => {
-    try {
-      await AsyncStorage.setItem('currentReadingPlan', JSON.stringify(plan));
-      setCurrentPlan(plan);
-      // Reiniciar el progreso al seleccionar un nuevo plan
-      setProgress({});
-      await AsyncStorage.setItem('readingPlanProgress', JSON.stringify({}));
-    } catch (error) {
-      console.error('Error al guardar el plan de lectura:', error);
+    setCurrentPlan(plan);
+    await AsyncStorage.setItem('currentPlan', JSON.stringify(plan));
+  };
+
+  const startPlan = async () => {
+    if (currentPlan) {
+      const newProgress = { [currentPlan.id]: { 1: true } };
+      setProgress(newProgress);
+      await AsyncStorage.setItem('readingPlanProgress', JSON.stringify(newProgress));
     }
   };
 
+  const continuePlan = () => {
+    // Implement the logic to continue the plan
+    console.log('Continuing plan');
+  };
+
   const updateProgress = async (day) => {
-    try {
-      const newProgress = { ...progress, [day]: true };
-      await AsyncStorage.setItem('readingPlanProgress', JSON.stringify(newProgress));
+    if (currentPlan) {
+      const newProgress = {
+        ...progress,
+        [currentPlan.id]: { ...progress[currentPlan.id], [day]: true }
+      };
       setProgress(newProgress);
-    } catch (error) {
-      console.error('Error al actualizar el progreso:', error);
+      await AsyncStorage.setItem('readingPlanProgress', JSON.stringify(newProgress));
     }
   };
 
@@ -53,8 +57,9 @@ export const ReadingPlanProvider = ({ children }) => {
         currentPlan,
         progress,
         savePlan,
-        updateProgress,
-        isLoaded,
+        startPlan,
+        continuePlan,
+        updateProgress
       }}
     >
       {children}
@@ -65,7 +70,7 @@ export const ReadingPlanProvider = ({ children }) => {
 export const useReadingPlan = () => {
   const context = useContext(ReadingPlanContext);
   if (context === undefined) {
-    throw new Error('useReadingPlan debe ser usado dentro de un ReadingPlanProvider');
+    throw new Error('useReadingPlan must be used within a ReadingPlanProvider');
   }
   return context;
 };

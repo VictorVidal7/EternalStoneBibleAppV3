@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserPreferencesContext = createContext();
@@ -7,7 +7,6 @@ export const UserPreferencesProvider = ({ children }) => {
   const [nightMode, setNightMode] = useState(false);
   const [fontSize, setFontSize] = useState('medium');
   const [fontFamily, setFontFamily] = useState('default');
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     loadPreferences();
@@ -22,41 +21,35 @@ export const UserPreferencesProvider = ({ children }) => {
       if (savedNightMode !== null) setNightMode(JSON.parse(savedNightMode));
       if (savedFontSize !== null) setFontSize(savedFontSize);
       if (savedFontFamily !== null) setFontFamily(savedFontFamily);
-
-      setIsLoaded(true);
     } catch (error) {
-      console.error('Error al cargar preferencias:', error);
-      setIsLoaded(true);
+      console.error('Error loading preferences:', error);
     }
   };
 
-  const savePreferences = async (nightMode, fontSize, fontFamily) => {
+  const savePreferences = async () => {
     try {
       await AsyncStorage.setItem('nightMode', JSON.stringify(nightMode));
       await AsyncStorage.setItem('fontSize', fontSize);
       await AsyncStorage.setItem('fontFamily', fontFamily);
     } catch (error) {
-      console.error('Error al guardar preferencias:', error);
+      console.error('Error saving preferences:', error);
     }
   };
 
-  const toggleNightMode = useCallback(() => {
-    setNightMode(prevMode => {
-      const newMode = !prevMode;
-      savePreferences(newMode, fontSize, fontFamily);
-      return newMode;
-    });
-  }, [fontSize, fontFamily]);
+  const toggleNightMode = () => {
+    setNightMode(prev => !prev);
+    savePreferences();
+  };
 
-  const changeFontSize = useCallback((size) => {
+  const changeFontSize = (size) => {
     setFontSize(size);
-    savePreferences(nightMode, size, fontFamily);
-  }, [nightMode, fontFamily]);
+    savePreferences();
+  };
 
-  const changeFontFamily = useCallback((family) => {
+  const changeFontFamily = (family) => {
     setFontFamily(family);
-    savePreferences(nightMode, fontSize, family);
-  }, [nightMode, fontSize]);
+    savePreferences();
+  };
 
   return (
     <UserPreferencesContext.Provider
@@ -67,7 +60,6 @@ export const UserPreferencesProvider = ({ children }) => {
         toggleNightMode,
         changeFontSize,
         changeFontFamily,
-        isLoaded,
       }}
     >
       {children}
@@ -78,7 +70,7 @@ export const UserPreferencesProvider = ({ children }) => {
 export const useUserPreferences = () => {
   const context = useContext(UserPreferencesContext);
   if (context === undefined) {
-    throw new Error('useUserPreferences debe ser usado dentro de un UserPreferencesProvider');
+    throw new Error('useUserPreferences must be used within a UserPreferencesProvider');
   }
   return context;
 };

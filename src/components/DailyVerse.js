@@ -1,47 +1,58 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { useUserPreferences } from '../context/UserPreferencesContext';
-import DailyVerseService from '../services/DailyVerseService';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useStyles } from '../hooks/useStyles';
+import DailyVerseService from '../services/DailyVerseService';
 
-const DailyVerse = ({ navigation }) => {
-  const [dailyVerse, setDailyVerse] = useState(null);
+const DailyVerse = () => {
+  const [verse, setVerse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
   const styles = useStyles(createStyles);
 
-  const loadDailyVerse = useCallback(async () => {
-    try {
-      const verse = await DailyVerseService.getDailyVerse();
-      setDailyVerse(verse);
-    } catch (error) {
-      console.error('Error loading daily verse:', error);
-    }
+  useEffect(() => {
+    const fetchDailyVerse = async () => {
+      try {
+        const dailyVerse = await DailyVerseService.getDailyVerse();
+        setVerse(dailyVerse);
+      } catch (error) {
+        console.error('Error fetching daily verse:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDailyVerse();
   }, []);
 
-  useEffect(() => {
-    loadDailyVerse();
-  }, [loadDailyVerse]);
-
-  const handlePress = useCallback(() => {
-    if (dailyVerse) {
+  const handlePress = () => {
+    if (verse) {
       navigation.navigate('Verse', { 
-        book: dailyVerse.book, 
-        chapter: dailyVerse.chapter, 
-        verseNumber: dailyVerse.number 
+        book: verse.book, 
+        chapter: verse.chapter, 
+        verseNumber: verse.number 
       });
     }
-  }, [dailyVerse, navigation]);
+  };
 
-  if (!dailyVerse) return null;
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="small" color={styles.loadingColor} />
+      </View>
+    );
+  }
+
+  if (!verse) {
+    return null;
+  }
 
   return (
-    <TouchableOpacity 
-      style={styles.container}
-      onPress={handlePress}
-    >
+    <TouchableOpacity style={styles.container} onPress={handlePress}>
       <Text style={styles.title}>Versículo del Día</Text>
-      <Text style={styles.verse}>{dailyVerse.text}</Text>
+      <Text style={styles.verseText}>{verse.text}</Text>
       <Text style={styles.reference}>
-        {dailyVerse.book} {dailyVerse.chapter}:{dailyVerse.number}
+        {verse.book} {verse.chapter}:{verse.number}
       </Text>
     </TouchableOpacity>
   );
@@ -64,7 +75,7 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       fontFamily,
       fontSize: dynamicFontSize + 2,
     },
-    verse: {
+    verseText: {
       fontStyle: 'italic',
       marginBottom: 5,
       color: nightMode ? '#fff' : '#333',
@@ -77,6 +88,7 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       fontFamily,
       fontSize: dynamicFontSize - 2,
     },
+    loadingColor: nightMode ? '#ffffff' : '#000000',
   };
 };
 
