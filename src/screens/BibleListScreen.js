@@ -1,7 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, FlatList, TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { bibleBooks } from '../data/bibleVerses';
+import { getAllBooks } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 
 const BookItem = React.memo(({ item, onPress, styles }) => (
@@ -16,6 +16,15 @@ const BookItem = React.memo(({ item, onPress, styles }) => (
 const BibleListScreen = () => {
   const navigation = useNavigation();
   const styles = useStyles(createStyles);
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    const loadBooks = async () => {
+      const allBooks = await getAllBooks();
+      setBooks(allBooks);
+    };
+    loadBooks();
+  }, []);
 
   const renderBookItem = useCallback(({ item }) => (
     <BookItem
@@ -28,7 +37,7 @@ const BibleListScreen = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={Object.keys(bibleBooks)}
+        data={books}
         renderItem={renderBookItem}
         keyExtractor={(item) => item}
         initialNumToRender={20}
