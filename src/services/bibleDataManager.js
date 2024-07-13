@@ -2,12 +2,12 @@ import { RV1909 } from '../data/completeBibleData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 let currentVersion = RV1909;
-
-const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
+const CACHE_PREFIX = 'bible_data_';
 
 const getFromCache = async (key) => {
   try {
-    const cached = await AsyncStorage.getItem(key);
+    const cached = await AsyncStorage.getItem(CACHE_PREFIX + key);
     if (cached) {
       const { data, timestamp } = JSON.parse(cached);
       if (Date.now() - timestamp < CACHE_EXPIRY) {
@@ -22,7 +22,7 @@ const getFromCache = async (key) => {
 
 const setToCache = async (key, data) => {
   try {
-    await AsyncStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+    await AsyncStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
   } catch (error) {
     console.error('Error setting to cache:', error);
   }
@@ -38,7 +38,7 @@ export const setCurrentVersion = (version) => {
 };
 
 export const getVerse = async (book, chapter, verse) => {
-  const cacheKey = `verse_${book}_${chapter}_${verse}`;
+  const cacheKey = `${book}_${chapter}_${verse}`;
   const cachedVerse = await getFromCache(cacheKey);
   if (cachedVerse) return cachedVerse;
 
@@ -48,7 +48,7 @@ export const getVerse = async (book, chapter, verse) => {
 };
 
 export const getChapter = async (book, chapter) => {
-  const cacheKey = `chapter_${book}_${chapter}`;
+  const cacheKey = `${book}_${chapter}`;
   const cachedChapter = await getFromCache(cacheKey);
   if (cachedChapter) return cachedChapter;
 
