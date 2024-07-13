@@ -1,41 +1,55 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, SectionList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAllBooks } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
+import { withTheme } from '../hoc/withTheme';
 
-const BibleListScreen = () => {
+const BibleListScreen = ({ theme }) => {
   const navigation = useNavigation();
+  const { colors } = theme;
   const styles = useStyles(createStyles);
 
-  const books = useMemo(() => getAllBooks(), []);
+  const sections = useMemo(() => {
+    console.log("Generating sections for Bible books");
+    const allBooks = getAllBooks();
+    const oldTestament = allBooks.slice(0, 39);
+    const newTestament = allBooks.slice(39);
+    return [
+      { title: 'Antiguo Testamento', data: oldTestament },
+      { title: 'Nuevo Testamento', data: newTestament },
+    ];
+  }, []);
 
   const renderBookItem = useCallback(({ item }) => (
     <TouchableOpacity
       style={styles.bookItem}
-      onPress={() => navigation.navigate('Chapter', { book: item })}
+      onPress={() => {
+        console.log(`Navigating to Chapter screen for book: ${item}`);
+        navigation.navigate('Chapter', { book: item });
+      }}
     >
-      <Text style={styles.bookName}>{item}</Text>
+      <Text style={[styles.bookName, { color: colors.text }]}>{item}</Text>
     </TouchableOpacity>
-  ), [navigation, styles]);
+  ), [navigation, styles, colors]);
 
-  const getItemLayout = useCallback((data, index) => ({
-    length: 50,
-    offset: 50 * index,
-    index,
-  }), []);
+  const renderSectionHeader = useCallback(({ section: { title } }) => (
+    <View style={[styles.sectionHeader, { backgroundColor: colors.secondary }]}>
+      <Text style={[styles.sectionHeaderText, { color: colors.text }]}>{title}</Text>
+    </View>
+  ), [styles, colors]);
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={books}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <SectionList
+        sections={sections}
         renderItem={renderBookItem}
+        renderSectionHeader={renderSectionHeader}
         keyExtractor={(item) => item}
-        getItemLayout={getItemLayout}
         initialNumToRender={20}
         maxToRenderPerBatch={20}
-        windowSize={21}
-        removeClippedSubviews={true}
+        windowSize={5}
+        stickySectionHeadersEnabled={false}
       />
     </View>
   );
@@ -47,7 +61,6 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
   return {
     container: {
       flex: 1,
-      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
     },
     bookItem: {
       padding: 15,
@@ -55,11 +68,18 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       borderBottomColor: nightMode ? '#333' : '#e0e0e0',
     },
     bookName: {
-      color: nightMode ? '#fff' : '#333',
       fontFamily,
       fontSize: dynamicFontSize,
+    },
+    sectionHeader: {
+      padding: 10,
+    },
+    sectionHeaderText: {
+      fontFamily,
+      fontSize: dynamicFontSize + 2,
+      fontWeight: 'bold',
     },
   };
 };
 
-export default React.memo(BibleListScreen);
+export default withTheme(React.memo(BibleListScreen));

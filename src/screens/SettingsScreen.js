@@ -1,23 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Switch, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet } from 'react-native';
+import { View, Text, Switch, TouchableOpacity, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { useUserPreferences } from '../context/UserPreferencesContext';
+import { useTheme } from '../context/ThemeContext';
 import NotificationService from '../services/NotificationService';
 import { FONT_SIZES, FONT_FAMILIES } from '../constants/appConstants';
+import { withTheme } from '../hoc/withTheme';
 
-const SettingsScreen = () => {
+const SettingsScreen = ({ theme }) => {
   const { 
-    nightMode, 
     fontSize, 
     fontFamily, 
     lineSpacing,
-    toggleNightMode, 
     changeFontSize, 
     changeFontFamily,
     changeLineSpacing,
   } = useUserPreferences();
 
+  const { isDarkMode, toggleTheme, colors } = theme;
+
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTimeInput, setNotificationTimeInput] = useState('12:00');
+
+  const styles = React.useMemo(() => createStyles(colors, fontSize, fontFamily), [colors, fontSize, fontFamily]);
 
   useEffect(() => {
     loadNotificationSettings();
@@ -42,7 +46,6 @@ const SettingsScreen = () => {
       }
     } catch (error) {
       console.error('Error toggling notifications:', error);
-      Alert.alert('Error', 'No se pudo configurar la notificación. Por favor, inténtalo de nuevo.');
     }
   }, [notificationTimeInput]);
 
@@ -55,171 +58,144 @@ const SettingsScreen = () => {
           await NotificationService.scheduleNotification(hours, minutes);
         } catch (error) {
           console.error('Error scheduling notification:', error);
-          Alert.alert('Error', 'No se pudo programar la notificación. Por favor, inténtalo de nuevo.');
         }
       }
     }
   }, [notificationsEnabled]);
 
+  const renderSectionTitle = (title) => (
+    <Text style={styles.sectionTitle}>{title}</Text>
+  );
+
+  const renderToggleOption = (title, value, onToggle) => (
+    <View style={styles.settingRow}>
+      <Text style={styles.settingLabel}>{title}</Text>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: colors.secondary, true: colors.primary }}
+        thumbColor={value ? colors.accent : colors.text}
+      />
+    </View>
+  );
+
+  const renderButtonGroup = (title, options, currentValue, onChange) => (
+    <View style={styles.settingRow}>
+      <Text style={styles.settingLabel}>{title}</Text>
+      <View style={styles.buttonGroup}>
+        {options.map((option) => (
+          <TouchableOpacity
+            key={option}
+            style={[
+              styles.button,
+              currentValue === option && styles.selectedButton
+            ]}
+            onPress={() => onChange(option)}
+          >
+            <Text style={[
+              styles.buttonText,
+              currentValue === option && styles.selectedButtonText
+            ]}>
+              {option}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Apariencia</Text>
-        <View style={styles.setting}>
-          <Text style={styles.settingLabel}>Modo Nocturno</Text>
-          <Switch
-            testID="night-mode-switch"
-            value={nightMode}
-            onValueChange={toggleNightMode}
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      {renderSectionTitle("Apariencia")}
+      {renderToggleOption("Modo Oscuro", isDarkMode, toggleTheme)}
+      {renderButtonGroup("Tamaño de Fuente", Object.values(FONT_SIZES), fontSize, changeFontSize)}
+      {renderButtonGroup("Tipo de Fuente", Object.values(FONT_FAMILIES), fontFamily, changeFontFamily)}
+      {renderButtonGroup("Espaciado de Línea", ['1.0', '1.5', '2.0'], lineSpacing, changeLineSpacing)}
+
+      {renderSectionTitle("Notificaciones")}
+      {renderToggleOption("Notificaciones de Lectura Diaria", notificationsEnabled, toggleNotifications)}
+      {notificationsEnabled && (
+        <View style={styles.settingRow}>
+          <Text style={styles.settingLabel}>Hora de notificación:</Text>
+          <TextInput
+            style={[styles.timeInput, { color: colors.text, borderColor: colors.secondary }]}
+            value={notificationTimeInput}
+            onChangeText={handleTimeChange}
+            placeholder="HH:MM"
+            keyboardType="numeric"
+            placeholderTextColor={colors.secondary}
           />
         </View>
-
-        <View style={styles.setting}>
-          <Text style={styles.settingLabel}>Tamaño de Fuente</Text>
-          <View style={styles.buttonGroup}>
-            {Object.values(FONT_SIZES).map((size) => (
-              <TouchableOpacity
-                key={size}
-                testID={`font-size-${size}`}
-                style={[styles.button, fontSize === size && styles.selectedButton]}
-                onPress={() => changeFontSize(size)}
-              >
-                <Text style={styles.buttonText}>{size}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.setting}>
-          <Text style={styles.settingLabel}>Tipo de Fuente</Text>
-          <View style={styles.buttonGroup}>
-            {Object.values(FONT_FAMILIES).map((family) => (
-              <TouchableOpacity
-                key={family}
-                testID={`font-family-${family}`}
-                style={[styles.button, fontFamily === family && styles.selectedButton]}
-                onPress={() => changeFontFamily(family)}
-              >
-                <Text style={styles.buttonText}>{family}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.setting}>
-          <Text style={styles.settingLabel}>Espaciado de Línea</Text>
-          <View style={styles.buttonGroup}>
-            {['1.0', '1.5', '2.0'].map((spacing) => (
-              <TouchableOpacity
-                key={spacing}
-                testID={`line-spacing-${spacing}`}
-                style={[styles.button, lineSpacing === spacing && styles.selectedButton]}
-                onPress={() => changeLineSpacing(spacing)}
-              >
-                <Text style={styles.buttonText}>{spacing}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notificaciones</Text>
-        <View style={styles.setting}>
-          <Text style={styles.settingLabel}>Notificaciones de Lectura Diaria</Text>
-          <Switch
-            testID="notifications-switch"
-            value={notificationsEnabled}
-            onValueChange={toggleNotifications}
-          />
-        </View>
-
-        {notificationsEnabled && (
-          <View style={styles.timePicker}>
-            <Text style={styles.timePickerText}>Hora de notificación:</Text>
-            <TextInput
-              testID="notification-time-input"
-              style={styles.timeInput}
-              value={notificationTimeInput}
-              onChangeText={handleTimeChange}
-              placeholder="HH:MM"
-              keyboardType="numeric"
-            />
-          </View>
-        )}
-      </View>
+      )}
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  section: {
-    marginBottom: 20,
-    padding: 15,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-  },
-  setting: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: '#555',
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-  },
-  button: {
-    padding: 10,
-    marginRight: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
-  },
-  selectedButton: {
-    backgroundColor: '#007AFF',
-  },
-  buttonText: {
-    color: '#333',
-  },
-  timePicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  timePickerText: {
-    marginRight: 10,
-    fontSize: 16,
-    color: '#555',
-  },
-  timeInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 5,
-    width: 80,
-    textAlign: 'center',
-    fontSize: 16,
-  },
-});
+const createStyles = (colors, fontSize, fontFamily) => {
+  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
 
-export default React.memo(SettingsScreen);
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 16,
+    },
+    sectionTitle: {
+      fontSize: dynamicFontSize + 4,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginTop: 20,
+      marginBottom: 10,
+      fontFamily,
+    },
+    settingRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.secondary,
+      flexWrap: 'wrap',
+    },
+    settingLabel: {
+      fontSize: dynamicFontSize,
+      color: colors.text,
+      fontFamily,
+      flex: 1,
+      marginRight: 10,
+    },
+    buttonGroup: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end',
+    },
+    button: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      marginLeft: 8,
+      marginBottom: 8,
+      borderRadius: 4,
+      backgroundColor: colors.secondary,
+    },
+    selectedButton: {
+      backgroundColor: colors.primary,
+    },
+    buttonText: {
+      color: colors.text,
+      fontSize: dynamicFontSize - 2,
+      fontFamily,
+    },
+    selectedButtonText: {
+      color: colors.background,
+    },
+    timeInput: {
+      borderWidth: 1,
+      borderRadius: 4,
+      padding: 8,
+      fontSize: dynamicFontSize,
+      fontFamily,
+      minWidth: 80,
+    },
+  });
+};
+
+export default withTheme(React.memo(SettingsScreen));

@@ -1,6 +1,6 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useUserPreferences } from '../context/UserPreferencesContext';
+import { useTheme } from '../context/ThemeContext';
 import HomeScreen from '../screens/HomeScreen';
 import BibleListScreen from '../screens/BibleListScreen';
 import ChapterScreen from '../screens/ChapterScreen';
@@ -13,18 +13,21 @@ import SettingsScreen from '../screens/SettingsScreen';
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-  const { nightMode } = useUserPreferences();
+  const { colors, isDarkMode } = useTheme();
+
+  console.log('AppNavigator rendering with isDarkMode:', isDarkMode);
 
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: nightMode ? '#121212' : '#f8f8f8',
+          backgroundColor: colors.background,
         },
-        headerTintColor: nightMode ? '#ffffff' : '#000000',
+        headerTintColor: colors.text,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
+        cardStyle: { backgroundColor: colors.background }
       }}
     >
       <Stack.Screen 
@@ -71,4 +74,4 @@ const AppNavigator = () => {
   );
 };
 
-export default AppNavigator;
+export default React.memo(AppNavigator);

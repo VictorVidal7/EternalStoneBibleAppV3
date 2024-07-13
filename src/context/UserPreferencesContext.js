@@ -1,65 +1,77 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserPreferencesContext = createContext();
 
+const DEFAULT_PREFERENCES = {
+  nightMode: false,
+  fontSize: 'medium',
+  fontFamily: 'default',
+  lineSpacing: '1.5',
+};
+
 export const UserPreferencesProvider = ({ children }) => {
-  const [nightMode, setNightMode] = useState(false);
-  const [fontSize, setFontSize] = useState('medium');
-  const [fontFamily, setFontFamily] = useState('default');
+  const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
 
   useEffect(() => {
     loadPreferences();
   }, []);
 
-  const loadPreferences = async () => {
+  const loadPreferences = useCallback(async () => {
     try {
-      const savedNightMode = await AsyncStorage.getItem('nightMode');
-      const savedFontSize = await AsyncStorage.getItem('fontSize');
-      const savedFontFamily = await AsyncStorage.getItem('fontFamily');
-
-      if (savedNightMode !== null) setNightMode(JSON.parse(savedNightMode));
-      if (savedFontSize !== null) setFontSize(savedFontSize);
-      if (savedFontFamily !== null) setFontFamily(savedFontFamily);
+      const savedPreferences = await AsyncStorage.getItem('userPreferences');
+      if (savedPreferences !== null) {
+        setPreferences(JSON.parse(savedPreferences));
+      }
     } catch (error) {
       console.error('Error loading preferences:', error);
+      // Optionally, you could set an error state here and show it to the user
     }
-  };
+  }, []);
 
-  const savePreferences = async () => {
+  const savePreferences = useCallback(async (newPreferences) => {
     try {
-      await AsyncStorage.setItem('nightMode', JSON.stringify(nightMode));
-      await AsyncStorage.setItem('fontSize', fontSize);
-      await AsyncStorage.setItem('fontFamily', fontFamily);
+      await AsyncStorage.setItem('userPreferences', JSON.stringify(newPreferences));
+      setPreferences(newPreferences);
     } catch (error) {
       console.error('Error saving preferences:', error);
+      // Optionally, you could set an error state here and show it to the user
     }
-  };
+  }, []);
 
-  const toggleNightMode = () => {
-    setNightMode(prev => !prev);
-    savePreferences();
-  };
+  const updatePreference = useCallback((key, value) => {
+    savePreferences({ ...preferences, [key]: value });
+  }, [preferences, savePreferences]);
 
-  const changeFontSize = (size) => {
-    setFontSize(size);
-    savePreferences();
-  };
+  const toggleNightMode = useCallback(() => {
+    updatePreference('nightMode', !preferences.nightMode);
+  }, [preferences.nightMode, updatePreference]);
 
-  const changeFontFamily = (family) => {
-    setFontFamily(family);
-    savePreferences();
-  };
+  const changeFontSize = useCallback((size) => {
+    updatePreference('fontSize', size);
+  }, [updatePreference]);
+
+  const changeFontFamily = useCallback((family) => {
+    updatePreference('fontFamily', family);
+  }, [updatePreference]);
+
+  const changeLineSpacing = useCallback((spacing) => {
+    updatePreference('lineSpacing', spacing);
+  }, [updatePreference]);
+
+  const resetPreferences = useCallback(() => {
+    savePreferences(DEFAULT_PREFERENCES);
+  }, [savePreferences]);
 
   return (
     <UserPreferencesContext.Provider
       value={{
-        nightMode,
-        fontSize,
-        fontFamily,
+        ...preferences,
         toggleNightMode,
         changeFontSize,
         changeFontFamily,
+        changeLineSpacing,
+        resetPreferences,
       }}
     >
       {children}

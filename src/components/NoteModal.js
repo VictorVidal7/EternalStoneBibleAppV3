@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useUserPreferences } from '../context/UserPreferencesContext';
+import { withTheme } from '../hoc/withTheme';
 
-const NoteModal = ({ visible, onClose, verse, onSave }) => {
+const NoteModal = ({ visible, onClose, verse, onSave, theme }) => {
   const [note, setNote] = useState('');
-  const { nightMode, fontSize, fontFamily } = useUserPreferences();
-  const styles = createStyles(nightMode, fontSize, fontFamily);
+  const { fontSize, fontFamily } = useUserPreferences();
+  const { colors } = theme;
+  const styles = createStyles(colors, fontSize, fontFamily);
 
   useEffect(() => {
     if (verse && verse.note) {
@@ -38,7 +40,7 @@ const NoteModal = ({ visible, onClose, verse, onSave }) => {
             value={note}
             onChangeText={setNote}
             placeholder="Escribe tu nota aquí..."
-            placeholderTextColor={styles.placeholderColor}
+            placeholderTextColor={colors.secondary}
           />
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={onClose}>
@@ -54,7 +56,7 @@ const NoteModal = ({ visible, onClose, verse, onSave }) => {
   );
 };
 
-const createStyles = (nightMode, fontSize, fontFamily) => {
+const createStyles = (colors, fontSize, fontFamily) => {
   const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
 
   return StyleSheet.create({
@@ -66,7 +68,7 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
     },
     modalContent: {
       width: '80%',
-      backgroundColor: nightMode ? '#2c2c2e' : 'white',
+      backgroundColor: colors.background,
       borderRadius: 10,
       padding: 20,
     },
@@ -74,16 +76,16 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       fontSize: dynamicFontSize + 2,
       fontWeight: 'bold',
       marginBottom: 10,
-      color: nightMode ? '#fff' : '#333',
+      color: colors.text,
       fontFamily,
     },
     noteInput: {
       borderWidth: 1,
-      borderColor: nightMode ? '#555' : '#ccc',
+      borderColor: colors.secondary,
       borderRadius: 5,
       padding: 10,
       minHeight: 100,
-      color: nightMode ? '#fff' : '#333',
+      color: colors.text,
       fontFamily,
       fontSize: dynamicFontSize,
     },
@@ -99,16 +101,15 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       alignItems: 'center',
     },
     saveButton: {
-      backgroundColor: nightMode ? '#0a84ff' : '#007AFF',
+      backgroundColor: colors.primary,
     },
     buttonText: {
-      color: nightMode ? '#fff' : '#007AFF',
+      color: colors.text,
       fontWeight: 'bold',
       fontFamily,
       fontSize: dynamicFontSize,
     },
-    placeholderColor: nightMode ? '#999' : '#999',
   });
 };
 
-export default NoteModal;
+export default withTheme(NoteModal);

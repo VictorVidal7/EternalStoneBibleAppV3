@@ -1,16 +1,17 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { ProgressBar } from '@react-native-community/progress-bar-android';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useReadingPlan } from '../context/ReadingPlanContext';
 import { readingPlans } from '../data/readingPlans';
-import { useStyles } from '../hooks/useStyles';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from '../context/ThemeContext';
+import { withTheme } from '../hoc/withTheme';
 
-const ReadingPlanScreen = () => {
+const ReadingPlanScreen = ({ theme }) => {
   const navigation = useNavigation();
-  const { currentPlan, savePlan, progress, startPlan, continuePlan } = useReadingPlan();
-  const styles = useStyles(createStyles);
+  const { currentPlan, savePlan, progress, startPlan, continuePlan, updateProgress } = useReadingPlan();
+  const { colors } = theme;
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     console.log('ReadingPlan context:', { currentPlan, progress, startPlan, continuePlan });
@@ -34,14 +35,14 @@ const ReadingPlanScreen = () => {
   const handleStartContinuePlan = useCallback(() => {
     console.log('handleStartContinuePlan called');
     if (currentPlan) {
-      if (progress[currentPlan.id]) {
+      if (progress && progress[currentPlan.id]) {
         console.log('Continuing plan');
         continuePlan && continuePlan();
       } else {
         console.log('Starting plan');
         startPlan && startPlan();
       }
-      navigation.navigate('Home'); // Cambiado de 'Bible' a 'Home'
+      navigation.navigate('Home');
     } else {
       console.log('No current plan selected');
     }
@@ -49,7 +50,7 @@ const ReadingPlanScreen = () => {
 
   const renderPlanItem = useCallback(({ item }) => {
     const isCurrentPlan = currentPlan && currentPlan.id === item.id;
-    const planProgress = progress[item.id] || {};
+    const planProgress = progress && progress[item.id] ? progress[item.id] : {};
     const completedDays = Object.keys(planProgress).length;
     const progressPercentage = (completedDays / item.duration) * 100;
 
@@ -61,13 +62,13 @@ const ReadingPlanScreen = () => {
       >
         <View style={styles.planHeader}>
           <Text style={styles.planName}>{item.name}</Text>
-          {isCurrentPlan && <Icon name="check-circle" size={24} color={styles.checkColor} />}
+          {isCurrentPlan && <Text style={styles.checkIcon}>✓</Text>}
         </View>
         <Text style={styles.planDescription}>{item.description}</Text>
         <Text style={styles.planDuration}>Duración: {item.duration} días</Text>
         {isCurrentPlan && (
           <View style={styles.progressContainer}>
-            <ProgressBar progress={progressPercentage / 100} color={styles.progressBarColor} style={styles.progressBar} />
+            <View style={[styles.progressBar, { width: `${progressPercentage}%` }]} />
             <Text style={styles.progressText}>{`${completedDays}/${item.duration} días completados`}</Text>
           </View>
         )}
@@ -82,7 +83,7 @@ const ReadingPlanScreen = () => {
       {currentPlan && (
         <TouchableOpacity style={styles.startContinueButton} onPress={handleStartContinuePlan}>
           <Text style={styles.startContinueButtonText}>
-            {progress[currentPlan.id] ? "Continuar Lectura" : "Comenzar Plan"}
+            {progress && progress[currentPlan.id] ? "Continuar Lectura" : "Comenzar Plan"}
           </Text>
         </TouchableOpacity>
       )}
@@ -98,89 +99,82 @@ const ReadingPlanScreen = () => {
   );
 };
 
-const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+const createStyles = (colors) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    padding: 10,
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 15,
+  },
+  planItem: {
+    backgroundColor: colors.secondary,
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 3,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  currentPlanItem: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  planHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  planName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  planDescription: {
+    fontSize: 14,
+    color: colors.text,
+    marginBottom: 5,
+  },
+  planDuration: {
+    fontSize: 12,
+    color: colors.text,
+  },
+  progressContainer: {
+    marginTop: 10,
+  },
+  progressBar: {
+    height: 5,
+    backgroundColor: colors.primary,
+    borderRadius: 5,
+  },
+  progressText: {
+    fontSize: 12,
+    color: colors.text,
+    marginTop: 5,
+  },
+  checkIcon: {
+    color: colors.primary,
+    fontSize: 24,
+  },
+  startContinueButton: {
+    backgroundColor: colors.primary,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  startContinueButtonText: {
+    color: colors.background,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
 
-  return {
-    container: {
-      flex: 1,
-      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
-      padding: 10,
-    },
-    header: {
-      fontSize: dynamicFontSize + 4,
-      fontWeight: 'bold',
-      color: nightMode ? '#fff' : '#333',
-      marginBottom: 15,
-      fontFamily,
-    },
-    planItem: {
-      backgroundColor: nightMode ? '#1e1e1e' : 'white',
-      padding: 15,
-      borderRadius: 10,
-      marginBottom: 15,
-      elevation: 3,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.22,
-      shadowRadius: 2.22,
-    },
-    currentPlanItem: {
-      borderColor: nightMode ? '#0a84ff' : '#007AFF',
-      borderWidth: 2,
-    },
-    planHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 5,
-    },
-    planName: {
-      fontSize: dynamicFontSize + 2,
-      fontWeight: 'bold',
-      color: nightMode ? '#fff' : '#333',
-      fontFamily,
-    },
-    planDescription: {
-      fontSize: dynamicFontSize,
-      color: nightMode ? '#ccc' : '#666',
-      marginBottom: 5,
-      fontFamily,
-    },
-    planDuration: {
-      fontSize: dynamicFontSize - 2,
-      color: nightMode ? '#999' : '#999',
-      fontFamily,
-    },
-    progressContainer: {
-      marginTop: 10,
-    },
-    progressBar: {
-      height: 5,
-      borderRadius: 5,
-    },
-    progressBarColor: nightMode ? '#0a84ff' : '#007AFF',
-    progressText: {
-      fontSize: dynamicFontSize - 2,
-      color: nightMode ? '#ccc' : '#666',
-      marginTop: 5,
-      fontFamily,
-    },
-    checkColor: nightMode ? '#0a84ff' : '#007AFF',
-    startContinueButton: {
-      backgroundColor: nightMode ? '#0a84ff' : '#007AFF',
-      padding: 15,
-      borderRadius: 10,
-      alignItems: 'center',
-      marginBottom: 15,
-    },
-    startContinueButtonText: {
-      color: 'white',
-      fontSize: dynamicFontSize,
-      fontWeight: 'bold',
-      fontFamily,
-    },
-  };
-};
-
-export default React.memo(ReadingPlanScreen);
+export default withTheme(React.memo(ReadingPlanScreen));

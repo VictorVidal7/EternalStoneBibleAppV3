@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, PanResponder } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -10,12 +10,14 @@ import { getChapter } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import NoteModal from '../components/NoteModal';
 import { useTranslation } from 'react-i18next';
+import { withTheme } from '../hoc/withTheme';
 
-const VerseScreen = ({ route }) => {
+const VerseScreen = ({ route, theme }) => {
   const { book, chapter, initialVerse } = route.params;
   const { bookmarks, addBookmark, removeBookmark } = useBookmarks();
   const { addNote, getNote } = useNotes();
-  const { nightMode, fontSize, fontFamily, lineSpacing } = useUserPreferences();
+  const { fontSize, fontFamily, lineSpacing } = useUserPreferences();
+  const { colors } = theme;
   const styles = useStyles(createStyles);
   const [verses, setVerses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,59 +92,42 @@ const VerseScreen = ({ route }) => {
           <Icon 
             name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
             size={24} 
-            color={styles.bookmarkColor}
+            color={colors.primary}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => shareVerse(item)} accessibilityLabel={t('shareVerse')}>
-          <Icon name="share" size={24} color={styles.shareColor} />
+          <Icon name="share" size={24} color={colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => openNoteModal(item)} accessibilityLabel={t('addNote')}>
-          <Icon name="note-add" size={24} color={styles.noteColor} />
+          <Icon name="note-add" size={24} color={colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => copyVerse(item)} accessibilityLabel={t('copyVerse')}>
-          <Icon name="content-copy" size={24} color={styles.copyColor} />
+          <Icon name="content-copy" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
     </View>
-  ), [styles, isBookmarked, toggleBookmark, shareVerse, openNoteModal, copyVerse, lineSpacing, t]);
-
-  const getItemLayout = useCallback((data, index) => ({
-    length: 60,
-    offset: 60 * index,
-    index,
-  }), []);
-
-  const panResponder = useMemo(() => PanResponder.create({
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return Math.abs(gestureState.dx) > 50;
-    },
-    onPanResponderRelease: (evt, gestureState) => {
-      if (gestureState.dx > 50) {
-        // Navigate to previous chapter
-        navigation.navigate('Chapter', { book, chapter: chapter - 1 });
-      } else if (gestureState.dx < -50) {
-        // Navigate to next chapter
-        navigation.navigate('Chapter', { book, chapter: chapter + 1 });
-      }
-    },
-  }), [navigation, book, chapter]);
+  ), [styles, isBookmarked, toggleBookmark, shareVerse, openNoteModal, copyVerse, lineSpacing, t, colors]);
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={styles.loadingColor} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container} testID="verse-screen-container" {...panResponder.panHandlers}>
+    <View style={styles.container} testID="verse-screen-container">
       <FlatList
         data={verses}
         renderItem={renderVerse}
         keyExtractor={(item) => item.number.toString()}
         initialScrollIndex={initialVerse ? initialVerse - 1 : 0}
-        getItemLayout={getItemLayout}
+        getItemLayout={(data, index) => ({
+          length: 60,
+          offset: 60 * index,
+          index,
+        })}
         maxToRenderPerBatch={10}
         windowSize={21}
         removeClippedSubviews={true}
@@ -177,7 +162,6 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       alignItems: 'center',
       backgroundColor: nightMode ? '#121212' : '#f5f5f5',
     },
-    loadingColor: nightMode ? '#ffffff' : '#000000',
     verseContainer: {
       flexDirection: 'row',
       padding: 10,
@@ -205,11 +189,7 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       width: 120,
       marginLeft: 10,
     },
-    bookmarkColor: nightMode ? "#FFD700" : "#007AFF",
-    shareColor: nightMode ? "#4CAF50" : "#4CAF50",
-    noteColor: nightMode ? "#FF9800" : "#FF9800",
-    copyColor: nightMode ? "#9C27B0" : "#9C27B0",
   };
 };
 
-export default React.memo(VerseScreen);
+export default withTheme(React.memo(VerseScreen));
