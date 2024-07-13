@@ -1,23 +1,60 @@
 import { RV1909 } from '../data/completeBibleData';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 let currentVersion = RV1909;
 
-export const setCurrentVersion = async (version) => {
+const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+
+const getFromCache = async (key) => {
+  try {
+    const cached = await AsyncStorage.getItem(key);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_EXPIRY) {
+        return data;
+      }
+    }
+  } catch (error) {
+    console.error('Error retrieving from cache:', error);
+  }
+  return null;
+};
+
+const setToCache = async (key, data) => {
+  try {
+    await AsyncStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch (error) {
+    console.error('Error setting to cache:', error);
+  }
+};
+
+export const setCurrentVersion = (version) => {
   if (version === 'RV1909') {
     currentVersion = RV1909;
   } else {
-    // Aquí iría la lógica para cargar otras versiones si las tuviéramos
     console.warn('Versión no disponible, usando RV1909 por defecto');
     currentVersion = RV1909;
   }
 };
 
-export const getVerse = (book, chapter, verse) => {
-  return currentVersion[book][chapter].find(v => v.number === verse);
+export const getVerse = async (book, chapter, verse) => {
+  const cacheKey = `verse_${book}_${chapter}_${verse}`;
+  const cachedVerse = await getFromCache(cacheKey);
+  if (cachedVerse) return cachedVerse;
+
+  const verseData = currentVersion[book][chapter].find(v => v.number === verse);
+  await setToCache(cacheKey, verseData);
+  return verseData;
 };
 
-export const getChapter = (book, chapter) => {
-  return currentVersion[book][chapter];
+export const getChapter = async (book, chapter) => {
+  const cacheKey = `chapter_${book}_${chapter}`;
+  const cachedChapter = await getFromCache(cacheKey);
+  if (cachedChapter) return cachedChapter;
+
+  const chapterData = currentVersion[book][chapter];
+  await setToCache(cacheKey, chapterData);
+  return chapterData;
 };
 
 export const getBookChapters = (book) => {
@@ -28,13 +65,19 @@ export const getAllBooks = () => {
   return Object.keys(currentVersion);
 };
 
-export const searchBible = (query, searchType = 'all') => {
+export const searchBible = async (query, searchType = 'all') => {
+  const cacheKey = `search_${query}_${searchType}`;
+  const cachedResults = await getFromCache(cacheKey);
+  if (cachedResults) return cachedResults;
+
   const results = [];
   const lowercaseQuery = query.toLowerCase();
 
   Object.entries(currentVersion).forEach(([book, chapters]) => {
-    if (searchType === 'ot' && book.indexOf('Nuevo') !== -1) return;
-    if (searchType === 'nt' && book.indexOf('Antiguo') !== -1) return;
+    if ((searchType === 'ot' && book.indexOf('Nuevo') !== -1) || 
+        (searchType === 'nt' && book.indexOf('Antiguo') !== -1)) {
+      return;
+    }
 
     Object.entries(chapters).forEach(([chapter, verses]) => {
       verses.forEach((verse) => {
@@ -50,5 +93,6 @@ export const searchBible = (query, searchType = 'all') => {
     });
   });
 
+  await setToCache(cacheKey, results);
   return results;
 };

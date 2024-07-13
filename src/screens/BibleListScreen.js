@@ -9,6 +9,7 @@ const BibleListScreen = () => {
   const styles = useStyles(createStyles);
 
   const sections = useMemo(() => {
+    console.log("Generating sections for Bible books");
     const allBooks = getAllBooks();
     const oldTestament = allBooks.slice(0, 39);
     const newTestament = allBooks.slice(39);
@@ -21,7 +22,10 @@ const BibleListScreen = () => {
   const renderBookItem = useCallback(({ item }) => (
     <TouchableOpacity
       style={styles.bookItem}
-      onPress={() => navigation.navigate('Chapter', { book: item })}
+      onPress={() => {
+        console.log(`Navigating to Chapter screen for book: ${item}`);
+        navigation.navigate('Chapter', { book: item });
+      }}
     >
       <Text style={styles.bookName}>{item}</Text>
     </TouchableOpacity>

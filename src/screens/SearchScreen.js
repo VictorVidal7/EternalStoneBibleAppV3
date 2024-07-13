@@ -1,77 +1,50 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useStyles } from '../hooks/useStyles';
-import { debounce } from 'lodash';
 import { searchBible } from '../services/bibleDataManager';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searchType, setSearchType] = useState('all');
-  const [searchHistory, setSearchHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const styles = useStyles(createStyles);
+  const { t } = useTranslation();
 
-  useEffect(() => {
-    loadSearchHistory();
-  }, []);
-
-  const loadSearchHistory = async () => {
-    try {
-      const history = await AsyncStorage.getItem('searchHistory');
-      if (history) {
-        setSearchHistory(JSON.parse(history));
-      }
-    } catch (error) {
-      console.error('Error loading search history:', error);
-    }
-  };
-
-  const saveSearchHistory = async (newQuery) => {
-    try {
-      const updatedHistory = [newQuery, ...searchHistory.filter(q => q !== newQuery)].slice(0, 10);
-      setSearchHistory(updatedHistory);
-      await AsyncStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
-    } catch (error) {
-      console.error('Error saving search history:', error);
-    }
-  };
-
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     if (query.length < 3) {
       setResults([]);
       return;
     }
-    saveSearchHistory(query);
-    const searchResults = searchBible(query, searchType);
-    setResults(searchResults);
+    setIsLoading(true);
+    try {
+      const searchResults = await searchBible(query, searchType);
+      setResults(searchResults);
+    } catch (error) {
+      console.error('Error searching the Bible:', error);
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [query, searchType]);
 
-  const debouncedSearch = useMemo(
-    () => debounce(handleSearch, 300),
-    [handleSearch]
-  );
-
   useEffect(() => {
-    if (query.length >= 3) {
-      debouncedSearch();
-    } else {
-      setResults([]);
-    }
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [query, searchType, debouncedSearch]);
+    const delayDebounceFn = setTimeout(() => {
+      if (query.length >= 3) {
+        handleSearch();
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query, searchType, handleSearch]);
 
   const renderSearchResult = useCallback(({ item }) => (
     <TouchableOpacity
       style={styles.resultItem}
-      onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verseNumber: item.number })}
-      accessibilityLabel={`Resultado de búsqueda: ${item.book} ${item.chapter}:${item.number}`}
-      accessibilityHint="Pulse para ver el versículo completo"
+      onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.number })}
     >
       <Text style={styles.resultReference}>
         {item.book} {item.chapter}:{item.number}
@@ -82,71 +55,45 @@ const SearchScreen = () => {
     </TouchableOpacity>
   ), [styles, navigation]);
 
-  const searchTypeButtons = useMemo(() => ['all', 'ot', 'nt'].map((type) => (
-    <TouchableOpacity
-      key={type}
-      style={[
-        styles.searchTypeButton,
-        searchType === type && styles.activeSearchType
-      ]}
-      onPress={() => setSearchType(type)}
-      accessibilityLabel={`Buscar en ${type === 'all' ? 'toda la Biblia' : type === 'ot' ? 'Antiguo Testamento' : 'Nuevo Testamento'}`}
-      accessibilityHint={`Pulse para cambiar el tipo de búsqueda a ${type === 'all' ? 'toda la Biblia' : type === 'ot' ? 'Antiguo Testamento' : 'Nuevo Testamento'}`}
-    >
-      <Text style={[styles.searchTypeText, searchType === type && styles.activeSearchTypeText]}>
-        {type === 'all' ? 'Toda' : type === 'ot' ? 'A.T.' : 'N.T.'}
-      </Text>
-    </TouchableOpacity>
-  )), [searchType, styles]);
-
   return (
-    <View style={styles.container} testID="search-screen">
-      <View style={styles.searchInputContainer}>
-        <TextInput
-          style={styles.searchInput}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Buscar en la Biblia..."
-          placeholderTextColor={styles.placeholderColor}
-          onSubmitEditing={handleSearch}
-          testID="search-input"
-          accessibilityLabel="Campo de búsqueda bíblica"
-          accessibilityHint="Ingrese texto para buscar en la Biblia"
-        />
-        <TouchableOpacity 
-          onPress={handleSearch} 
-          style={styles.searchButton} 
-          testID="search-icon"
-          accessibilityLabel="Botón de búsqueda"
-          accessibilityHint="Presione para realizar la búsqueda"
-        >
-          <Icon name="search" size={24} color={styles.iconColor} />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <TextInput
+        style={styles.searchInput}
+        value={query}
+        onChangeText={setQuery}
+        placeholder={t('searchPlaceholder')}
+        placeholderTextColor={styles.placeholderColor}
+      />
       <View style={styles.searchTypeContainer}>
-        {searchTypeButtons}
+        {['all', 'ot', 'nt'].map((type) => (
+          <TouchableOpacity
+            key={type}
+            style={[
+              styles.searchTypeButton,
+              searchType === type && styles.activeSearchType
+            ]}
+            onPress={() => setSearchType(type)}
+          >
+            <Text style={[styles.searchTypeText, searchType === type && styles.activeSearchTypeText]}>
+              {t(`searchType${type.toUpperCase()}Short`)}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
-      {query.length < 3 && searchHistory.length > 0 && (
+      {isLoading ? (
+        <ActivityIndicator size="large" color={styles.loadingColor} />
+      ) : (
         <FlatList
-          data={searchHistory}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => setQuery(item)}>
-              <Text style={styles.historyItem}>{item}</Text>
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item, index) => `history-${index}`}
+          data={results}
+          renderItem={renderSearchResult}
+          keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.number}-${index}`}
+          ListEmptyComponent={
+            <Text style={styles.emptyResult}>
+              {query.length < 3 ? t('enterMinChars') : t('noResults')}
+            </Text>
+          }
         />
       )}
-      <FlatList
-        data={results}
-        renderItem={renderSearchResult}
-        keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.number}-${index}`}
-        ListEmptyComponent={
-          <Text style={styles.emptyResult}>
-            {query.length < 3 ? "Ingresa al menos 3 caracteres para buscar" : "No se encontraron resultados"}
-          </Text>
-        }
-      />
     </View>
   );
 };
@@ -160,28 +107,19 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       padding: 10,
       backgroundColor: nightMode ? '#121212' : '#f5f5f5',
     },
-    searchInputContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 10,
-    },
     searchInput: {
-      flex: 1,
       height: 40,
       borderColor: nightMode ? '#666' : 'gray',
       borderWidth: 1,
       borderRadius: 5,
       paddingHorizontal: 10,
+      marginBottom: 10,
       backgroundColor: nightMode ? '#333' : 'white',
       color: nightMode ? 'white' : 'black',
       fontFamily,
       fontSize: dynamicFontSize,
     },
     placeholderColor: nightMode ? '#999999' : '#666666',
-    iconColor: nightMode ? '#fff' : '#007AFF',
-    searchButton: {
-      padding: 10,
-    },
     searchTypeContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -231,12 +169,7 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       fontFamily,
       fontSize: dynamicFontSize,
     },
-    historyItem: {
-      padding: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: nightMode ? '#333' : '#e0e0e0',
-      color: nightMode ? '#ccc' : '#666',
-    },
+    loadingColor: '#007AFF',
   };
 };
 

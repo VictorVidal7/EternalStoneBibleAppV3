@@ -1,0 +1,17 @@
+{
+  "appName": "Eternal Stone Bible App",
+  "exploreBible": "Explorar la Biblia",
+  "myBookmarks": "Mis Marcadores",
+  "viewReadingPlan": "Ver Plan de Lectura",
+  "searchBible": "Buscar en la Biblia",
+  "settings": "Configuración",
+  "readingPlan": "Plan de Lectura",
+  "notSelected": "No seleccionado",
+  "bookmarks": "Marcadores",
+  "searchTypeALLShort": "Toda",
+  "searchTypeOTShort": "A.T.",
+  "searchTypeNTShort": "N.T.",
+  "searchPlaceholder": "Buscar en la Biblia...",
+  "enterMinChars": "Ingresa al menos 3 caracteres para buscar",
+  "noResults": "No se encontraron resultados"
+}

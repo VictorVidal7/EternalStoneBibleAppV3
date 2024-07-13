@@ -5,45 +5,44 @@ import { useBookmarks } from '../context/BookmarksContext';
 import { useReadingPlan } from '../context/ReadingPlanContext';
 import { useStyles } from '../hooks/useStyles';
 import DailyVerse from '../components/DailyVerse';
+import { useTranslation } from 'react-i18next';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { bookmarks } = useBookmarks();
   const { currentPlan } = useReadingPlan();
   const styles = useStyles(createStyles);
+  const { t } = useTranslation();
 
   const buttonTextStyle = useMemo(() => [
     styles.buttonText,
     { fontSize: styles.dynamicFontSize }
   ], [styles.buttonText, styles.dynamicFontSize]);
 
-  const renderButton = (text, onPress) => (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+  const renderButton = (text, onPress, testID) => (
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
       <Text style={buttonTextStyle}>{text}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Eternal Stone Bible App</Text>
+    <ScrollView style={styles.container} testID="home-screen">
+      <Text style={styles.title}>{t('appName')}</Text>
       
       <DailyVerse />
       
-      {renderButton('Explorar la Biblia', () => navigation.navigate('BibleList'))}
-      {renderButton(`Mis Marcadores (${bookmarks.length})`, () => navigation.navigate('Bookmarks'))}
-      {renderButton(
-        currentPlan ? 'Ver Plan de Lectura' : 'Seleccionar Plan de Lectura',
-        () => navigation.navigate('ReadingPlan')
-      )}
-      {renderButton('Buscar en la Biblia', () => navigation.navigate('Search'))}
-      {renderButton('Configuración', () => navigation.navigate('Settings'))}
+      {renderButton(t('exploreBible'), () => navigation.navigate('BibleList'), 'explore-bible-button')}
+      {renderButton(t('myBookmarks'), () => navigation.navigate('Bookmarks'), 'bookmarks-button')}
+      {renderButton(t('viewReadingPlan'), () => navigation.navigate('ReadingPlan'), 'reading-plan-button')}
+      {renderButton(t('searchBible'), () => navigation.navigate('Search'), 'search-bible-button')}
+      {renderButton(t('settings'), () => navigation.navigate('Settings'), 'settings-button')}
 
       <View style={styles.infoContainer}>
         <Text style={styles.infoText}>
-          Plan de lectura: {currentPlan ? currentPlan.name : 'No seleccionado'}
+          {t('readingPlan')}: {currentPlan ? currentPlan.name : t('notSelected')}
         </Text>
         <Text style={styles.infoText}>
-          Marcadores: {bookmarks.length}
+          {t('bookmarks')}: {bookmarks.length}
         </Text>
       </View>
     </ScrollView>

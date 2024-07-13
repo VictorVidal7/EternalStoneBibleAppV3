@@ -119,4 +119,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
 }
 
+project.ext.react = [
+    enableHermes: true  // Habilita Hermes para todos los builds
+]
+
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)

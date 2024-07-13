@@ -21,7 +21,10 @@ const ChapterScreen = ({ route }) => {
     return (
       <TouchableOpacity
         style={styles.chapterItem}
-        onPress={() => navigation.navigate('Verse', { book, chapter: item })}
+        onPress={() => {
+          console.log(`Navigating to Verse screen for ${book}, chapter ${item}`);
+          navigation.navigate('Verse', { book, chapter: item });
+        }}
       >
         <Text style={styles.chapterText}>Capítulo {item}</Text>
         {progress > 0 && (

@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, PanResponder } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import { useNotes } from '../context/NotesContext';
 import { getChapter } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import NoteModal from '../components/NoteModal';
+import { useTranslation } from 'react-i18next';
 
 const VerseScreen = ({ route }) => {
   const { book, chapter, initialVerse } = route.params;
@@ -19,6 +21,8 @@ const VerseScreen = ({ route }) => {
   const [loading, setLoading] = useState(true);
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [currentVerse, setCurrentVerse] = useState(null);
+  const navigation = useNavigation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const loadVerses = async () => {
@@ -28,13 +32,13 @@ const VerseScreen = ({ route }) => {
         setVerses(chapterVerses);
       } catch (error) {
         console.error('Error loading verses:', error);
-        Alert.alert('Error', 'No se pudieron cargar los versículos. Por favor, intente de nuevo.');
+        Alert.alert(t('error'), t('errorLoadingVerses'));
       } finally {
         setLoading(false);
       }
     };
     loadVerses();
-  }, [book, chapter]);
+  }, [book, chapter, t]);
 
   const isBookmarked = useCallback((verse) => {
     return bookmarks.some(b => b.book === book && b.chapter === chapter && b.verse === verse);
@@ -52,31 +56,25 @@ const VerseScreen = ({ route }) => {
     try {
       const result = await Share.share({
         message: `${verse.text} - ${book} ${chapter}:${verse.number}`,
-        title: `Versículo de ${book} ${chapter}:${verse.number}`,
+        title: t('shareVerseTitle', { book, chapter, number: verse.number }),
       });
       if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log('Shared with activity type:', result.activityType);
-        } else {
-          console.log('Shared successfully');
-        }
-      } else if (result.action === Share.dismissedAction) {
-        console.log('Share dismissed');
+        console.log('Shared successfully');
       }
     } catch (error) {
       console.error('Error sharing verse:', error);
-      Alert.alert('Error', 'No se pudo compartir el versículo');
+      Alert.alert(t('error'), t('errorSharingVerse'));
     }
-  }, [book, chapter]);
+  }, [book, chapter, t]);
 
   const copyVerse = useCallback((verse) => {
     Clipboard.setString(`${verse.text} - ${book} ${chapter}:${verse.number}`);
     if (Platform.OS === 'android') {
-      ToastAndroid.show('Versículo copiado al portapapeles', ToastAndroid.SHORT);
+      ToastAndroid.show(t('verseCopied'), ToastAndroid.SHORT);
     } else {
-      Alert.alert('Copiado', 'Versículo copiado al portapapeles');
+      Alert.alert(t('copied'), t('verseCopied'));
     }
-  }, [book, chapter]);
+  }, [book, chapter, t]);
 
   const openNoteModal = useCallback((verse) => {
     setCurrentVerse(verse);
@@ -88,31 +86,46 @@ const VerseScreen = ({ route }) => {
       <Text style={styles.verseNumber}>{item.number}</Text>
       <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
       <View style={styles.actionsContainer}>
-        <TouchableOpacity onPress={() => toggleBookmark(item.number)}>
+        <TouchableOpacity onPress={() => toggleBookmark(item.number)} accessibilityLabel={t('toggleBookmark')}>
           <Icon 
             name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
             size={24} 
             color={styles.bookmarkColor}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => shareVerse(item)}>
+        <TouchableOpacity onPress={() => shareVerse(item)} accessibilityLabel={t('shareVerse')}>
           <Icon name="share" size={24} color={styles.shareColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => openNoteModal(item)}>
+        <TouchableOpacity onPress={() => openNoteModal(item)} accessibilityLabel={t('addNote')}>
           <Icon name="note-add" size={24} color={styles.noteColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => copyVerse(item)}>
+        <TouchableOpacity onPress={() => copyVerse(item)} accessibilityLabel={t('copyVerse')}>
           <Icon name="content-copy" size={24} color={styles.copyColor} />
         </TouchableOpacity>
       </View>
     </View>
-  ), [styles, isBookmarked, toggleBookmark, shareVerse, openNoteModal, copyVerse, lineSpacing]);
+  ), [styles, isBookmarked, toggleBookmark, shareVerse, openNoteModal, copyVerse, lineSpacing, t]);
 
   const getItemLayout = useCallback((data, index) => ({
     length: 60,
     offset: 60 * index,
     index,
   }), []);
+
+  const panResponder = useMemo(() => PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dx) > 50;
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dx > 50) {
+        // Navigate to previous chapter
+        navigation.navigate('Chapter', { book, chapter: chapter - 1 });
+      } else if (gestureState.dx < -50) {
+        // Navigate to next chapter
+        navigation.navigate('Chapter', { book, chapter: chapter + 1 });
+      }
+    },
+  }), [navigation, book, chapter]);
 
   if (loading) {
     return (
@@ -123,7 +136,7 @@ const VerseScreen = ({ route }) => {
   }
 
   return (
-    <View style={styles.container} testID="verse-screen-container">
+    <View style={styles.container} testID="verse-screen-container" {...panResponder.panHandlers}>
       <FlatList
         data={verses}
         renderItem={renderVerse}
