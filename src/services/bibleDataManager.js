@@ -38,26 +38,61 @@ export const setCurrentVersion = (version) => {
 };
 
 export const getVerse = async (book, chapter, verse) => {
-  const cacheKey = `${book}_${chapter}_${verse}`;
-  const cachedVerse = await getFromCache(cacheKey);
-  if (cachedVerse) return cachedVerse;
+  try {
+    const cacheKey = `${book}_${chapter}_${verse}`;
+    const cachedVerse = await getFromCache(cacheKey);
+    if (cachedVerse) return cachedVerse;
 
-  const verseData = currentVersion[book][chapter].find(v => v.number === verse);
-  await setToCache(cacheKey, verseData);
-  return verseData;
+    if (!currentVersion[book]) {
+      console.error(`Book ${book} not found in currentVersion`);
+      console.log('Available books:', Object.keys(currentVersion));
+      throw new Error(`Book ${book} not found`);
+    }
+    if (!currentVersion[book][chapter]) {
+      console.error(`Chapter ${chapter} not found in book ${book}`);
+      console.log(`Available chapters for ${book}:`, Object.keys(currentVersion[book]));
+      throw new Error(`Chapter ${chapter} not found in book ${book}`);
+    }
+    const verseData = currentVersion[book][chapter].find(v => v.number === parseInt(verse));
+    if (!verseData) {
+      console.error(`Verse ${verse} not found in chapter ${chapter} of book ${book}`);
+      console.log(`Available verses for ${book} ${chapter}:`, currentVersion[book][chapter].map(v => v.number));
+      throw new Error(`Verse ${verse} not found in chapter ${chapter} of book ${book}`);
+    }
+    await setToCache(cacheKey, verseData);
+    return verseData;
+  } catch (error) {
+    console.error(`Error getting verse ${book} ${chapter}:${verse}:`, error);
+    throw error;
+  }
 };
 
 export const getChapter = async (book, chapter) => {
-  const cacheKey = `${book}_${chapter}`;
-  const cachedChapter = await getFromCache(cacheKey);
-  if (cachedChapter) return cachedChapter;
+  try {
+    const cacheKey = `${book}_${chapter}`;
+    const cachedChapter = await getFromCache(cacheKey);
+    if (cachedChapter) return cachedChapter;
 
-  const chapterData = currentVersion[book][chapter];
-  await setToCache(cacheKey, chapterData);
-  return chapterData;
+    if (!currentVersion[book]) {
+      throw new Error(`Book ${book} not found`);
+    }
+    if (!currentVersion[book][chapter]) {
+      throw new Error(`Chapter ${chapter} not found in book ${book}`);
+    }
+    const chapterData = currentVersion[book][chapter];
+    await setToCache(cacheKey, chapterData);
+    return chapterData;
+  } catch (error) {
+    console.error(`Error getting chapter ${book} ${chapter}:`, error);
+    throw error;
+  }
 };
 
 export const getBookChapters = (book) => {
+  if (!currentVersion[book]) {
+    console.error(`Book ${book} not found`);
+    return 0;
+  }
   return Object.keys(currentVersion[book]).length;
 };
 
@@ -66,33 +101,38 @@ export const getAllBooks = () => {
 };
 
 export const searchBible = async (query, searchType = 'all') => {
-  const cacheKey = `search_${query}_${searchType}`;
-  const cachedResults = await getFromCache(cacheKey);
-  if (cachedResults) return cachedResults;
+  try {
+    const cacheKey = `search_${query}_${searchType}`;
+    const cachedResults = await getFromCache(cacheKey);
+    if (cachedResults) return cachedResults;
 
-  const results = [];
-  const lowercaseQuery = query.toLowerCase();
+    const results = [];
+    const lowercaseQuery = query.toLowerCase();
 
-  Object.entries(currentVersion).forEach(([book, chapters]) => {
-    if ((searchType === 'ot' && book.indexOf('Nuevo') !== -1) || 
-        (searchType === 'nt' && book.indexOf('Antiguo') !== -1)) {
-      return;
-    }
+    Object.entries(currentVersion).forEach(([book, chapters]) => {
+      if ((searchType === 'ot' && book.indexOf('Nuevo') !== -1) || 
+          (searchType === 'nt' && book.indexOf('Antiguo') !== -1)) {
+        return;
+      }
 
-    Object.entries(chapters).forEach(([chapter, verses]) => {
-      verses.forEach((verse) => {
-        if (verse.text.toLowerCase().includes(lowercaseQuery)) {
-          results.push({
-            book,
-            chapter: parseInt(chapter),
-            number: verse.number,
-            text: verse.text
-          });
-        }
+      Object.entries(chapters).forEach(([chapter, verses]) => {
+        verses.forEach((verse) => {
+          if (verse.text.toLowerCase().includes(lowercaseQuery)) {
+            results.push({
+              book,
+              chapter: parseInt(chapter),
+              number: verse.number,
+              text: verse.text
+            });
+          }
+        });
       });
     });
-  });
 
-  await setToCache(cacheKey, results);
-  return results;
+    await setToCache(cacheKey, results);
+    return results;
+  } catch (error) {
+    console.error('Error searching Bible:', error);
+    throw error;
+  }
 };
