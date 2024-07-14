@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, AccessibilityInfo } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -12,6 +12,52 @@ import NoteModal from '../components/NoteModal';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
+
+const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNoteModal, onCopyVerse, styles, colors, isBookmarked }) => (
+  <View 
+    style={[styles.verseContainer, { lineHeight: item.lineSpacing }]}
+    accessible={true}
+    accessibilityLabel={`Versículo ${item.number}: ${item.text}`}
+    accessibilityRole="text"
+  >
+    <Text style={styles.verseNumber}>{item.number}</Text>
+    <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
+    <View style={styles.actionsContainer}>
+      <TouchableOpacity 
+        onPress={() => onToggleBookmark(item.number)}
+        accessibilityLabel={isBookmarked(item.number) ? 'Quitar marcador' : 'Añadir marcador'}
+        accessibilityRole="button"
+      >
+        <Icon 
+          name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
+          size={24} 
+          color={colors.primary}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        onPress={() => onShareVerse(item)}
+        accessibilityLabel="Compartir versículo"
+        accessibilityRole="button"
+      >
+        <Icon name="share" size={24} color={colors.primary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        onPress={() => onOpenNoteModal(item)}
+        accessibilityLabel="Añadir nota"
+        accessibilityRole="button"
+      >
+        <Icon name="note-add" size={24} color={colors.primary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        onPress={() => onCopyVerse(item)}
+        accessibilityLabel="Copiar versículo"
+        accessibilityRole="button"
+      >
+        <Icon name="content-copy" size={24} color={colors.primary} />
+      </TouchableOpacity>
+    </View>
+  </View>
+));
 
 const VerseScreen = ({ route, theme }) => {
   const { book, chapter, initialVerse } = route.params;
@@ -90,50 +136,17 @@ const VerseScreen = ({ route, theme }) => {
   }, []);
 
   const renderVerse = useCallback(({ item }) => (
-    <View 
-      style={[styles.verseContainer, { lineHeight: lineSpacing }]}
-      accessible={true}
-      accessibilityLabel={`Versículo ${item.number}: ${item.text}`}
-      accessibilityRole="text"
-    >
-      <Text style={styles.verseNumber}>{item.number}</Text>
-      <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity 
-          onPress={() => toggleBookmark(item.number)}
-          accessibilityLabel={isBookmarked(item.number) ? t('removeBookmark') : t('addBookmark')}
-          accessibilityRole="button"
-        >
-          <Icon 
-            name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
-            size={24} 
-            color={colors.primary}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => shareVerse(item)}
-          accessibilityLabel={t('shareVerse')}
-          accessibilityRole="button"
-        >
-          <Icon name="share" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => openNoteModal(item)}
-          accessibilityLabel={t('addNote')}
-          accessibilityRole="button"
-        >
-          <Icon name="note-add" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => copyVerse(item)}
-          accessibilityLabel={t('copyVerse')}
-          accessibilityRole="button"
-        >
-          <Icon name="content-copy" size={24} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  ), [styles, isBookmarked, toggleBookmark, shareVerse, openNoteModal, copyVerse, lineSpacing, t, colors]);
+    <VerseItem
+      item={item}
+      onToggleBookmark={toggleBookmark}
+      onShareVerse={shareVerse}
+      onOpenNoteModal={openNoteModal}
+      onCopyVerse={copyVerse}
+      styles={styles}
+      colors={colors}
+      isBookmarked={isBookmarked}
+    />
+  ), [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked]);
 
   if (loading) {
     return (
@@ -158,6 +171,9 @@ const VerseScreen = ({ route, theme }) => {
         maxToRenderPerBatch={10}
         windowSize={21}
         removeClippedSubviews={true}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        onEndReachedThreshold={0.5}
         accessible={true}
         accessibilityLabel={t('verseList')}
         accessibilityRole="list"
