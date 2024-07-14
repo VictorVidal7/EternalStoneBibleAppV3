@@ -1,10 +1,25 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, memo } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useStyles } from '../hooks/useStyles';
 import { searchBible } from '../services/bibleDataManager';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
+import { AnalyticsService } from '../services/AnalyticsService';
+
+const SearchResultItem = memo(({ item, onPress, styles, colors }) => (
+  <TouchableOpacity
+    style={[styles.resultItem, { backgroundColor: colors.secondary }]}
+    onPress={onPress}
+  >
+    <Text style={[styles.resultReference, { color: colors.text }]}>
+      {item.book} {item.chapter}:{item.number}
+    </Text>
+    <Text style={[styles.resultText, { color: colors.text }]} numberOfLines={2}>
+      {item.text}
+    </Text>
+  </TouchableOpacity>
+));
 
 const SearchScreen = ({ theme }) => {
   const navigation = useNavigation();
@@ -25,9 +40,11 @@ const SearchScreen = ({ theme }) => {
     try {
       const searchResults = await searchBible(query, searchType);
       setResults(searchResults);
+      AnalyticsService.logEvent('search_performed', { query, searchType, resultsCount: searchResults.length });
     } catch (error) {
       console.error('Error searching the Bible:', error);
       setResults([]);
+      AnalyticsService.logEvent('search_error', { query, searchType, error: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -44,18 +61,16 @@ const SearchScreen = ({ theme }) => {
   }, [query, searchType, handleSearch]);
 
   const renderSearchResult = useCallback(({ item }) => (
-    <TouchableOpacity
-      style={[styles.resultItem, { backgroundColor: colors.secondary }]}
-      onPress={() => navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.number })}
-    >
-      <Text style={[styles.resultReference, { color: colors.text }]}>
-        {item.book} {item.chapter}:{item.number}
-      </Text>
-      <Text style={[styles.resultText, { color: colors.text }]} numberOfLines={2}>
-        {item.text}
-      </Text>
-    </TouchableOpacity>
-  ), [styles, navigation, colors]);
+    <SearchResultItem
+      item={item}
+      onPress={() => {
+        navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.number });
+        AnalyticsService.logEvent('search_result_selected', { book: item.book, chapter: item.chapter, verse: item.number });
+      }}
+      styles={styles}
+      colors={colors}
+    />
+  ), [navigation, styles, colors]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -75,7 +90,10 @@ const SearchScreen = ({ theme }) => {
               searchType === type && styles.activeSearchType,
               { backgroundColor: searchType === type ? colors.primary : colors.secondary }
             ]}
-            onPress={() => setSearchType(type)}
+            onPress={() => {
+              setSearchType(type);
+              AnalyticsService.logEvent('search_type_changed', { newType: type });
+            }}
           >
             <Text style={[styles.searchTypeText, searchType === type && styles.activeSearchTypeText, { color: colors.text }]}>
               {t(`searchType${type.toUpperCase()}Short`)}
@@ -92,9 +110,15 @@ const SearchScreen = ({ theme }) => {
           keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.number}-${index}`}
           ListEmptyComponent={
             <Text style={[styles.emptyResult, { color: colors.text }]}>
-              {query.length < 3 ? t('enterMinChars') : t('noResults')}
+            {query.length < 3 ? t('enterMinChars') : t('noResults')}
             </Text>
           }
+          initialNumToRender={10}
+          maxToRenderPerBatch={15}
+          windowSize={5}
+          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}
+          onEndReachedThreshold={0.5}
         />
       )}
     </View>
