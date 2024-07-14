@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, AccessibilityInfo } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,7 @@ import { useStyles } from '../hooks/useStyles';
 import NoteModal from '../components/NoteModal';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
+import { AnalyticsService } from '../services/AnalyticsService';
 
 const VerseScreen = ({ route, theme }) => {
   const { book, chapter, initialVerse } = route.params;
@@ -32,6 +33,7 @@ const VerseScreen = ({ route, theme }) => {
         setLoading(true);
         const chapterVerses = await getChapter(book, chapter);
         setVerses(chapterVerses);
+        AnalyticsService.logScreenView(`Verse_${book}_${chapter}`);
       } catch (error) {
         console.error('Error loading verses:', error);
         Alert.alert(t('error'), t('errorLoadingVerses'));
@@ -49,8 +51,10 @@ const VerseScreen = ({ route, theme }) => {
   const toggleBookmark = useCallback((verse) => {
     if (isBookmarked(verse)) {
       removeBookmark(book, chapter, verse);
+      AnalyticsService.logEvent('remove_bookmark', { book, chapter, verse });
     } else {
       addBookmark(book, chapter, verse);
+      AnalyticsService.logEvent('add_bookmark', { book, chapter, verse });
     }
   }, [isBookmarked, addBookmark, removeBookmark, book, chapter]);
 
@@ -62,6 +66,7 @@ const VerseScreen = ({ route, theme }) => {
       });
       if (result.action === Share.sharedAction) {
         console.log('Shared successfully');
+        AnalyticsService.logEvent('share_verse', { book, chapter, verse: verse.number });
       }
     } catch (error) {
       console.error('Error sharing verse:', error);
@@ -76,6 +81,7 @@ const VerseScreen = ({ route, theme }) => {
     } else {
       Alert.alert(t('copied'), t('verseCopied'));
     }
+    AnalyticsService.logEvent('copy_verse', { book, chapter, verse: verse.number });
   }, [book, chapter, t]);
 
   const openNoteModal = useCallback((verse) => {
@@ -84,24 +90,45 @@ const VerseScreen = ({ route, theme }) => {
   }, []);
 
   const renderVerse = useCallback(({ item }) => (
-    <View style={[styles.verseContainer, { lineHeight: lineSpacing }]}>
+    <View 
+      style={[styles.verseContainer, { lineHeight: lineSpacing }]}
+      accessible={true}
+      accessibilityLabel={`Versículo ${item.number}: ${item.text}`}
+      accessibilityRole="text"
+    >
       <Text style={styles.verseNumber}>{item.number}</Text>
       <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
       <View style={styles.actionsContainer}>
-        <TouchableOpacity onPress={() => toggleBookmark(item.number)} accessibilityLabel={t('toggleBookmark')}>
+        <TouchableOpacity 
+          onPress={() => toggleBookmark(item.number)}
+          accessibilityLabel={isBookmarked(item.number) ? t('removeBookmark') : t('addBookmark')}
+          accessibilityRole="button"
+        >
           <Icon 
             name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
             size={24} 
             color={colors.primary}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => shareVerse(item)} accessibilityLabel={t('shareVerse')}>
+        <TouchableOpacity 
+          onPress={() => shareVerse(item)}
+          accessibilityLabel={t('shareVerse')}
+          accessibilityRole="button"
+        >
           <Icon name="share" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => openNoteModal(item)} accessibilityLabel={t('addNote')}>
+        <TouchableOpacity 
+          onPress={() => openNoteModal(item)}
+          accessibilityLabel={t('addNote')}
+          accessibilityRole="button"
+        >
           <Icon name="note-add" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => copyVerse(item)} accessibilityLabel={t('copyVerse')}>
+        <TouchableOpacity 
+          onPress={() => copyVerse(item)}
+          accessibilityLabel={t('copyVerse')}
+          accessibilityRole="button"
+        >
           <Icon name="content-copy" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -131,6 +158,9 @@ const VerseScreen = ({ route, theme }) => {
         maxToRenderPerBatch={10}
         windowSize={21}
         removeClippedSubviews={true}
+        accessible={true}
+        accessibilityLabel={t('verseList')}
+        accessibilityRole="list"
       />
       <NoteModal 
         visible={noteModalVisible}
@@ -139,6 +169,7 @@ const VerseScreen = ({ route, theme }) => {
         onSave={(noteText) => {
           if (currentVerse) {
             addNote(book, chapter, currentVerse.number, noteText);
+            AnalyticsService.logEvent('add_note', { book, chapter, verse: currentVerse.number });
           }
           setNoteModalVisible(false);
         }}

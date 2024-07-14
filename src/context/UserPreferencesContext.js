@@ -1,77 +1,73 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserPreferencesContext = createContext();
 
-const DEFAULT_PREFERENCES = {
-  nightMode: false,
-  fontSize: 'medium',
-  fontFamily: 'default',
-  lineSpacing: '1.5',
-};
-
 export const UserPreferencesProvider = ({ children }) => {
-  const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
+  const [nightMode, setNightMode] = useState(false);
+  const [fontSize, setFontSize] = useState('medium');
+  const [fontFamily, setFontFamily] = useState('default');
+  const [lineSpacing, setLineSpacing] = useState('1.5');
 
   useEffect(() => {
     loadPreferences();
   }, []);
 
-  const loadPreferences = useCallback(async () => {
+  const loadPreferences = async () => {
     try {
       const savedPreferences = await AsyncStorage.getItem('userPreferences');
       if (savedPreferences !== null) {
-        setPreferences(JSON.parse(savedPreferences));
+        const prefs = JSON.parse(savedPreferences);
+        setNightMode(prefs.nightMode);
+        setFontSize(prefs.fontSize);
+        setFontFamily(prefs.fontFamily);
+        setLineSpacing(prefs.lineSpacing);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
-      // Optionally, you could set an error state here and show it to the user
     }
-  }, []);
+  };
 
-  const savePreferences = useCallback(async (newPreferences) => {
+  const savePreferences = async () => {
     try {
-      await AsyncStorage.setItem('userPreferences', JSON.stringify(newPreferences));
-      setPreferences(newPreferences);
+      const preferences = { nightMode, fontSize, fontFamily, lineSpacing };
+      await AsyncStorage.setItem('userPreferences', JSON.stringify(preferences));
     } catch (error) {
       console.error('Error saving preferences:', error);
-      // Optionally, you could set an error state here and show it to the user
     }
-  }, []);
+  };
 
-  const updatePreference = useCallback((key, value) => {
-    savePreferences({ ...preferences, [key]: value });
-  }, [preferences, savePreferences]);
+  const toggleNightMode = () => {
+    setNightMode(prev => !prev);
+    savePreferences();
+  };
 
-  const toggleNightMode = useCallback(() => {
-    updatePreference('nightMode', !preferences.nightMode);
-  }, [preferences.nightMode, updatePreference]);
+  const changeFontSize = (size) => {
+    setFontSize(size);
+    savePreferences();
+  };
 
-  const changeFontSize = useCallback((size) => {
-    updatePreference('fontSize', size);
-  }, [updatePreference]);
+  const changeFontFamily = (family) => {
+    setFontFamily(family);
+    savePreferences();
+  };
 
-  const changeFontFamily = useCallback((family) => {
-    updatePreference('fontFamily', family);
-  }, [updatePreference]);
-
-  const changeLineSpacing = useCallback((spacing) => {
-    updatePreference('lineSpacing', spacing);
-  }, [updatePreference]);
-
-  const resetPreferences = useCallback(() => {
-    savePreferences(DEFAULT_PREFERENCES);
-  }, [savePreferences]);
+  const changeLineSpacing = (spacing) => {
+    setLineSpacing(spacing);
+    savePreferences();
+  };
 
   return (
     <UserPreferencesContext.Provider
       value={{
-        ...preferences,
+        nightMode,
+        fontSize,
+        fontFamily,
+        lineSpacing,
         toggleNightMode,
         changeFontSize,
         changeFontFamily,
         changeLineSpacing,
-        resetPreferences,
       }}
     >
       {children}

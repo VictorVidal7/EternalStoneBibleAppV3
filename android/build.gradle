@@ -1,3 +1,5 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
 buildscript {
     ext {
         buildToolsVersion = "34.0.0"
@@ -15,14 +17,10 @@ buildscript {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
-        // Añade esta línea para el plugin de Google Services
-        classpath("com.google.gms:google-services:4.4.2")
+        classpath("com.google.gms:google-services:4.4.0")
     }
 }
 
-apply plugin: "com.facebook.react.rootproject"
-
-// Añade estas líneas al final del archivo
 allprojects {
     repositories {
         google()

@@ -1,19 +1,44 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NotesContext = createContext();
 
 export const NotesProvider = ({ children }) => {
   const [notes, setNotes] = useState({});
 
+  useEffect(() => {
+    loadNotes();
+  }, []);
+
+  const loadNotes = async () => {
+    try {
+      const savedNotes = await AsyncStorage.getItem('notes');
+      if (savedNotes !== null) {
+        setNotes(JSON.parse(savedNotes));
+      }
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    }
+  };
+
+  const saveNotes = async (newNotes) => {
+    try {
+      await AsyncStorage.setItem('notes', JSON.stringify(newNotes));
+      setNotes(newNotes);
+    } catch (error) {
+      console.error('Error saving notes:', error);
+    }
+  };
+
   const addNote = (book, chapter, verse, content) => {
-    setNotes(prevNotes => ({
-      ...prevNotes,
-      [`${book}-${chapter}-${verse}`]: content
-    }));
+    const key = `${book}-${chapter}-${verse}`;
+    const newNotes = { ...notes, [key]: content };
+    saveNotes(newNotes);
   };
 
   const getNote = (book, chapter, verse) => {
-    return notes[`${book}-${chapter}-${verse}`] || '';
+    const key = `${book}-${chapter}-${verse}`;
+    return notes[key] || '';
   };
 
   return (
@@ -23,4 +48,10 @@ export const NotesProvider = ({ children }) => {
   );
 };
 
-export const useNotes = () => useContext(NotesContext);
+export const useNotes = () => {
+  const context = useContext(NotesContext);
+  if (context === undefined) {
+    throw new Error('useNotes must be used within a NotesProvider');
+  }
+  return context;
+};
