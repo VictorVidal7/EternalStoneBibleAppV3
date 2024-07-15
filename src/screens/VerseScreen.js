@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, AccessibilityInfo, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, Dimensions } from 'react-native';
 import { RecyclerListView, DataProvider, LayoutProvider } from 'recyclerlistview';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -87,23 +87,24 @@ const VerseScreen = ({ route, theme }) => {
     }
   ), []);
 
-  useEffect(() => {
-    const loadVerses = async () => {
-      try {
-        setLoading(true);
-        const chapterVerses = await getChapter(book, chapter);
-        setVerses(chapterVerses);
-        setDataProviderState(dataProvider.cloneWithRows(chapterVerses));
-        AnalyticsService.logScreenView(`Verse_${book}_${chapter}`);
-      } catch (error) {
-        console.error('Error loading verses:', error);
-        Alert.alert(t('error'), t('errorLoadingVerses'));
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadVerses();
+  const loadVerses = useCallback(async () => {
+    try {
+      setLoading(true);
+      const chapterVerses = await getChapter(book, chapter);
+      setVerses(chapterVerses);
+      setDataProviderState(dataProvider.cloneWithRows(chapterVerses));
+      AnalyticsService.logScreenView(`Verse_${book}_${chapter}`);
+    } catch (error) {
+      console.error('Error loading verses:', error);
+      Alert.alert(t('error'), t('errorLoadingVerses'));
+    } finally {
+      setLoading(false);
+    }
   }, [book, chapter, t, dataProvider]);
+
+  useEffect(() => {
+    loadVerses();
+  }, [loadVerses]);
 
   const isBookmarked = useCallback((verse) => {
     return bookmarks.some(b => b.book === book && b.chapter === chapter && b.verse === verse);
@@ -150,6 +151,18 @@ const VerseScreen = ({ route, theme }) => {
     setNoteModalVisible(true);
   }, []);
 
+  const closeNoteModal = useCallback(() => {
+    setNoteModalVisible(false);
+  }, []);
+
+  const saveNote = useCallback((noteText) => {
+    if (currentVerse) {
+      addNote(book, chapter, currentVerse.number, noteText);
+      AnalyticsService.logEvent('add_note', { book, chapter, verse: currentVerse.number });
+    }
+    setNoteModalVisible(false);
+  }, [addNote, book, chapter, currentVerse]);
+
   const renderVerse = useCallback((_type, item) => (
     <VerseItem
       item={item}
@@ -186,15 +199,9 @@ const VerseScreen = ({ route, theme }) => {
       />
       <NoteModal 
         visible={noteModalVisible}
-        onClose={() => setNoteModalVisible(false)}
+        onClose={closeNoteModal}
         verse={currentVerse}
-        onSave={(noteText) => {
-          if (currentVerse) {
-            addNote(book, chapter, currentVerse.number, noteText);
-            AnalyticsService.logEvent('add_note', { book, chapter, verse: currentVerse.number });
-          }
-          setNoteModalVisible(false);
-        }}
+        onSave={saveNote}
         initialNote={currentVerse ? getNote(book, chapter, currentVerse.number) : ''}
       />
     </View>
@@ -245,4 +252,4 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
   };
 };
 
-export default withTheme(React.memo(VerseScreen));
+export default React.memo(withTheme(VerseScreen));
