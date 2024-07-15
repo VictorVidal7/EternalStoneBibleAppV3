@@ -1,0 +1,169 @@
+import SQLite from 'react-native-sqlite-storage';
+
+class BibleDatabaseService {
+  constructor() {
+    this.db = null;
+  }
+
+  async openDatabase() {
+    return new Promise((resolve, reject) => {
+      SQLite.openDatabase(
+        {name: 'BibleDB.db', location: 'default'},
+        (db) => {
+          this.db = db;
+          console.log('Database opened successfully');
+          this.createTables().then(resolve).catch(reject);
+        },
+        (error) => {
+          console.error('Error opening database', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  async createTables() {
+    const createVerseTable = `
+      CREATE TABLE IF NOT EXISTS verses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        book TEXT,
+        chapter INTEGER,
+        verse INTEGER,
+        text TEXT,
+        UNIQUE(book, chapter, verse)
+      )
+    `;
+
+    return new Promise((resolve, reject) => {
+      this.db.transaction((tx) => {
+        tx.executeSql(createVerseTable, [], 
+          () => {
+            console.log('Table created successfully');
+            resolve();
+          },
+          (_, error) => {
+            console.error('Error creating table', error);
+            reject(error);
+          }
+        );
+      });
+    });
+  }
+
+  async insertVerse(book, chapter, verse, text) {
+    const query = `INSERT OR IGNORE INTO verses (book, chapter, verse, text) VALUES (?, ?, ?, ?)`;
+    return new Promise((resolve, reject) => {
+      this.db.transaction((tx) => {
+        tx.executeSql(query, [book, chapter, verse, text],
+          (_, result) => {
+            console.log('Verse inserted successfully');
+            resolve(result);
+          },
+          (_, error) => {
+            console.error('Error inserting verse', error);
+            reject(error);
+          }
+        );
+      });
+    });
+  }
+
+  async getVerse(book, chapter, verse) {
+    const query = `SELECT * FROM verses WHERE book = ? AND chapter = ? AND verse = ?`;
+    return new Promise((resolve, reject) => {
+      this.db.transaction((tx) => {
+        tx.executeSql(query, [book, chapter, verse],
+          (_, result) => {
+            if (result.rows.length > 0) {
+              resolve(result.rows.item(0));
+            } else {
+              resolve(null);
+            }
+          },
+          (_, error) => {
+            console.error('Error getting verse', error);
+            reject(error);
+          }
+        );
+      });
+    });
+  }
+
+  async getChapter(book, chapter) {
+    const query = `SELECT * FROM verses WHERE book = ? AND chapter = ? ORDER BY verse`;
+    return new Promise((resolve, reject) => {
+      this.db.transaction((tx) => {
+        tx.executeSql(query, [book, chapter],
+          (_, result) => {
+            const verses = [];
+            for (let i = 0; i < result.rows.length; i++) {
+              verses.push(result.rows.item(i));
+            }
+            resolve(verses);
+          },
+          (_, error) => {
+            console.error('Error getting chapter', error);
+            reject(error);
+          }
+        );
+      });
+    });
+  }
+
+  async searchVerses(searchTerm) {
+    const query = `SELECT * FROM verses WHERE text LIKE ? ORDER BY book, chapter, verse LIMIT 100`;
+    return new Promise((resolve, reject) => {
+      this.db.transaction((tx) => {
+        tx.executeSql(query, [`%${searchTerm}%`],
+          (_, result) => {
+            const verses = [];
+            for (let i = 0; i < result.rows.length; i++) {
+              verses.push(result.rows.item(i));
+            }
+            resolve(verses);
+          },
+          (_, error) => {
+            console.error('Error searching verses', error);
+            reject(error);
+          }
+        );
+      });
+    });
+  }
+
+  async close() {
+    if (this.db) {
+      return new Promise((resolve, reject) => {
+        this.db.close(
+          () => {
+            console.log('Database closed successfully');
+            resolve();
+          },
+          (error) => {
+            console.error('Error closing database', error);
+            reject(error);
+          }
+        );
+      });
+    }
+  }
+
+  async dropTable() {
+    return new Promise((resolve, reject) => {
+      this.db.transaction((tx) => {
+        tx.executeSql('DROP TABLE IF EXISTS verses', [],
+          () => {
+            console.log('Table dropped successfully');
+            resolve();
+          },
+          (_, error) => {
+            console.error('Error dropping table', error);
+            reject(error);
+          }
+        );
+      });
+    });
+  }
+}
+
+export default new BibleDatabaseService();

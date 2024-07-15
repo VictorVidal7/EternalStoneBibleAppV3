@@ -1,32 +1,7 @@
 import { RV1909 } from '../data/completeBibleData';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import BibleDatabaseService from './BibleDatabaseService';
 
 let currentVersion = RV1909;
-const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
-const CACHE_PREFIX = 'bible_data_';
-
-const getFromCache = async (key) => {
-  try {
-    const cached = await AsyncStorage.getItem(CACHE_PREFIX + key);
-    if (cached) {
-      const { data, timestamp } = JSON.parse(cached);
-      if (Date.now() - timestamp < CACHE_EXPIRY) {
-        return data;
-      }
-    }
-  } catch (error) {
-    console.error('Error retrieving from cache:', error);
-  }
-  return null;
-};
-
-const setToCache = async (key, data) => {
-  try {
-    await AsyncStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
-  } catch (error) {
-    console.error('Error setting to cache:', error);
-  }
-};
 
 export const setCurrentVersion = (version) => {
   if (version === 'RV1909') {
@@ -37,29 +12,47 @@ export const setCurrentVersion = (version) => {
   }
 };
 
+export const resetDatabase = async () => {
+  try {
+    await BibleDatabaseService.openDatabase();
+    await BibleDatabaseService.dropTable();
+    await BibleDatabaseService.createTables();
+    console.log('Database reset complete');
+  } catch (error) {
+    console.error('Error resetting database:', error);
+  }
+};
+
+export const initializeBibleData = async () => {
+  try {
+    await BibleDatabaseService.openDatabase();
+    
+    // Check if the database is empty
+    const sampleVerse = await BibleDatabaseService.getVerse('Génesis', 1, 1);
+    if (!sampleVerse) {
+      console.log('Populating database with initial data...');
+      for (const [book, chapters] of Object.entries(currentVersion)) {
+        for (const [chapter, verses] of Object.entries(chapters)) {
+          for (const verse of verses) {
+            await BibleDatabaseService.insertVerse(book, parseInt(chapter), verse.number, verse.text);
+          }
+        }
+      }
+      console.log('Database population complete.');
+    } else {
+      console.log('Database already populated.');
+    }
+  } catch (error) {
+    console.error('Error initializing Bible data:', error);
+  }
+};
+
 export const getVerse = async (book, chapter, verse) => {
   try {
-    const cacheKey = `${book}_${chapter}_${verse}`;
-    const cachedVerse = await getFromCache(cacheKey);
-    if (cachedVerse) return cachedVerse;
-
-    if (!currentVersion[book]) {
-      console.error(`Book ${book} not found in currentVersion`);
-      console.log('Available books:', Object.keys(currentVersion));
-      throw new Error(`Book ${book} not found`);
-    }
-    if (!currentVersion[book][chapter]) {
-      console.error(`Chapter ${chapter} not found in book ${book}`);
-      console.log(`Available chapters for ${book}:`, Object.keys(currentVersion[book]));
-      throw new Error(`Chapter ${chapter} not found in book ${book}`);
-    }
-    const verseData = currentVersion[book][chapter].find(v => v.number === parseInt(verse));
+    const verseData = await BibleDatabaseService.getVerse(book, parseInt(chapter), parseInt(verse));
     if (!verseData) {
-      console.error(`Verse ${verse} not found in chapter ${chapter} of book ${book}`);
-      console.log(`Available verses for ${book} ${chapter}:`, currentVersion[book][chapter].map(v => v.number));
       throw new Error(`Verse ${verse} not found in chapter ${chapter} of book ${book}`);
     }
-    await setToCache(cacheKey, verseData);
     return verseData;
   } catch (error) {
     console.error(`Error getting verse ${book} ${chapter}:${verse}:`, error);
@@ -69,18 +62,10 @@ export const getVerse = async (book, chapter, verse) => {
 
 export const getChapter = async (book, chapter) => {
   try {
-    const cacheKey = `${book}_${chapter}`;
-    const cachedChapter = await getFromCache(cacheKey);
-    if (cachedChapter) return cachedChapter;
-
-    if (!currentVersion[book]) {
-      throw new Error(`Book ${book} not found`);
-    }
-    if (!currentVersion[book][chapter]) {
+    const chapterData = await BibleDatabaseService.getChapter(book, parseInt(chapter));
+    if (chapterData.length === 0) {
       throw new Error(`Chapter ${chapter} not found in book ${book}`);
     }
-    const chapterData = currentVersion[book][chapter];
-    await setToCache(cacheKey, chapterData);
     return chapterData;
   } catch (error) {
     console.error(`Error getting chapter ${book} ${chapter}:`, error);
@@ -102,37 +87,24 @@ export const getAllBooks = () => {
 
 export const searchBible = async (query, searchType = 'all') => {
   try {
-    const cacheKey = `search_${query}_${searchType}`;
-    const cachedResults = await getFromCache(cacheKey);
-    if (cachedResults) return cachedResults;
-
-    const results = [];
-    const lowercaseQuery = query.toLowerCase();
-
-    Object.entries(currentVersion).forEach(([book, chapters]) => {
-      if ((searchType === 'ot' && book.indexOf('Nuevo') !== -1) || 
-          (searchType === 'nt' && book.indexOf('Antiguo') !== -1)) {
-        return;
-      }
-
-      Object.entries(chapters).forEach(([chapter, verses]) => {
-        verses.forEach((verse) => {
-          if (verse.text.toLowerCase().includes(lowercaseQuery)) {
-            results.push({
-              book,
-              chapter: parseInt(chapter),
-              number: verse.number,
-              text: verse.text
-            });
-          }
-        });
+    const results = await BibleDatabaseService.searchVerses(query);
+    if (searchType !== 'all') {
+      return results.filter(verse => {
+        const isOT = Object.keys(currentVersion).indexOf(verse.book) < 39;
+        return searchType === 'ot' ? isOT : !isOT;
       });
-    });
-
-    await setToCache(cacheKey, results);
+    }
     return results;
   } catch (error) {
     console.error('Error searching Bible:', error);
     throw error;
+  }
+};
+
+export const closeBibleDatabase = async () => {
+  try {
+    await BibleDatabaseService.close();
+  } catch (error) {
+    console.error('Error closing Bible database:', error);
   }
 };

@@ -10,16 +10,26 @@ import { NotesProvider } from './src/context/NotesContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import './src/i18n';
 import analytics from '@react-native-firebase/analytics';
+import { resetDatabase, initializeBibleData, closeBibleDatabase } from './src/services/bibleDataManager';
 
 const App = () => {
   useEffect(() => {
-    const initAnalytics = async () => {
+    const initApp = async () => {
       await analytics().setAnalyticsCollectionEnabled(true);
       await analytics().logAppOpen();
-      console.log('Firebase Analytics initialized');
+      
+      // Reset and reinitialize the database
+      await resetDatabase();
+      await initializeBibleData();
+      
+      console.log('App initialized');
     };
 
-    initAnalytics().catch(console.error);
+    initApp().catch(console.error);
+
+    return () => {
+      closeBibleDatabase().catch(console.error);
+    };
   }, []);
 
   return (
