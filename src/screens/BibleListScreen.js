@@ -5,6 +5,21 @@ import { getAllBooks } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import { withTheme } from '../hoc/withTheme';
 
+const BookItem = React.memo(({ item, onPress, styles, colors }) => (
+  <TouchableOpacity
+    style={styles.bookItem}
+    onPress={() => onPress(item)}
+  >
+    <Text style={[styles.bookName, { color: colors.text }]}>{item}</Text>
+  </TouchableOpacity>
+));
+
+const SectionHeader = React.memo(({ title, styles, colors }) => (
+  <View style={[styles.sectionHeader, { backgroundColor: colors.secondary }]}>
+    <Text style={[styles.sectionHeaderText, { color: colors.text }]}>{title}</Text>
+  </View>
+));
+
 const BibleListScreen = ({ theme }) => {
   const navigation = useNavigation();
   const { colors } = theme;
@@ -21,22 +36,26 @@ const BibleListScreen = ({ theme }) => {
     ];
   }, []);
 
+  const navigateToChapter = useCallback((book) => {
+    console.log(`Navigating to Chapter screen for book: ${book}`);
+    navigation.navigate('Chapter', { book });
+  }, [navigation]);
+
   const renderBookItem = useCallback(({ item }) => (
-    <TouchableOpacity
-      style={styles.bookItem}
-      onPress={() => {
-        console.log(`Navigating to Chapter screen for book: ${item}`);
-        navigation.navigate('Chapter', { book: item });
-      }}
-    >
-      <Text style={[styles.bookName, { color: colors.text }]}>{item}</Text>
-    </TouchableOpacity>
-  ), [navigation, styles, colors]);
+    <BookItem
+      item={item}
+      onPress={navigateToChapter}
+      styles={styles}
+      colors={colors}
+    />
+  ), [navigateToChapter, styles, colors]);
 
   const renderSectionHeader = useCallback(({ section: { title } }) => (
-    <View style={[styles.sectionHeader, { backgroundColor: colors.secondary }]}>
-      <Text style={[styles.sectionHeaderText, { color: colors.text }]}>{title}</Text>
-    </View>
+    <SectionHeader
+      title={title}
+      styles={styles}
+      colors={colors}
+    />
   ), [styles, colors]);
 
   return (
@@ -82,4 +101,4 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
   };
 };
 
-export default withTheme(React.memo(BibleListScreen));
+export default React.memo(withTheme(BibleListScreen));
