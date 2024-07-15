@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, AccessibilityInfo } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, AccessibilityInfo, Dimensions } from 'react-native';
+import { RecyclerListView, DataProvider, LayoutProvider } from 'recyclerlistview';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -12,6 +13,8 @@ import NoteModal from '../components/NoteModal';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
+
+const { width } = Dimensions.get('window');
 
 const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNoteModal, onCopyVerse, styles, colors, isBookmarked }) => (
   <View 
@@ -73,12 +76,24 @@ const VerseScreen = ({ route, theme }) => {
   const navigation = useNavigation();
   const { t } = useTranslation();
 
+  const dataProvider = useMemo(() => new DataProvider((r1, r2) => r1 !== r2), []);
+  const [dataProviderState, setDataProviderState] = useState(dataProvider);
+
+  const layoutProvider = useMemo(() => new LayoutProvider(
+    index => 0,
+    (type, dim) => {
+      dim.width = width;
+      dim.height = 120; // Ajusta esta altura según tus necesidades
+    }
+  ), []);
+
   useEffect(() => {
     const loadVerses = async () => {
       try {
         setLoading(true);
         const chapterVerses = await getChapter(book, chapter);
         setVerses(chapterVerses);
+        setDataProviderState(dataProvider.cloneWithRows(chapterVerses));
         AnalyticsService.logScreenView(`Verse_${book}_${chapter}`);
       } catch (error) {
         console.error('Error loading verses:', error);
@@ -88,7 +103,7 @@ const VerseScreen = ({ route, theme }) => {
       }
     };
     loadVerses();
-  }, [book, chapter, t]);
+  }, [book, chapter, t, dataProvider]);
 
   const isBookmarked = useCallback((verse) => {
     return bookmarks.some(b => b.book === book && b.chapter === chapter && b.verse === verse);
@@ -135,7 +150,7 @@ const VerseScreen = ({ route, theme }) => {
     setNoteModalVisible(true);
   }, []);
 
-  const renderVerse = useCallback(({ item }) => (
+  const renderVerse = useCallback((_type, item) => (
     <VerseItem
       item={item}
       onToggleBookmark={toggleBookmark}
@@ -158,25 +173,16 @@ const VerseScreen = ({ route, theme }) => {
 
   return (
     <View style={styles.container} testID="verse-screen-container">
-      <FlatList
-        data={verses}
-        renderItem={renderVerse}
-        keyExtractor={(item) => item.number.toString()}
-        initialScrollIndex={initialVerse ? initialVerse - 1 : 0}
-        getItemLayout={(data, index) => ({
-          length: 60,
-          offset: 60 * index,
-          index,
-        })}
-        maxToRenderPerBatch={10}
-        windowSize={21}
-        removeClippedSubviews={true}
-        updateCellsBatchingPeriod={50}
-        initialNumToRender={10}
-        onEndReachedThreshold={0.5}
-        accessible={true}
-        accessibilityLabel={t('verseList')}
-        accessibilityRole="list"
+      <RecyclerListView
+        layoutProvider={layoutProvider}
+        dataProvider={dataProviderState}
+        rowRenderer={renderVerse}
+        initialRenderIndex={initialVerse ? initialVerse - 1 : 0}
+        renderAheadOffset={1000}
+        scrollViewProps={{
+          accessibilityLabel: t('verseList'),
+          accessibilityRole: "list"
+        }}
       />
       <NoteModal 
         visible={noteModalVisible}
