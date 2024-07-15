@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
+import { ActivityIndicator } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTheme } from '../context/ThemeContext';
 import HomeScreen from '../screens/HomeScreen';
@@ -7,10 +8,19 @@ import ChapterScreen from '../screens/ChapterScreen';
 import VerseScreen from '../screens/VerseScreen';
 import BookmarksScreen from '../screens/BookmarksScreen';
 import ReadingPlanScreen from '../screens/ReadingPlanScreen';
-import SearchScreen from '../screens/SearchScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+
+// Lazy loaded screens
+const SearchScreen = lazy(() => import('../screens/SearchScreen'));
+const SettingsScreen = lazy(() => import('../screens/SettingsScreen'));
 
 const Stack = createStackNavigator();
+
+const LoadingScreen = () => {
+  const { colors } = useTheme();
+  return (
+    <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+  );
+};
 
 const AppNavigator = () => {
   const { colors, isDarkMode } = useTheme();
@@ -62,14 +72,24 @@ const AppNavigator = () => {
       />
       <Stack.Screen 
         name="Search" 
-        component={SearchScreen} 
-        options={{ title: 'Búsqueda' }} 
-      />
+        options={{ title: 'Búsqueda' }}
+      >
+        {props => (
+          <Suspense fallback={<LoadingScreen />}>
+            <SearchScreen {...props} />
+          </Suspense>
+        )}
+      </Stack.Screen>
       <Stack.Screen 
         name="Settings" 
-        component={SettingsScreen} 
-        options={{ title: 'Configuración' }} 
-      />
+        options={{ title: 'Configuración' }}
+      >
+        {props => (
+          <Suspense fallback={<LoadingScreen />}>
+            <SettingsScreen {...props} />
+          </Suspense>
+        )}
+      </Stack.Screen>
     </Stack.Navigator>
   );
 };
