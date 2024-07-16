@@ -1,27 +1,36 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Switch, TouchableOpacity, ScrollView, StyleSheet, TextInput } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import { useTheme } from '../context/ThemeContext';
 import NotificationService from '../services/NotificationService';
 import { FONT_SIZES, FONT_FAMILIES } from '../constants/appConstants';
 import { withTheme } from '../hoc/withTheme';
+import ColorPicker from '../components/ColorPicker';
+import { useTranslation } from 'react-i18next';
+import { AnalyticsService } from '../services/AnalyticsService';
 
 const SettingsScreen = ({ theme }) => {
   const { 
     fontSize, 
     fontFamily, 
     lineSpacing,
+    textZoom,
+    accentColor,
     changeFontSize, 
     changeFontFamily,
     changeLineSpacing,
+    changeTextZoom,
+    changeAccentColor
   } = useUserPreferences();
 
   const { isDarkMode, toggleTheme, colors } = theme;
+  const { t } = useTranslation();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTimeInput, setNotificationTimeInput] = useState('12:00');
 
-  const styles = React.useMemo(() => createStyles(colors, fontSize, fontFamily), [colors, fontSize, fontFamily]);
+  const styles = React.useMemo(() => createStyles(colors, fontSize, fontFamily, textZoom, accentColor), [colors, fontSize, fontFamily, textZoom, accentColor]);
 
   useEffect(() => {
     loadNotificationSettings();
@@ -41,8 +50,10 @@ const SettingsScreen = ({ theme }) => {
       if (value) {
         const [hours, minutes] = notificationTimeInput.split(':').map(Number);
         await NotificationService.scheduleNotification(hours, minutes);
+        AnalyticsService.logEvent('notifications_enabled', { time: notificationTimeInput });
       } else {
         await NotificationService.cancelAllNotifications();
+        AnalyticsService.logEvent('notifications_disabled');
       }
     } catch (error) {
       console.error('Error toggling notifications:', error);
@@ -56,12 +67,38 @@ const SettingsScreen = ({ theme }) => {
       if (!isNaN(hours) && !isNaN(minutes)) {
         try {
           await NotificationService.scheduleNotification(hours, minutes);
+          AnalyticsService.logEvent('notification_time_changed', { newTime: text });
         } catch (error) {
           console.error('Error scheduling notification:', error);
         }
       }
     }
   }, [notificationsEnabled]);
+
+  const handleTextZoomChange = useCallback((value) => {
+    changeTextZoom(value);
+    AnalyticsService.logEvent('text_zoom_changed', { newZoom: value });
+  }, [changeTextZoom]);
+
+  const handleFontSizeChange = useCallback((size) => {
+    changeFontSize(size);
+    AnalyticsService.logEvent('font_size_changed', { newSize: size });
+  }, [changeFontSize]);
+
+  const handleFontFamilyChange = useCallback((family) => {
+    changeFontFamily(family);
+    AnalyticsService.logEvent('font_family_changed', { newFamily: family });
+  }, [changeFontFamily]);
+
+  const handleLineSpacingChange = useCallback((spacing) => {
+    changeLineSpacing(spacing);
+    AnalyticsService.logEvent('line_spacing_changed', { newSpacing: spacing });
+  }, [changeLineSpacing]);
+
+  const handleAccentColorChange = useCallback((color) => {
+    changeAccentColor(color);
+    AnalyticsService.logEvent('accent_color_changed', { newColor: color });
+  }, [changeAccentColor]);
 
   const renderSectionTitle = (title) => (
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -73,8 +110,8 @@ const SettingsScreen = ({ theme }) => {
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: colors.secondary, true: colors.primary }}
-        thumbColor={value ? colors.accent : colors.text}
+        trackColor={{ false: colors.secondary, true: accentColor }}
+        thumbColor={value ? colors.background : colors.text}
       />
     </View>
   );
@@ -105,20 +142,46 @@ const SettingsScreen = ({ theme }) => {
   );
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      {renderSectionTitle("Apariencia")}
-      {renderToggleOption("Modo Oscuro", isDarkMode, toggleTheme)}
-      {renderButtonGroup("Tamaño de Fuente", Object.values(FONT_SIZES), fontSize, changeFontSize)}
-      {renderButtonGroup("Tipo de Fuente", Object.values(FONT_FAMILIES), fontFamily, changeFontFamily)}
-      {renderButtonGroup("Espaciado de Línea", ['1.0', '1.5', '2.0'], lineSpacing, changeLineSpacing)}
+    <ScrollView style={styles.container}>
+      {renderSectionTitle(t("appearance"))}
+      {renderToggleOption(t("darkMode"), isDarkMode, toggleTheme)}
+      {renderButtonGroup(t("fontSize"), Object.values(FONT_SIZES), fontSize, handleFontSizeChange)}
+      {renderButtonGroup(t("fontFamily"), Object.values(FONT_FAMILIES), fontFamily, handleFontFamilyChange)}
+      {renderButtonGroup(t("lineSpacing"), ['1.0', '1.5', '2.0'], lineSpacing, handleLineSpacingChange)}
+      
+      <View style={styles.settingRow}>
+        <Text style={styles.settingLabel}>{t("textZoom")}</Text>
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={styles.slider}
+            minimumValue={50}
+            maximumValue={200}
+            step={10}
+            value={textZoom}
+            onValueChange={handleTextZoomChange}
+            minimumTrackTintColor={accentColor}
+            maximumTrackTintColor={colors.secondary}
+            thumbTintColor={accentColor}
+          />
+          <Text style={styles.sliderValue}>{textZoom}%</Text>
+        </View>
+      </View>
 
-      {renderSectionTitle("Notificaciones")}
-      {renderToggleOption("Notificaciones de Lectura Diaria", notificationsEnabled, toggleNotifications)}
+      <View style={styles.settingRow}>
+        <Text style={styles.settingLabel}>{t("accentColor")}</Text>
+        <ColorPicker
+          selectedColor={accentColor}
+          onColorChange={handleAccentColorChange}
+        />
+      </View>
+
+      {renderSectionTitle(t("notifications"))}
+      {renderToggleOption(t("dailyReadingNotifications"), notificationsEnabled, toggleNotifications)}
       {notificationsEnabled && (
         <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Hora de notificación:</Text>
+          <Text style={styles.settingLabel}>{t("notificationTime")}:</Text>
           <TextInput
-            style={[styles.timeInput, { color: colors.text, borderColor: colors.secondary }]}
+            style={styles.timeInput}
             value={notificationTimeInput}
             onChangeText={handleTimeChange}
             placeholder="HH:MM"
@@ -131,69 +194,88 @@ const SettingsScreen = ({ theme }) => {
   );
 };
 
-const createStyles = (colors, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+const createStyles = (colors, fontSize, fontFamily, textZoom, accentColor) => {
+  const zoomFactor = textZoom / 100;
+  const baseFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+  const dynamicFontSize = baseFontSize * zoomFactor;
 
   return StyleSheet.create({
     container: {
       flex: 1,
-      padding: 16,
+      padding: 16 * zoomFactor,
+      backgroundColor: colors.background,
     },
     sectionTitle: {
-      fontSize: dynamicFontSize + 4,
+      fontSize: dynamicFontSize * 1.2,
       fontWeight: 'bold',
-      color: colors.text,
-      marginTop: 20,
-      marginBottom: 10,
+      color: accentColor,
+      marginTop: 20 * zoomFactor,
+      marginBottom: 10 * zoomFactor,
       fontFamily,
     },
     settingRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 12,
+      flexDirection: 'column',
+      justifyContent: 'flex-start',
+      alignItems: 'flex-start',
+      paddingVertical: 12 * zoomFactor,
       borderBottomWidth: 1,
       borderBottomColor: colors.secondary,
-      flexWrap: 'wrap',
     },
     settingLabel: {
       fontSize: dynamicFontSize,
       color: colors.text,
       fontFamily,
-      flex: 1,
-      marginRight: 10,
+      marginBottom: 5 * zoomFactor,
     },
     buttonGroup: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'flex-end',
+      justifyContent: 'flex-start',
+      marginTop: 5 * zoomFactor,
     },
     button: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      marginLeft: 8,
-      marginBottom: 8,
-      borderRadius: 4,
+      paddingHorizontal: 12 * zoomFactor,
+      paddingVertical: 6 * zoomFactor,
+      marginRight: 8 * zoomFactor,
+      marginBottom: 8 * zoomFactor,
+      borderRadius: 4 * zoomFactor,
       backgroundColor: colors.secondary,
     },
     selectedButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: accentColor,
     },
     buttonText: {
       color: colors.text,
-      fontSize: dynamicFontSize - 2,
+      fontSize: dynamicFontSize * 0.9,
       fontFamily,
     },
     selectedButtonText: {
       color: colors.background,
     },
+    sliderContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%',
+    },
+    slider: {
+      flex: 1,
+      height: 40 * zoomFactor,
+    },
+    sliderValue: {
+      marginLeft: 10 * zoomFactor,
+      fontSize: dynamicFontSize,
+      color: colors.text,
+      fontFamily,
+    },
     timeInput: {
       borderWidth: 1,
-      borderRadius: 4,
-      padding: 8,
+      borderRadius: 4 * zoomFactor,
+      padding: 8 * zoomFactor,
       fontSize: dynamicFontSize,
       fontFamily,
-      minWidth: 80,
+      minWidth: 80 * zoomFactor,
+      borderColor: accentColor,
+      color: colors.text,
     },
   });
 };

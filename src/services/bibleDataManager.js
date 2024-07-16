@@ -60,13 +60,20 @@ export const getVerse = async (book, chapter, verse) => {
   }
 };
 
-export const getChapter = async (book, chapter, page = 1, pageSize = 20) => {
+export const getChapter = async (book, chapter) => {
   try {
-    const chapterData = await BibleDatabaseService.getChapter(book, parseInt(chapter), page, pageSize);
-    if (chapterData.length === 0 && page === 1) {
+    const chapterData = await BibleDatabaseService.getChapter(book, parseInt(chapter));
+    console.log('Raw chapter data:', JSON.stringify(chapterData, null, 2));
+    if (chapterData.length === 0) {
       throw new Error(`Chapter ${chapter} not found in book ${book}`);
     }
-    return chapterData;
+    // Asegúrate de que cada versículo tenga la estructura correcta
+    const processedData = chapterData.map(verse => ({
+      number: verse.verse,
+      text: verse.text
+    }));
+    console.log('Processed chapter data:', JSON.stringify(processedData, null, 2));
+    return processedData;
   } catch (error) {
     console.error(`Error getting chapter ${book} ${chapter}:`, error);
     throw error;

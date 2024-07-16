@@ -8,6 +8,8 @@ export const UserPreferencesProvider = ({ children }) => {
   const [fontSize, setFontSize] = useState('medium');
   const [fontFamily, setFontFamily] = useState('default');
   const [lineSpacing, setLineSpacing] = useState('1.5');
+  const [textZoom, setTextZoom] = useState(100);
+  const [accentColor, setAccentColor] = useState('#007AFF');
 
   useEffect(() => {
     loadPreferences();
@@ -22,6 +24,8 @@ export const UserPreferencesProvider = ({ children }) => {
         setFontSize(prefs.fontSize);
         setFontFamily(prefs.fontFamily);
         setLineSpacing(prefs.lineSpacing);
+        setTextZoom(prefs.textZoom);
+        setAccentColor(prefs.accentColor);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
@@ -30,7 +34,7 @@ export const UserPreferencesProvider = ({ children }) => {
 
   const savePreferences = async () => {
     try {
-      const preferences = { nightMode, fontSize, fontFamily, lineSpacing };
+      const preferences = { nightMode, fontSize, fontFamily, lineSpacing, textZoom, accentColor };
       await AsyncStorage.setItem('userPreferences', JSON.stringify(preferences));
     } catch (error) {
       console.error('Error saving preferences:', error);
@@ -57,6 +61,16 @@ export const UserPreferencesProvider = ({ children }) => {
     savePreferences();
   };
 
+  const changeTextZoom = (zoom) => {
+    setTextZoom(zoom);
+    savePreferences();
+  };
+
+  const changeAccentColor = (color) => {
+    setAccentColor(color);
+    savePreferences();
+  };
+
   return (
     <UserPreferencesContext.Provider
       value={{
@@ -64,10 +78,14 @@ export const UserPreferencesProvider = ({ children }) => {
         fontSize,
         fontFamily,
         lineSpacing,
+        textZoom,
+        accentColor,
         toggleNightMode,
         changeFontSize,
         changeFontFamily,
         changeLineSpacing,
+        changeTextZoom,
+        changeAccentColor,
       }}
     >
       {children}
