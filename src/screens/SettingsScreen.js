@@ -1,40 +1,39 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, Switch, TouchableOpacity, ScrollView, StyleSheet, TextInput } from 'react-native';
-import Slider from '@react-native-community/slider';
+import Slider from '@react-native-community/slider'; // Actualiza esta línea
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import { useTheme } from '../context/ThemeContext';
 import NotificationService from '../services/NotificationService';
 import { FONT_SIZES, FONT_FAMILIES } from '../constants/appConstants';
 import { withTheme } from '../hoc/withTheme';
-import ColorPicker from '../components/ColorPicker';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
 
-const SettingsScreen = ({ theme }) => {
+
+const SettingsScreen = () => {
   const { 
+    nightMode, 
     fontSize, 
     fontFamily, 
     lineSpacing,
     textZoom,
-    accentColor,
-    changeFontSize, 
+    colorTheme,
+    toggleNightMode,
+    changeFontSize,
     changeFontFamily,
     changeLineSpacing,
     changeTextZoom,
-    changeAccentColor
+    changeColorTheme,
+    COLOR_THEMES
   } = useUserPreferences();
-
-  const { isDarkMode, toggleTheme, colors } = theme;
+  
+  const { colors } = useTheme();
   const { t } = useTranslation();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTimeInput, setNotificationTimeInput] = useState('12:00');
 
-  const styles = React.useMemo(() => createStyles(colors, fontSize, fontFamily, textZoom, accentColor), [colors, fontSize, fontFamily, textZoom, accentColor]);
-
-  useEffect(() => {
-    loadNotificationSettings();
-  }, []);
+  const styles = React.useMemo(() => createStyles(colors, fontSize, fontFamily), [colors, fontSize, fontFamily]);
 
   const loadNotificationSettings = useCallback(async () => {
     const scheduledTime = await NotificationService.getScheduledNotificationTime();
@@ -43,6 +42,34 @@ const SettingsScreen = ({ theme }) => {
       setNotificationTimeInput(`${scheduledTime.hour.toString().padStart(2, '0')}:${scheduledTime.minute.toString().padStart(2, '0')}`);
     }
   }, []);
+
+  React.useEffect(() => {
+    loadNotificationSettings();
+  }, [loadNotificationSettings]);
+
+  const handleSettingChange = (settingName, newValue) => {
+    switch (settingName) {
+      case 'nightMode':
+        toggleNightMode();
+        break;
+      case 'fontSize':
+        changeFontSize(newValue);
+        break;
+      case 'fontFamily':
+        changeFontFamily(newValue);
+        break;
+      case 'lineSpacing':
+        changeLineSpacing(newValue);
+        break;
+      case 'textZoom':
+        changeTextZoom(newValue);
+        break;
+      case 'colorTheme':
+        changeColorTheme(newValue);
+        break;
+    }
+    AnalyticsService.logEvent('settings_changed', { setting: settingName, value: newValue });
+  };
 
   const toggleNotifications = useCallback(async (value) => {
     try {
@@ -75,31 +102,6 @@ const SettingsScreen = ({ theme }) => {
     }
   }, [notificationsEnabled]);
 
-  const handleTextZoomChange = useCallback((value) => {
-    changeTextZoom(value);
-    AnalyticsService.logEvent('text_zoom_changed', { newZoom: value });
-  }, [changeTextZoom]);
-
-  const handleFontSizeChange = useCallback((size) => {
-    changeFontSize(size);
-    AnalyticsService.logEvent('font_size_changed', { newSize: size });
-  }, [changeFontSize]);
-
-  const handleFontFamilyChange = useCallback((family) => {
-    changeFontFamily(family);
-    AnalyticsService.logEvent('font_family_changed', { newFamily: family });
-  }, [changeFontFamily]);
-
-  const handleLineSpacingChange = useCallback((spacing) => {
-    changeLineSpacing(spacing);
-    AnalyticsService.logEvent('line_spacing_changed', { newSpacing: spacing });
-  }, [changeLineSpacing]);
-
-  const handleAccentColorChange = useCallback((color) => {
-    changeAccentColor(color);
-    AnalyticsService.logEvent('accent_color_changed', { newColor: color });
-  }, [changeAccentColor]);
-
   const renderSectionTitle = (title) => (
     <Text style={styles.sectionTitle}>{title}</Text>
   );
@@ -110,8 +112,8 @@ const SettingsScreen = ({ theme }) => {
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: colors.secondary, true: accentColor }}
-        thumbColor={value ? colors.background : colors.text}
+        trackColor={{ false: colors.secondary, true: colors.primary }}
+        thumbColor={value ? colors.accent : colors.text}
       />
     </View>
   );
@@ -144,35 +146,41 @@ const SettingsScreen = ({ theme }) => {
   return (
     <ScrollView style={styles.container}>
       {renderSectionTitle(t("appearance"))}
-      {renderToggleOption(t("darkMode"), isDarkMode, toggleTheme)}
-      {renderButtonGroup(t("fontSize"), Object.values(FONT_SIZES), fontSize, handleFontSizeChange)}
-      {renderButtonGroup(t("fontFamily"), Object.values(FONT_FAMILIES), fontFamily, handleFontFamilyChange)}
-      {renderButtonGroup(t("lineSpacing"), ['1.0', '1.5', '2.0'], lineSpacing, handleLineSpacingChange)}
+      {renderToggleOption(t("darkMode"), nightMode, () => handleSettingChange('nightMode', !nightMode))}
+      {renderButtonGroup(t("fontSize"), Object.values(FONT_SIZES), fontSize, (size) => handleSettingChange('fontSize', size))}
+      {renderButtonGroup(t("fontFamily"), Object.values(FONT_FAMILIES), fontFamily, (family) => handleSettingChange('fontFamily', family))}
+      {renderButtonGroup(t("lineSpacing"), ['1.0', '1.5', '2.0'], lineSpacing, (spacing) => handleSettingChange('lineSpacing', spacing))}
       
       <View style={styles.settingRow}>
         <Text style={styles.settingLabel}>{t("textZoom")}</Text>
-        <View style={styles.sliderContainer}>
-          <Slider
-            style={styles.slider}
-            minimumValue={50}
-            maximumValue={200}
-            step={10}
-            value={textZoom}
-            onValueChange={handleTextZoomChange}
-            minimumTrackTintColor={accentColor}
-            maximumTrackTintColor={colors.secondary}
-            thumbTintColor={accentColor}
-          />
-          <Text style={styles.sliderValue}>{textZoom}%</Text>
-        </View>
+        <Slider
+          style={{width: 200, height: 40}}
+          minimumValue={50}
+          maximumValue={200}
+          step={10}
+          value={textZoom}
+          onValueChange={(value) => handleSettingChange('textZoom', value)}
+          minimumTrackTintColor={colors.primary}
+          maximumTrackTintColor={colors.secondary}
+        />
+        <Text style={styles.settingLabel}>{textZoom}%</Text>
       </View>
 
       <View style={styles.settingRow}>
-        <Text style={styles.settingLabel}>{t("accentColor")}</Text>
-        <ColorPicker
-          selectedColor={accentColor}
-          onColorChange={handleAccentColorChange}
-        />
+        <Text style={styles.settingLabel}>{t("colorTheme")}</Text>
+        <View style={styles.colorThemeContainer}>
+          {Object.keys(COLOR_THEMES).map((theme) => (
+            <TouchableOpacity
+              key={theme}
+              style={[
+                styles.colorThemeButton,
+                { backgroundColor: COLOR_THEMES[theme].primary },
+                colorTheme === theme && styles.selectedColorTheme,
+              ]}
+              onPress={() => handleSettingChange('colorTheme', theme)}
+            />
+          ))}
+        </View>
       </View>
 
       {renderSectionTitle(t("notifications"))}
@@ -194,30 +202,28 @@ const SettingsScreen = ({ theme }) => {
   );
 };
 
-const createStyles = (colors, fontSize, fontFamily, textZoom, accentColor) => {
-  const zoomFactor = textZoom / 100;
-  const baseFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
-  const dynamicFontSize = baseFontSize * zoomFactor;
+const createStyles = (colors, fontSize, fontFamily) => {
+  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
 
   return StyleSheet.create({
     container: {
       flex: 1,
-      padding: 16 * zoomFactor,
+      padding: 16,
       backgroundColor: colors.background,
     },
     sectionTitle: {
-      fontSize: dynamicFontSize * 1.2,
+      fontSize: dynamicFontSize + 4,
       fontWeight: 'bold',
-      color: accentColor,
-      marginTop: 20 * zoomFactor,
-      marginBottom: 10 * zoomFactor,
+      color: colors.text,
+      marginTop: 20,
+      marginBottom: 10,
       fontFamily,
     },
     settingRow: {
-      flexDirection: 'column',
-      justifyContent: 'flex-start',
-      alignItems: 'flex-start',
-      paddingVertical: 12 * zoomFactor,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: colors.secondary,
     },
@@ -225,57 +231,56 @@ const createStyles = (colors, fontSize, fontFamily, textZoom, accentColor) => {
       fontSize: dynamicFontSize,
       color: colors.text,
       fontFamily,
-      marginBottom: 5 * zoomFactor,
+      flex: 1,
+      marginRight: 10,
     },
     buttonGroup: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'flex-start',
-      marginTop: 5 * zoomFactor,
+      justifyContent: 'flex-end',
     },
     button: {
-      paddingHorizontal: 12 * zoomFactor,
-      paddingVertical: 6 * zoomFactor,
-      marginRight: 8 * zoomFactor,
-      marginBottom: 8 * zoomFactor,
-      borderRadius: 4 * zoomFactor,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      marginLeft: 8,
+      marginBottom: 8,
+      borderRadius: 4,
       backgroundColor: colors.secondary,
     },
     selectedButton: {
-      backgroundColor: accentColor,
+      backgroundColor: colors.primary,
     },
     buttonText: {
       color: colors.text,
-      fontSize: dynamicFontSize * 0.9,
+      fontSize: dynamicFontSize - 2,
       fontFamily,
     },
     selectedButtonText: {
       color: colors.background,
     },
-    sliderContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      width: '100%',
-    },
-    slider: {
-      flex: 1,
-      height: 40 * zoomFactor,
-    },
-    sliderValue: {
-      marginLeft: 10 * zoomFactor,
-      fontSize: dynamicFontSize,
-      color: colors.text,
-      fontFamily,
-    },
     timeInput: {
       borderWidth: 1,
-      borderRadius: 4 * zoomFactor,
-      padding: 8 * zoomFactor,
+      borderColor: colors.secondary,
+      borderRadius: 4,
+      padding: 8,
       fontSize: dynamicFontSize,
       fontFamily,
-      minWidth: 80 * zoomFactor,
-      borderColor: accentColor,
+      minWidth: 80,
       color: colors.text,
+    },
+    colorThemeContainer: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+    },
+    colorThemeButton: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      marginLeft: 10,
+    },
+    selectedColorTheme: {
+      borderWidth: 2,
+      borderColor: colors.text,
     },
   });
 };

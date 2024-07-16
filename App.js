@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider } from './src/context/ThemeContext';
 import { UserPreferencesProvider } from './src/context/UserPreferencesContext';
+import { ThemeProvider } from './src/context/ThemeContext';
 import { ReadingProgressProvider } from './src/context/ReadingProgressContext';
 import { BookmarksProvider } from './src/context/BookmarksContext';
 import { ReadingPlanProvider } from './src/context/ReadingPlanContext';
-import { NotesProvider } from './src/context/NotesContext';
+import { NotesProvider } from './src/context/NotesContext'; // Cambiado de NotesProvider a NotesContext
 import AppNavigator from './src/navigation/AppNavigator';
 import './src/i18n';
 import analytics from '@react-native-firebase/analytics';
@@ -34,8 +34,8 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <UserPreferencesProvider>
+      <UserPreferencesProvider>
+        <ThemeProvider>
           <ReadingProgressProvider>
             <BookmarksProvider>
               <ReadingPlanProvider>
@@ -47,8 +47,8 @@ const App = () => {
               </ReadingPlanProvider>
             </BookmarksProvider>
           </ReadingProgressProvider>
-        </UserPreferencesProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </UserPreferencesProvider>
     </SafeAreaProvider>
   );
 };

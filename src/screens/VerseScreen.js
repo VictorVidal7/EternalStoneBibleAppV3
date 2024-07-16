@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, Dimensions, TextInput, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, Dimensions, TextInput, FlatList, Animated } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -16,12 +16,31 @@ import { AnalyticsService } from '../services/AnalyticsService';
 const { width } = Dimensions.get('window');
 
 const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNoteModal, onCopyVerse, styles, colors, isBookmarked, isHighlighted }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const animatePress = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true })
+    ]).start();
+  };
+
   if (!item) return null;
   
   return (
-    <View 
+    <Animated.View 
       style={[
         styles.verseContainer, 
+        { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
         { lineHeight: item.lineSpacing },
         isHighlighted && styles.highlightedVerse
       ]}
@@ -33,7 +52,10 @@ const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNote
       <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
       <View style={styles.actionsContainer}>
         <TouchableOpacity 
-          onPress={() => onToggleBookmark(item.number)}
+          onPress={() => {
+            animatePress();
+            onToggleBookmark(item.number);
+          }}
           accessibilityLabel={isBookmarked(item.number) ? 'Quitar marcador' : 'Añadir marcador'}
           accessibilityRole="button"
         >
@@ -44,28 +66,37 @@ const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNote
           />
         </TouchableOpacity>
         <TouchableOpacity 
-          onPress={() => onShareVerse(item)}
+          onPress={() => {
+            animatePress();
+            onShareVerse(item);
+          }}
           accessibilityLabel="Compartir versículo"
           accessibilityRole="button"
         >
           <Icon name="share" size={24} color={colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity 
-          onPress={() => onOpenNoteModal(item)}
+          onPress={() => {
+            animatePress();
+            onOpenNoteModal(item);
+          }}
           accessibilityLabel="Añadir nota"
           accessibilityRole="button"
         >
           <Icon name="note-add" size={24} color={colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity 
-          onPress={() => onCopyVerse(item)}
+          onPress={() => {
+            animatePress();
+            onCopyVerse(item);
+          }}
           accessibilityLabel="Copiar versículo"
           accessibilityRole="button"
         >
           <Icon name="content-copy" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   );
 });
 
@@ -95,25 +126,10 @@ const VerseScreen = ({ route, theme }) => {
       setLoading(true);
       setError(null);
       const chapterVerses = await getChapter(book, chapter);
-      console.log('Received chapter verses:', JSON.stringify(chapterVerses, null, 2));
       if (!chapterVerses || chapterVerses.length === 0) {
         throw new Error('No verses found for this chapter');
       }
-      // Verificar y limpiar los datos
-      const validVerses = chapterVerses.filter(verse => {
-        const isValid = verse && typeof verse.number === 'number' && typeof verse.text === 'string';
-        if (!isValid) {
-          console.warn('Invalid verse:', JSON.stringify(verse, null, 2));
-          console.warn('Verse number type:', typeof verse.number);
-          console.warn('Verse text type:', typeof verse.text);
-        }
-        return isValid;
-      });
-      console.log('Valid verses:', JSON.stringify(validVerses, null, 2));
-      if (validVerses.length !== chapterVerses.length) {
-        console.warn(`Some verses were invalid and have been filtered out. Original: ${chapterVerses.length}, Valid: ${validVerses.length}`);
-      }
-      setVerses(validVerses);
+      setVerses(chapterVerses);
       const bookChapters = await getBookChapters(book);
       setTotalChapters(bookChapters);
       AnalyticsService.logScreenView(`Verse_${book}_${chapter}`);
@@ -225,22 +241,19 @@ const VerseScreen = ({ route, theme }) => {
     }
   }, [totalChapters, chapter, book]);
 
-  const renderItem = useCallback(({ item, index }) => {
-    if (!item) return null;
-    return (
-      <VerseItem
-        item={item}
-        onToggleBookmark={toggleBookmark}
-        onShareVerse={shareVerse}
-        onOpenNoteModal={openNoteModal}
-        onCopyVerse={copyVerse}
-        styles={styles}
-        colors={colors}
-        isBookmarked={isBookmarked}
-        isHighlighted={highlightedVerses.includes(item.number)}
-      />
-    );
-  }, [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
+  const renderItem = useCallback(({ item }) => (
+    <VerseItem
+      item={item}
+      onToggleBookmark={toggleBookmark}
+      onShareVerse={shareVerse}
+      onOpenNoteModal={openNoteModal}
+      onCopyVerse={copyVerse}
+      styles={styles}
+      colors={colors}
+      isBookmarked={isBookmarked}
+      isHighlighted={highlightedVerses.includes(item.number)}
+    />
+  ), [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
 
   if (loading) {
     return (
@@ -264,11 +277,23 @@ const VerseScreen = ({ route, theme }) => {
   return (
     <View style={styles.container} testID="verse-screen-container">
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigateToChapter(chapter - 1)} disabled={chapter === 1}>
+        <TouchableOpacity 
+          onPress={() => navigateToChapter(chapter - 1)} 
+          disabled={chapter === 1}
+          accessibilityLabel={`Ir al capítulo anterior de ${book}`}
+          accessibilityHint="Navega al capítulo anterior del libro actual"
+          accessibilityRole="button"
+        >
           <Icon name="chevron-left" size={24} color={chapter === 1 ? colors.secondary : colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.chapterTitle}>{`${book} ${chapter}`}</Text>
-        <TouchableOpacity onPress={() => navigateToChapter(chapter + 1)} disabled={chapter === totalChapters}>
+        <Text style={styles.chapterTitle} accessibilityRole="header">{`${book} ${chapter}`}</Text>
+        <TouchableOpacity 
+          onPress={() => navigateToChapter(chapter + 1)} 
+          disabled={chapter === totalChapters}
+          accessibilityLabel={`Ir al siguiente capítulo de ${book}`}
+          accessibilityHint="Navega al siguiente capítulo del libro actual"
+          accessibilityRole="button"
+        >
           <Icon name="chevron-right" size={24} color={chapter === totalChapters ? colors.secondary : colors.primary} />
         </TouchableOpacity>
       </View>
@@ -279,8 +304,15 @@ const VerseScreen = ({ route, theme }) => {
           onChangeText={setSearchQuery}
           placeholder={t('searchInChapter')}
           placeholderTextColor={colors.secondary}
+          accessibilityLabel="Buscar en el capítulo actual"
+          accessibilityHint="Ingresa texto para buscar en el capítulo actual"
         />
-        <TouchableOpacity onPress={handleSearch}>
+        <TouchableOpacity 
+          onPress={handleSearch}
+          accessibilityLabel="Buscar"
+          accessibilityHint="Inicia la búsqueda con el texto ingresado"
+          accessibilityRole="button"
+        >
           <Icon name="search" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -288,7 +320,7 @@ const VerseScreen = ({ route, theme }) => {
         ref={flatListRef}
         data={verses}
         renderItem={renderItem}
-        keyExtractor={(item, index) => `verse-${item?.number || index}`}
+        keyExtractor={(item) => `verse-${item.number}`}
         initialNumToRender={20}
         maxToRenderPerBatch={20}
         windowSize={21}
@@ -299,6 +331,8 @@ const VerseScreen = ({ route, theme }) => {
         ListEmptyComponent={
           <Text style={styles.emptyText}>{t('noVersesFound')}</Text>
         }
+        accessibilityLabel={`Lista de versículos del capítulo ${chapter} de ${book}`}
+        accessibilityHint="Desliza hacia arriba o abajo para navegar por los versículos"
       />
       <NoteModal 
         visible={noteModalVisible}

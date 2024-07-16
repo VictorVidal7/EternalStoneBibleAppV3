@@ -3,13 +3,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserPreferencesContext = createContext();
 
+const COLOR_THEMES = {
+  default: {
+    primary: '#007AFF',
+    secondary: '#5856D6',
+    background: '#FFFFFF',
+    text: '#000000',
+  },
+  nature: {
+    primary: '#4CAF50',
+    secondary: '#8BC34A',
+    background: '#F1F8E9',
+    text: '#33691E',
+  },
+  ocean: {
+    primary: '#0288D1',
+    secondary: '#03A9F4',
+    background: '#E1F5FE',
+    text: '#01579B',
+  },
+  // Puedes añadir más temas aquí
+};
+
 export const UserPreferencesProvider = ({ children }) => {
   const [nightMode, setNightMode] = useState(false);
   const [fontSize, setFontSize] = useState('medium');
   const [fontFamily, setFontFamily] = useState('default');
   const [lineSpacing, setLineSpacing] = useState('1.5');
   const [textZoom, setTextZoom] = useState(100);
-  const [accentColor, setAccentColor] = useState('#007AFF');
+  const [colorTheme, setColorTheme] = useState('default');
 
   useEffect(() => {
     loadPreferences();
@@ -25,7 +47,7 @@ export const UserPreferencesProvider = ({ children }) => {
         setFontFamily(prefs.fontFamily);
         setLineSpacing(prefs.lineSpacing);
         setTextZoom(prefs.textZoom);
-        setAccentColor(prefs.accentColor);
+        setColorTheme(prefs.colorTheme || 'default');
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
@@ -34,7 +56,7 @@ export const UserPreferencesProvider = ({ children }) => {
 
   const savePreferences = async () => {
     try {
-      const preferences = { nightMode, fontSize, fontFamily, lineSpacing, textZoom, accentColor };
+      const preferences = { nightMode, fontSize, fontFamily, lineSpacing, textZoom, colorTheme };
       await AsyncStorage.setItem('userPreferences', JSON.stringify(preferences));
     } catch (error) {
       console.error('Error saving preferences:', error);
@@ -66,8 +88,8 @@ export const UserPreferencesProvider = ({ children }) => {
     savePreferences();
   };
 
-  const changeAccentColor = (color) => {
-    setAccentColor(color);
+  const changeColorTheme = (theme) => {
+    setColorTheme(theme);
     savePreferences();
   };
 
@@ -79,13 +101,14 @@ export const UserPreferencesProvider = ({ children }) => {
         fontFamily,
         lineSpacing,
         textZoom,
-        accentColor,
+        colorTheme,
         toggleNightMode,
         changeFontSize,
         changeFontFamily,
         changeLineSpacing,
         changeTextZoom,
-        changeAccentColor,
+        changeColorTheme,
+        COLOR_THEMES,
       }}
     >
       {children}
