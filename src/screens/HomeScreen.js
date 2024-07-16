@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useReadingPlan } from '../context/ReadingPlanContext';
@@ -14,25 +14,51 @@ const HomeScreen = ({ theme }) => {
   const { currentPlan } = useReadingPlan();
   const { t } = useTranslation();
   const { colors } = theme;
+  const styles = useStyles(createStyles);
 
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
-  const buttonTextStyle = useMemo(() => [
-    styles.buttonText,
-    { fontSize: styles.dynamicFontSize }
-  ], [styles.buttonText, styles.dynamicFontSize]);
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, []);
+
+  const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
   const renderButton = (text, onPress, testID) => (
-    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
-      <Text style={buttonTextStyle}>{text}</Text>
-    </TouchableOpacity>
+    <AnimatedButton 
+      style={[
+        styles.button,
+        {
+          opacity: fadeAnim,
+          transform: [{ scale: scaleAnim }]
+        }
+      ]} 
+      onPress={onPress} 
+      testID={testID}
+    >
+      <Text style={styles.buttonText}>{text}</Text>
+    </AnimatedButton>
   );
 
   return (
     <ScrollView style={styles.container} testID="home-screen">
-      <Text style={styles.title}>{t('appName')}</Text>
+      <Animated.Text style={[styles.title, { opacity: fadeAnim }]}>{t('appName')}</Animated.Text>
       
-      <DailyVerse />
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <DailyVerse />
+      </Animated.View>
       
       {renderButton(t('exploreBible'), () => navigation.navigate('BibleList'), 'explore-bible-button')}
       {renderButton(t('myBookmarks'), () => navigation.navigate('Bookmarks'), 'bookmarks-button')}
@@ -40,30 +66,30 @@ const HomeScreen = ({ theme }) => {
       {renderButton(t('searchBible'), () => navigation.navigate('Search'), 'search-bible-button')}
       {renderButton(t('settings'), () => navigation.navigate('Settings'), 'settings-button')}
 
-      <View style={styles.infoContainer}>
+      <Animated.View style={[styles.infoContainer, { opacity: fadeAnim }]}>
         <Text style={styles.infoText}>
           {t('readingPlan')}: {currentPlan ? currentPlan.name : t('notSelected')}
         </Text>
         <Text style={styles.infoText}>
           {t('bookmarks')}: {bookmarks.length}
         </Text>
-      </View>
+      </Animated.View>
     </ScrollView>
   );
 };
 
-const createStyles = (colors) => StyleSheet.create({
+const createStyles = (colors, fontSize, fontFamily) => ({
   container: {
     flex: 1,
     padding: 20,
     backgroundColor: colors.background,
   },
   title: {
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
     color: colors.text,
-    fontSize: 28,
   },
   button: {
     backgroundColor: colors.primary,
@@ -75,6 +101,7 @@ const createStyles = (colors) => StyleSheet.create({
   buttonText: {
     color: colors.background,
     fontWeight: 'bold',
+    fontSize: 16,
   },
   infoContainer: {
     backgroundColor: colors.secondary,
