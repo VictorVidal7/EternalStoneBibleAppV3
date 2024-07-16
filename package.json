@@ -28,6 +28,7 @@
     "react": "18.2.0",
     "react-i18next": "latest",
     "react-native": "0.74.3",
+    "react-native-fast-image": "^8.6.3",
     "react-native-gesture-handler": "^2.17.1",
     "react-native-push-notification": "^8.1.1",
     "react-native-reanimated": "^3.7.2",
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@babel/core": "latest",
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/plugin-transform-class-properties": "latest",
     "@babel/plugin-transform-private-methods": "latest",
     "@babel/plugin-transform-private-property-in-object": "latest",

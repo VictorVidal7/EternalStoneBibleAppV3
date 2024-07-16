@@ -89,11 +89,12 @@ class BibleDatabaseService {
     });
   }
 
-  async getChapter(book, chapter) {
-    const query = `SELECT * FROM verses WHERE book = ? AND chapter = ? ORDER BY verse`;
+  async getChapter(book, chapter, page = 1, pageSize = 20) {
+    const offset = (page - 1) * pageSize;
+    const query = `SELECT * FROM verses WHERE book = ? AND chapter = ? ORDER BY verse LIMIT ? OFFSET ?`;
     return new Promise((resolve, reject) => {
       this.db.transaction((tx) => {
-        tx.executeSql(query, [book, chapter],
+        tx.executeSql(query, [book, chapter, pageSize, offset],
           (_, result) => {
             const verses = [];
             for (let i = 0; i < result.rows.length; i++) {
@@ -110,11 +111,12 @@ class BibleDatabaseService {
     });
   }
 
-  async searchVerses(searchTerm) {
-    const query = `SELECT * FROM verses WHERE text LIKE ? ORDER BY book, chapter, verse LIMIT 100`;
+  async searchVerses(searchTerm, page = 1, pageSize = 20) {
+    const offset = (page - 1) * pageSize;
+    const query = `SELECT * FROM verses WHERE text LIKE ? ORDER BY book, chapter, verse LIMIT ? OFFSET ?`;
     return new Promise((resolve, reject) => {
       this.db.transaction((tx) => {
-        tx.executeSql(query, [`%${searchTerm}%`],
+        tx.executeSql(query, [`%${searchTerm}%`, pageSize, offset],
           (_, result) => {
             const verses = [];
             for (let i = 0; i < result.rows.length; i++) {

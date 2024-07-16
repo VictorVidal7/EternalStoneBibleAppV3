@@ -3248,6 +3248,7 @@ __metadata:
   resolution: "EternalStoneBibleApp@workspace:."
   dependencies:
     "@babel/core": latest
+    "@babel/plugin-syntax-dynamic-import": ^7.8.3
     "@babel/plugin-transform-class-properties": latest
     "@babel/plugin-transform-private-methods": latest
     "@babel/plugin-transform-private-property-in-object": latest
@@ -3284,6 +3285,7 @@ __metadata:
     react: 18.2.0
     react-i18next: latest
     react-native: 0.74.3
+    react-native-fast-image: ^8.6.3
     react-native-gesture-handler: ^2.17.1
     react-native-push-notification: ^8.1.1
     react-native-reanimated: ^3.7.2
@@ -8602,6 +8604,16 @@ __metadata:
   version: 17.0.2
   resolution: "react-is@npm:17.0.2"
   checksum: 9d6d111d8990dc98bc5402c1266a808b0459b5d54830bbea24c12d908b536df7883f268a7868cfaedde3dd9d4e0d574db456f84d2e6df9c4526f99bb4b5344d8
+  languageName: node
+  linkType: hard
+
+"react-native-fast-image@npm:^8.6.3":
+  version: 8.6.3
+  resolution: "react-native-fast-image@npm:8.6.3"
+  peerDependencies:
+    react: ^17 || ^18
+    react-native: ">=0.60.0"
+  checksum: 29289cb6b2eae0983c8922b22e2d9de3be07322bb7991c5def19f95eadefaedb0e308ff0b38cc1d0444e8bd4fe94a7621a99a2d3d9298100bcb60b3144677234
   languageName: node
   linkType: hard
 

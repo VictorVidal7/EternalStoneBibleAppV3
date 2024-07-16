@@ -60,10 +60,10 @@ export const getVerse = async (book, chapter, verse) => {
   }
 };
 
-export const getChapter = async (book, chapter) => {
+export const getChapter = async (book, chapter, page = 1, pageSize = 20) => {
   try {
-    const chapterData = await BibleDatabaseService.getChapter(book, parseInt(chapter));
-    if (chapterData.length === 0) {
+    const chapterData = await BibleDatabaseService.getChapter(book, parseInt(chapter), page, pageSize);
+    if (chapterData.length === 0 && page === 1) {
       throw new Error(`Chapter ${chapter} not found in book ${book}`);
     }
     return chapterData;
@@ -85,9 +85,9 @@ export const getAllBooks = () => {
   return Object.keys(currentVersion);
 };
 
-export const searchBible = async (query, searchType = 'all') => {
+export const searchBible = async (query, searchType = 'all', page = 1, pageSize = 20) => {
   try {
-    const results = await BibleDatabaseService.searchVerses(query);
+    const results = await BibleDatabaseService.searchVerses(query, page, pageSize);
     if (searchType !== 'all') {
       return results.filter(verse => {
         const isOT = Object.keys(currentVersion).indexOf(verse.book) < 39;
