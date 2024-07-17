@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, Dimensions, TextInput, FlatList, Animated } from 'react-native';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, Dimensions, TextInput, ScrollView, Animated } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -18,20 +18,27 @@ const { width } = Dimensions.get('window');
 
 const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNoteModal, onCopyVerse, styles, colors, isBookmarked, isHighlighted }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        useNativeDriver: true,
+      })
+    ]).start();
   }, []);
 
   const animatePress = () => {
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
-      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true })
+      Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: true })
     ]).start();
   };
 
@@ -41,8 +48,10 @@ const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNote
     <Animated.View 
       style={[
         styles.verseContainer, 
-        { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
-        { lineHeight: item.lineSpacing },
+        { 
+          opacity: fadeAnim, 
+          transform: [{ scale: scaleAnim }],
+        },
         isHighlighted && styles.highlightedVerse
       ]}
       accessible={true}
@@ -121,44 +130,80 @@ const VerseScreen = ({ route, theme }) => {
   const [totalChapters, setTotalChapters] = useState(0);
   const [isDistractionFreeMode, setIsDistractionFreeMode] = useState(false);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [visibleVerses, setVisibleVerses] = useState(20);
 
-  const flatListRef = useRef(null);
+  const scrollViewRef = useRef(null);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const loadVerses = useCallback(async () => {
+  const loadVerses = useCallback(async (bookToLoad, chapterToLoad) => {
     try {
       setLoading(true);
       setError(null);
-      const chapterVerses = await getChapter(book, chapter);
+      const chapterVerses = await getChapter(bookToLoad, chapterToLoad);
       if (!chapterVerses || chapterVerses.length === 0) {
         throw new Error('No verses found for this chapter');
       }
       setVerses(chapterVerses);
-      const bookChapters = await getBookChapters(book);
+      setVisibleVerses(20);
+      const bookChapters = await getBookChapters(bookToLoad);
       setTotalChapters(bookChapters);
-      AnalyticsService.logScreenView(`Verse_${book}_${chapter}`);
+      AnalyticsService.logScreenView(`Verse_${bookToLoad}_${chapterToLoad}`);
     } catch (error) {
       console.error('Error loading verses:', error);
       setError(t('errorLoadingVerses'));
     } finally {
       setLoading(false);
+      setIsTransitioning(false);
     }
-  }, [book, chapter, t]);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      loadVerses();
-    }, [loadVerses])
-  );
+  }, [t]);
 
   useEffect(() => {
-    if (initialVerse && flatListRef.current && verses.length > 0) {
+    loadVerses(book, chapter);
+  }, [book, chapter, loadVerses]);
+
+  useEffect(() => {
+    if (initialVerse && scrollViewRef.current) {
       const index = verses.findIndex(v => v.number === initialVerse);
       if (index !== -1) {
-        flatListRef.current.scrollToIndex({ index, animated: true });
+        scrollViewRef.current.scrollTo({ y: index * 150, animated: true });
         setCurrentVerseIndex(index);
       }
     }
   }, [initialVerse, verses]);
+
+  const animateTransition = useCallback((direction) => {
+    setIsTransitioning(true);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0.5,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: -100 * direction,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      slideAnim.setValue(100 * direction);
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsTransitioning(false);
+      });
+    });
+  }, [fadeAnim, slideAnim]);
 
   const isBookmarked = useCallback((verse) => {
     return bookmarks.some(b => b.book === book && b.chapter === chapter && b.verse === verse);
@@ -227,37 +272,26 @@ const VerseScreen = ({ route, theme }) => {
       verse.text.toLowerCase().includes(lowercaseQuery)
     ).map(verse => verse.number);
     setHighlightedVerses(matchingVerses);
-    if (matchingVerses.length > 0 && flatListRef.current) {
+    if (matchingVerses.length > 0 && scrollViewRef.current) {
       const index = verses.findIndex(v => v.number === matchingVerses[0]);
       if (index !== -1) {
-        flatListRef.current.scrollToIndex({ index, animated: true });
+        scrollViewRef.current.scrollTo({ y: index * 150, animated: true });
       }
     }
     AnalyticsService.logEvent('search_within_chapter', { book, chapter, query: searchQuery });
   }, [searchQuery, verses, book, chapter]);
 
   const navigateToChapter = useCallback((newChapter) => {
-    if (newChapter > 0 && newChapter <= totalChapters) {
+    if (newChapter > 0 && newChapter <= totalChapters && !isTransitioning) {
+      const direction = newChapter > chapter ? 1 : -1;
+      animateTransition(direction);
       setChapter(newChapter);
       setSearchQuery('');
       setHighlightedVerses([]);
+      loadVerses(book, newChapter);
       AnalyticsService.logEvent('navigate_chapter', { book, from: chapter, to: newChapter });
     }
-  }, [totalChapters, chapter, book]);
-
-  const renderItem = useCallback(({ item }) => (
-    <VerseItem
-      item={item}
-      onToggleBookmark={toggleBookmark}
-      onShareVerse={shareVerse}
-      onOpenNoteModal={openNoteModal}
-      onCopyVerse={copyVerse}
-      styles={styles}
-      colors={colors}
-      isBookmarked={isBookmarked}
-      isHighlighted={highlightedVerses.includes(item.number)}
-    />
-  ), [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
+  }, [totalChapters, chapter, book, animateTransition, isTransitioning, loadVerses]);
 
   const toggleDistractionFreeMode = () => {
     setIsDistractionFreeMode(!isDistractionFreeMode);
@@ -276,6 +310,15 @@ const VerseScreen = ({ route, theme }) => {
     }
   };
 
+  const loadMoreVerses = () => {
+    setVisibleVerses(prevVisible => Math.min(prevVisible + 20, verses.length));
+  };
+
+  const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }) => {
+    const paddingToBottom = 20;
+    return layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -288,7 +331,7 @@ const VerseScreen = ({ route, theme }) => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadVerses}>
+        <TouchableOpacity style={styles.retryButton} onPress={() => loadVerses(book, chapter)}>
           <Text style={styles.retryButtonText}>{t('retry')}</Text>
         </TouchableOpacity>
       </View>
@@ -348,27 +391,38 @@ const VerseScreen = ({ route, theme }) => {
         >
           <Icon name="search" size={24} color={colors.primary} />
         </TouchableOpacity>
-      </View >
-
-      <FlatList
-        ref={flatListRef}
-        data={verses}
-        renderItem={renderItem}
-        keyExtractor={(item) => `verse-${item.number}`}
-        initialNumToRender={20}
-        maxToRenderPerBatch={10}
-        updateCellsBatchingPeriod={50}
-        windowSize={21}
-        removeClippedSubviews={true}
-        getItemLayout={(data, index) => (
-          {length: 120, offset: 120 * index, index}
+      </View>
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+        onScroll={({ nativeEvent }) => {
+          if (isCloseToBottom(nativeEvent)) {
+            loadMoreVerses();
+          }
+        }}
+        scrollEventThrottle={400}
+      >
+        {verses.slice(0, visibleVerses).map(verse => (
+          <VerseItem
+            key={`verse-${verse.number}`}
+            item={verse}
+            onToggleBookmark={toggleBookmark}
+            onShareVerse={shareVerse}
+            onOpenNoteModal={openNoteModal}
+            onCopyVerse={copyVerse}
+            styles={styles}
+            colors={colors}
+            isBookmarked={isBookmarked}
+            isHighlighted={highlightedVerses.includes(verse.number)}
+          />
+        ))}
+        {visibleVerses < verses.length && (
+          <TouchableOpacity style={styles.loadMoreButton} onPress={loadMoreVerses}>
+            <Text style={styles.loadMoreButtonText}>{t('loadMoreVerses')}</Text>
+          </TouchableOpacity>
         )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>{t('noVersesFound')}</Text>
-        }
-        accessibilityLabel={`Lista de versículos del capítulo ${chapter} de ${book}`}
-        accessibilityHint="Desliza hacia arriba o abajo para navegar por los versículos"
-      />
+      </ScrollView>
       <TouchableOpacity 
         style={styles.distractionFreeModeButton} 
         onPress={toggleDistractionFreeMode}
@@ -454,12 +508,19 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       fontFamily,
       fontSize: dynamicFontSize,
     },
+    scrollView: {
+      flex: 1,
+    },
+    scrollViewContent: {
+      paddingBottom: 40,
+    },
     verseContainer: {
-      flexDirection: 'row',
-      padding: 10,
+      flexDirection: 'column',
+      padding: 20,
       borderBottomWidth: 1,
       borderBottomColor: nightMode ? '#333' : '#e0e0e0',
-      alignItems: 'center',
+      marginBottom: 20,
+      minHeight: 150,
     },
     highlightedVerse: {
       backgroundColor: nightMode ? '#2C2C2C' : '#FFFDE7',
@@ -481,14 +542,19 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
     actionsContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      width: 120,
-      marginLeft: 10,
+      marginTop: 10,
     },
-    emptyText: {
-      color: nightMode ? '#fff' : '#333',
-      fontSize: 16,
-      textAlign: 'center',
-      marginTop: 20,
+    loadMoreButton: {
+      backgroundColor: nightMode ? '#333' : '#e0e0e0',
+      padding: 15,
+      alignItems: 'center',
+      marginTop: 10,
+      borderRadius: 5,
+    },
+    loadMoreButtonText: {
+      color: nightMode ? '#fff' : '#000',
+      fontSize: dynamicFontSize,
+      fontFamily,
     },
     distractionFreeModeButton: {
       position: 'absolute',
