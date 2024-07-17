@@ -7,13 +7,15 @@ import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
 
+const ITEMS_PER_PAGE = 20;
+
 const SearchResultItem = memo(({ item, onPress, styles, colors }) => (
   <TouchableOpacity
     style={[styles.resultItem, { backgroundColor: colors.secondary }]}
     onPress={onPress}
   >
     <Text style={[styles.resultReference, { color: colors.text }]}>
-      {item.book} {item.chapter}:{item.number}
+      {item.book} {item.chapter}:{item.verse}
     </Text>
     <Text style={[styles.resultText, { color: colors.text }]} numberOfLines={2}>
       {item.text}
@@ -27,19 +29,24 @@ const SearchScreen = ({ theme }) => {
   const [results, setResults] = useState([]);
   const [searchType, setSearchType] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const { colors } = theme;
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
 
-  const handleSearch = useCallback(async () => {
+  const handleSearch = useCallback(async (newSearch = false) => {
     if (query.length < 3) {
       setResults([]);
       return;
     }
     setIsLoading(true);
     try {
-      const searchResults = await searchBible(query, searchType);
-      setResults(searchResults);
+      const currentPage = newSearch ? 1 : page;
+      const searchResults = await searchBible(query, searchType, currentPage, ITEMS_PER_PAGE);
+      setResults(prevResults => newSearch ? searchResults : [...prevResults, ...searchResults]);
+      setHasMore(searchResults.length === ITEMS_PER_PAGE);
+      setPage(currentPage + 1);
       AnalyticsService.logEvent('search_performed', { query, searchType, resultsCount: searchResults.length });
     } catch (error) {
       console.error('Error searching the Bible:', error);
@@ -48,24 +55,30 @@ const SearchScreen = ({ theme }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [query, searchType]);
+  }, [query, searchType, page]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (query.length >= 3) {
-        handleSearch();
+        handleSearch(true);
       }
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [query, searchType, handleSearch]);
+  }, [query, searchType]);
+
+  const loadMoreResults = () => {
+    if (!isLoading && hasMore) {
+      handleSearch();
+    }
+  };
 
   const renderSearchResult = useCallback(({ item }) => (
     <SearchResultItem
       item={item}
       onPress={() => {
-        navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.number });
-        AnalyticsService.logEvent('search_result_selected', { book: item.book, chapter: item.chapter, verse: item.number });
+        navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.verse });
+        AnalyticsService.logEvent('search_result_selected', { book: item.book, chapter: item.chapter, verse: item.verse });
       }}
       styles={styles}
       colors={colors}
@@ -101,88 +114,85 @@ const SearchScreen = ({ theme }) => {
           </TouchableOpacity>
         ))}
       </View>
-      {isLoading ? (
+      {isLoading && page === 1 ? (
         <ActivityIndicator size="large" color={colors.primary} />
       ) : (
         <FlatList
           data={results}
           renderItem={renderSearchResult}
-          keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.number}-${index}`}
+          keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`}
           ListEmptyComponent={
             <Text style={[styles.emptyResult, { color: colors.text }]}>
             {query.length < 3 ? t('enterMinChars') : t('noResults')}
-            </Text>
-          }
-          initialNumToRender={10}
-          maxToRenderPerBatch={15}
-          windowSize={5}
-          removeClippedSubviews={true}
-          updateCellsBatchingPeriod={50}
-          onEndReachedThreshold={0.5}
-        />
-      )}
-    </View>
-  );
+          </Text>
+        }
+        onEndReached={loadMoreResults}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={() => isLoading && page > 1 ? <ActivityIndicator size="small" color={colors.primary} /> : null}
+      />
+    )}
+  </View>
+);
 };
 
 const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
 
-  return {
-    container: {
-      flex: 1,
-      padding: 10,
-    },
-    searchInput: {
-      height: 40,
-      borderWidth: 1,
-      borderRadius: 5,
-      paddingHorizontal: 10,
-      marginBottom: 10,
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    searchTypeContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 10,
-    },
-    searchTypeButton: {
-      flex: 1,
-      padding: 10,
-      borderRadius: 5,
-      marginHorizontal: 2,
-      alignItems: 'center',
-    },
-    searchTypeText: {
-      fontSize: dynamicFontSize - 2,
-      fontFamily,
-    },
-    activeSearchTypeText: {
-      fontWeight: 'bold',
-    },
-    resultItem: {
-      marginBottom: 10,
-      padding: 10,
-      borderRadius: 5,
-    },
-    resultReference: {
-      fontWeight: 'bold',
-      marginBottom: 5,
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    resultText: {
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    emptyResult: {
-      textAlign: 'center',
-      marginTop: 20,
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-  };
+return {
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+  searchInput: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    fontFamily,
+    fontSize: dynamicFontSize,
+  },
+  searchTypeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  searchTypeButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 2,
+    alignItems: 'center',
+  },
+  searchTypeText: {
+    fontSize: dynamicFontSize - 2,
+    fontFamily,
+  },
+  activeSearchTypeText: {
+    fontWeight: 'bold',
+  },
+  resultItem: {
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 5,
+  },
+  resultReference: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+    fontFamily,
+    fontSize: dynamicFontSize,
+  },
+  resultText: {
+    fontFamily,
+    fontSize: dynamicFontSize,
+  },
+  emptyResult: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontFamily,
+    fontSize: dynamicFontSize,
+  },
+};
 };
 
 export default withTheme(React.memo(SearchScreen));

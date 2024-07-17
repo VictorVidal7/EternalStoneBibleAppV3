@@ -1,5 +1,6 @@
 import { RV1909 } from '../data/completeBibleData';
 import BibleDatabaseService from './BibleDatabaseService';
+import CacheService from './CacheService';
 
 let currentVersion = RV1909;
 
@@ -48,11 +49,19 @@ export const initializeBibleData = async () => {
 };
 
 export const getVerse = async (book, chapter, verse) => {
+  const cacheKey = `verse_${book}_${chapter}_${verse}`;
+  const cachedVerse = await CacheService.getItem(cacheKey);
+  
+  if (cachedVerse) {
+    return cachedVerse;
+  }
+
   try {
     const verseData = await BibleDatabaseService.getVerse(book, parseInt(chapter), parseInt(verse));
     if (!verseData) {
       throw new Error(`Verse ${verse} not found in chapter ${chapter} of book ${book}`);
     }
+    await CacheService.setItem(cacheKey, verseData);
     return verseData;
   } catch (error) {
     console.error(`Error getting verse ${book} ${chapter}:${verse}:`, error);
@@ -61,18 +70,23 @@ export const getVerse = async (book, chapter, verse) => {
 };
 
 export const getChapter = async (book, chapter) => {
+  const cacheKey = `chapter_${book}_${chapter}`;
+  const cachedChapter = await CacheService.getItem(cacheKey);
+
+  if (cachedChapter) {
+    return cachedChapter;
+  }
+
   try {
     const chapterData = await BibleDatabaseService.getChapter(book, parseInt(chapter));
-    console.log('Raw chapter data:', JSON.stringify(chapterData, null, 2));
     if (chapterData.length === 0) {
       throw new Error(`Chapter ${chapter} not found in book ${book}`);
     }
-    // Asegúrate de que cada versículo tenga la estructura correcta
     const processedData = chapterData.map(verse => ({
       number: verse.verse,
       text: verse.text
     }));
-    console.log('Processed chapter data:', JSON.stringify(processedData, null, 2));
+    await CacheService.setItem(cacheKey, processedData);
     return processedData;
   } catch (error) {
     console.error(`Error getting chapter ${book} ${chapter}:`, error);
@@ -113,5 +127,56 @@ export const closeBibleDatabase = async () => {
     await BibleDatabaseService.close();
   } catch (error) {
     console.error('Error closing Bible database:', error);
+  }
+};
+
+export const getRandomVerse = async () => {
+  try {
+    const books = getAllBooks();
+    const randomBook = books[Math.floor(Math.random() * books.length)];
+    const chapterCount = getBookChapters(randomBook);
+    const randomChapter = Math.floor(Math.random() * chapterCount) + 1;
+    const chapterVerses = await getChapter(randomBook, randomChapter);
+    const randomVerseIndex = Math.floor(Math.random() * chapterVerses.length);
+    const randomVerse = chapterVerses[randomVerseIndex];
+    
+    return {
+      book: randomBook,
+      chapter: randomChapter,
+      number: randomVerse.number,
+      text: randomVerse.text
+    };
+  } catch (error) {
+    console.error('Error getting random verse:', error);
+    throw error;
+  }
+};
+
+export const getNextChapter = (book, chapter) => {
+  const books = getAllBooks();
+  const currentBookIndex = books.indexOf(book);
+  const chapterCount = getBookChapters(book);
+
+  if (chapter < chapterCount) {
+    return { book, chapter: chapter + 1 };
+  } else if (currentBookIndex < books.length - 1) {
+    return { book: books[currentBookIndex + 1], chapter: 1 };
+  } else {
+    return null; // End of the Bible
+  }
+};
+
+export const getPreviousChapter = (book, chapter) => {
+  const books = getAllBooks();
+  const currentBookIndex = books.indexOf(book);
+
+  if (chapter > 1) {
+    return { book, chapter: chapter - 1 };
+  } else if (currentBookIndex > 0) {
+    const previousBook = books[currentBookIndex - 1];
+    const previousBookChapterCount = getBookChapters(previousBook);
+    return { book: previousBook, chapter: previousBookChapterCount };
+  } else {
+    return null; // Beginning of the Bible
   }
 };

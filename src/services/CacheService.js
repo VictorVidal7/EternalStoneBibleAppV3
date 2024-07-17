@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import LRU from 'lru-cache';
 
 const CACHE_PREFIX = 'bible_cache_';
-const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 días
-const MAX_CACHE_SIZE = 100; // Número máximo de elementos en caché
+const CACHE_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 días
+const MAX_CACHE_SIZE = 1000; // Aumentado para almacenar más elementos
 
 class CacheService {
   constructor() {
@@ -65,38 +65,6 @@ class CacheService {
       await AsyncStorage.multiRemove(cacheKeys);
     } catch (error) {
       console.error('Error clearing cache:', error);
-    }
-  }
-
-  async getCacheSize() {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      const cacheKeys = keys.filter(key => key.startsWith(CACHE_PREFIX));
-      return cacheKeys.length;
-    } catch (error) {
-      console.error('Error getting cache size:', error);
-      return 0;
-    }
-  }
-
-  async pruneExpiredItems() {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      const cacheKeys = keys.filter(key => key.startsWith(CACHE_PREFIX));
-      const now = Date.now();
-
-      for (const key of cacheKeys) {
-        const value = await AsyncStorage.getItem(key);
-        if (value !== null) {
-          const item = JSON.parse(value);
-          if (now >= item.expiry) {
-            await AsyncStorage.removeItem(key);
-            this.memoryCache.del(key.replace(CACHE_PREFIX, ''));
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error pruning expired items:', error);
     }
   }
 }
