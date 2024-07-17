@@ -9,6 +9,7 @@ import { useNotes } from '../context/NotesContext';
 import { getChapter, getBookChapters } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import NoteModal from '../components/NoteModal';
+import DistractionFreeMode from '../components/DistractionFreeMode';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
@@ -118,6 +119,8 @@ const VerseScreen = ({ route, theme }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedVerses, setHighlightedVerses] = useState([]);
   const [totalChapters, setTotalChapters] = useState(0);
+  const [isDistractionFreeMode, setIsDistractionFreeMode] = useState(false);
+  const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
 
   const flatListRef = useRef(null);
 
@@ -152,6 +155,7 @@ const VerseScreen = ({ route, theme }) => {
       const index = verses.findIndex(v => v.number === initialVerse);
       if (index !== -1) {
         flatListRef.current.scrollToIndex({ index, animated: true });
+        setCurrentVerseIndex(index);
       }
     }
   }, [initialVerse, verses]);
@@ -255,6 +259,23 @@ const VerseScreen = ({ route, theme }) => {
     />
   ), [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
 
+  const toggleDistractionFreeMode = () => {
+    setIsDistractionFreeMode(!isDistractionFreeMode);
+    AnalyticsService.logEvent('toggle_distraction_free_mode', { enabled: !isDistractionFreeMode });
+  };
+
+  const handleNextVerse = () => {
+    if (currentVerseIndex < verses.length - 1) {
+      setCurrentVerseIndex(currentVerseIndex + 1);
+    }
+  };
+
+  const handlePreviousVerse = () => {
+    if (currentVerseIndex > 0) {
+      setCurrentVerseIndex(currentVerseIndex - 1);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -271,6 +292,18 @@ const VerseScreen = ({ route, theme }) => {
           <Text style={styles.retryButtonText}>{t('retry')}</Text>
         </TouchableOpacity>
       </View>
+    );
+  }
+
+  if (isDistractionFreeMode) {
+    return (
+      <DistractionFreeMode
+        verses={verses.map(v => ({...v, book, chapter}))}
+        currentVerseIndex={currentVerseIndex}
+        onNextVerse={handleNextVerse}
+        onPreviousVerse={handlePreviousVerse}
+        onClose={toggleDistractionFreeMode}
+      />
     );
   }
 
@@ -315,7 +348,8 @@ const VerseScreen = ({ route, theme }) => {
         >
           <Icon name="search" size={24} color={colors.primary} />
         </TouchableOpacity>
-      </View>
+      </View >
+
       <FlatList
         ref={flatListRef}
         data={verses}
@@ -335,6 +369,14 @@ const VerseScreen = ({ route, theme }) => {
         accessibilityLabel={`Lista de versículos del capítulo ${chapter} de ${book}`}
         accessibilityHint="Desliza hacia arriba o abajo para navegar por los versículos"
       />
+      <TouchableOpacity 
+        style={styles.distractionFreeModeButton} 
+        onPress={toggleDistractionFreeMode}
+        accessibilityLabel="Activar modo de lectura sin distracciones"
+        accessibilityRole="button"
+      >
+        <Icon name="fullscreen" size={24} color={colors.primary} />
+      </TouchableOpacity>
       <NoteModal 
         visible={noteModalVisible}
         onClose={closeNoteModal}
@@ -347,7 +389,8 @@ const VerseScreen = ({ route, theme }) => {
 };
 
 const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16
+  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+
   return {
     container: {
       flex: 1,
@@ -446,6 +489,14 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       fontSize: 16,
       textAlign: 'center',
       marginTop: 20,
+    },
+    distractionFreeModeButton: {
+      position: 'absolute',
+      right: 10,
+      bottom: 10,
+      padding: 10,
+      backgroundColor: nightMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+      borderRadius: 20,
     },
   };
 };
