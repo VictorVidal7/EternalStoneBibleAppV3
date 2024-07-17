@@ -3,7 +3,7 @@ import LRU from 'lru-cache';
 
 const CACHE_PREFIX = 'bible_cache_';
 const CACHE_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 días
-const MAX_CACHE_SIZE = 1000; // Aumentado para almacenar más elementos
+const MAX_CACHE_SIZE = 1000;
 
 class CacheService {
   constructor() {
@@ -66,6 +66,19 @@ class CacheService {
     } catch (error) {
       console.error('Error clearing cache:', error);
     }
+  }
+
+  async preloadFrequentlyAccessed(items) {
+    const promises = items.map(async (item) => {
+      const { key, fetcher } = item;
+      const cachedItem = await this.getItem(key);
+      if (!cachedItem) {
+        const value = await fetcher();
+        await this.setItem(key, value);
+      }
+    });
+
+    await Promise.all(promises);
   }
 }
 

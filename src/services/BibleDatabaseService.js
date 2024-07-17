@@ -34,12 +34,27 @@ class BibleDatabaseService {
       )
     `;
 
+    const createIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_book ON verses (book);
+      CREATE INDEX IF NOT EXISTS idx_chapter ON verses (chapter);
+      CREATE INDEX IF NOT EXISTS idx_verse ON verses (verse);
+      CREATE INDEX IF NOT EXISTS idx_text ON verses (text);
+    `;
+
     return new Promise((resolve, reject) => {
       this.db.transaction((tx) => {
         tx.executeSql(createVerseTable, [], 
           () => {
-            console.log('Table created successfully');
-            resolve();
+            tx.executeSql(createIndexes, [],
+              () => {
+                console.log('Table and indexes created successfully');
+                resolve();
+              },
+              (_, error) => {
+                console.error('Error creating indexes', error);
+                reject(error);
+              }
+            );
           },
           (_, error) => {
             console.error('Error creating table', error);

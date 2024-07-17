@@ -322,7 +322,8 @@ const VerseScreen = ({ route, theme }) => {
         renderItem={renderItem}
         keyExtractor={(item) => `verse-${item.number}`}
         initialNumToRender={20}
-        maxToRenderPerBatch={20}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
         windowSize={21}
         removeClippedSubviews={true}
         getItemLayout={(data, index) => (
@@ -346,8 +347,7 @@ const VerseScreen = ({ route, theme }) => {
 };
 
 const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
-
+  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16
   return {
     container: {
       flex: 1,

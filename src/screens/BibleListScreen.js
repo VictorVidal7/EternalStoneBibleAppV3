@@ -66,8 +66,10 @@ const BibleListScreen = ({ theme }) => {
         renderSectionHeader={renderSectionHeader}
         keyExtractor={(item) => item}
         initialNumToRender={20}
-        maxToRenderPerBatch={20}
-        windowSize={5}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        windowSize={21}
+        removeClippedSubviews={true}
         stickySectionHeadersEnabled={false}
       />
     </View>

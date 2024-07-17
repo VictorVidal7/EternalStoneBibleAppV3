@@ -180,3 +180,14 @@ export const getPreviousChapter = (book, chapter) => {
     return null; // Beginning of the Bible
   }
 };
+
+export const preloadFrequentlyAccessedData = async () => {
+  const frequentlyAccessedItems = [
+    { key: 'book_list', fetcher: getAllBooks },
+    { key: 'chapter_Genesis_1', fetcher: () => getChapter('Génesis', 1) },
+    { key: 'chapter_John_3', fetcher: () => getChapter('Juan', 3) },
+    // Añade más elementos frecuentemente accedidos según sea necesario
+  ];
+
+  await CacheService.preloadFrequentlyAccessed(frequentlyAccessedItems);
+};
