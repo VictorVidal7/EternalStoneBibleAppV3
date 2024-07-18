@@ -73,19 +73,22 @@ export const getVerse = async (book, chapter, verse) => {
 export const getChapter = async (book, chapter) => {
   const cacheKey = `chapter_${book}_${chapter}`;
   try {
-    const cachedChapter = await CacheService.getItem(cacheKey);
-    if (cachedChapter) return cachedChapter;
+    const chapterData = await CacheService.getOfflineData(cacheKey, async () => {
+      const data = await BibleDatabaseService.getChapter(book, parseInt(chapter));
+      if (data.length === 0) {
+        throw new Error(`Chapter ${chapter} not found in book ${book}`);
+      }
+      return data.map(verse => ({
+        number: verse.verse,
+        text: verse.text
+      }));
+    });
 
-    const chapterData = await BibleDatabaseService.getChapter(book, parseInt(chapter));
-    if (chapterData.length === 0) {
-      throw new Error(`Chapter ${chapter} not found in book ${book}`);
+    if (!chapterData) {
+      throw new Error('No se pudo obtener el capítulo. Verifica tu conexión a internet.');
     }
-    const processedData = chapterData.map(verse => ({
-      number: verse.verse,
-      text: verse.text
-    }));
-    await CacheService.setItem(cacheKey, processedData);
-    return processedData;
+
+    return chapterData;
   } catch (error) {
     console.error(`Error getting chapter ${book} ${chapter}:`, error);
     throw error;
