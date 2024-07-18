@@ -21,6 +21,7 @@ export const resetDatabase = async () => {
     console.log('Database reset complete');
   } catch (error) {
     console.error('Error resetting database:', error);
+    throw error;
   }
 };
 
@@ -28,16 +29,18 @@ export const initializeBibleData = async () => {
   try {
     await BibleDatabaseService.openDatabase();
     
-    // Check if the database is empty
     const sampleVerse = await BibleDatabaseService.getVerse('Génesis', 1, 1);
     if (!sampleVerse) {
       console.log('Populating database with initial data...');
       for (const [book, chapters] of Object.entries(currentVersion)) {
+        console.log(`Inserting book: ${book} with ${Object.keys(chapters).length} chapters`);
         for (const [chapter, verses] of Object.entries(chapters)) {
+          console.log(`Inserting chapter ${chapter} of ${book} with ${verses.length} verses`);
           for (const verse of verses) {
             await BibleDatabaseService.insertVerse(book, parseInt(chapter), verse.number, verse.text);
           }
         }
+        console.log(`Finished inserting book: ${book}`);
       }
       console.log('Database population complete.');
     } else {
@@ -45,18 +48,16 @@ export const initializeBibleData = async () => {
     }
   } catch (error) {
     console.error('Error initializing Bible data:', error);
+    throw error;
   }
 };
 
 export const getVerse = async (book, chapter, verse) => {
   const cacheKey = `verse_${book}_${chapter}_${verse}`;
-  const cachedVerse = await CacheService.getItem(cacheKey);
-  
-  if (cachedVerse) {
-    return cachedVerse;
-  }
-
   try {
+    const cachedVerse = await CacheService.getItem(cacheKey);
+    if (cachedVerse) return cachedVerse;
+
     const verseData = await BibleDatabaseService.getVerse(book, parseInt(chapter), parseInt(verse));
     if (!verseData) {
       throw new Error(`Verse ${verse} not found in chapter ${chapter} of book ${book}`);
@@ -71,13 +72,10 @@ export const getVerse = async (book, chapter, verse) => {
 
 export const getChapter = async (book, chapter) => {
   const cacheKey = `chapter_${book}_${chapter}`;
-  const cachedChapter = await CacheService.getItem(cacheKey);
-
-  if (cachedChapter) {
-    return cachedChapter;
-  }
-
   try {
+    const cachedChapter = await CacheService.getItem(cacheKey);
+    if (cachedChapter) return cachedChapter;
+
     const chapterData = await BibleDatabaseService.getChapter(book, parseInt(chapter));
     if (chapterData.length === 0) {
       throw new Error(`Chapter ${chapter} not found in book ${book}`);
@@ -103,6 +101,10 @@ export const getBookChapters = (book) => {
 };
 
 export const getAllBooks = () => {
+  if (!currentVersion) {
+    console.warn('Current version is not set');
+    return [];
+  }
   return Object.keys(currentVersion);
 };
 
@@ -110,8 +112,9 @@ export const searchBible = async (query, searchType = 'all', page = 1, pageSize 
   try {
     const results = await BibleDatabaseService.searchVerses(query, page, pageSize);
     if (searchType !== 'all') {
+      const books = getAllBooks();
       return results.filter(verse => {
-        const isOT = Object.keys(currentVersion).indexOf(verse.book) < 39;
+        const isOT = books.indexOf(verse.book) < 39;
         return searchType === 'ot' ? isOT : !isOT;
       });
     }
@@ -127,6 +130,7 @@ export const closeBibleDatabase = async () => {
     await BibleDatabaseService.close();
   } catch (error) {
     console.error('Error closing Bible database:', error);
+    throw error;
   }
 };
 
@@ -137,8 +141,7 @@ export const getRandomVerse = async () => {
     const chapterCount = getBookChapters(randomBook);
     const randomChapter = Math.floor(Math.random() * chapterCount) + 1;
     const chapterVerses = await getChapter(randomBook, randomChapter);
-    const randomVerseIndex = Math.floor(Math.random() * chapterVerses.length);
-    const randomVerse = chapterVerses[randomVerseIndex];
+    const randomVerse = chapterVerses[Math.floor(Math.random() * chapterVerses.length)];
     
     return {
       book: randomBook,
@@ -185,9 +188,25 @@ export const preloadFrequentlyAccessedData = async () => {
   const frequentlyAccessedItems = [
     { key: 'book_list', fetcher: getAllBooks },
     { key: 'chapter_Genesis_1', fetcher: () => getChapter('Génesis', 1) },
-    { key: 'chapter_John_3', fetcher: () => getChapter('Juan', 3) },
-    // Añade más elementos frecuentemente accedidos según sea necesario
+    { key: 'chapter_Exodus_1', fetcher: () => getChapter('Éxodo', 1) },
   ];
 
-  await CacheService.preloadFrequentlyAccessed(frequentlyAccessedItems);
+  const results = await Promise.allSettled(frequentlyAccessedItems.map(async item => {
+    try {
+      const data = await item.fetcher();
+      await CacheService.setItem(item.key, data);
+      console.log(`Successfully preloaded ${item.key}`);
+      return { key: item.key, status: 'success' };
+    } catch (error) {
+      console.warn(`Error preloading ${item.key}:`, error.message);
+      return { key: item.key, status: 'error', error: error.message };
+    }
+  }));
+
+  const errors = results.filter(result => result.status === 'rejected' || (result.value && result.value.status === 'error'));
+  if (errors.length > 0) {
+    console.warn('Some items failed to preload:', errors.map(e => e.value ? e.value.key : e.reason).join(', '));
+  } else {
+    console.log('All frequently accessed data preloaded successfully');
+  }
 };
