@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, memo } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, VirtualizedList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useStyles } from '../hooks/useStyles';
 import { searchBible } from '../services/bibleDataManager';
@@ -67,11 +67,9 @@ const SearchScreen = ({ theme }) => {
     return () => clearTimeout(delayDebounceFn);
   }, [query, searchType]);
 
-  const loadMoreResults = () => {
-    if (!isLoading && hasMore) {
-      handleSearch();
-    }
-  };
+  const getItem = useCallback((data, index) => data[index], []);
+  const getItemCount = useCallback((data) => data.length, []);
+  const keyExtractor = useCallback((item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`, []);
 
   const renderSearchResult = useCallback(({ item }) => (
     <SearchResultItem
@@ -84,6 +82,12 @@ const SearchScreen = ({ theme }) => {
       colors={colors}
     />
   ), [navigation, styles, colors]);
+
+  const loadMoreResults = useCallback(() => {
+    if (!isLoading && hasMore) {
+      handleSearch();
+    }
+  }, [isLoading, hasMore, handleSearch]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -117,82 +121,89 @@ const SearchScreen = ({ theme }) => {
       {isLoading && page === 1 ? (
         <ActivityIndicator size="large" color={colors.primary} />
       ) : (
-        <FlatList
+        <VirtualizedList
           data={results}
           renderItem={renderSearchResult}
-          keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`}
+          keyExtractor={keyExtractor}
+          getItemCount={getItemCount}
+          getItem={getItem}
+          onEndReached={loadMoreResults}
+          onEndReachedThreshold={0.5}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          windowSize={21}
+          removeClippedSubviews={true}
           ListEmptyComponent={
             <Text style={[styles.emptyResult, { color: colors.text }]}>
-            {query.length < 3 ? t('enterMinChars') : t('noResults')}
-          </Text>
-        }
-        onEndReached={loadMoreResults}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={() => isLoading && page > 1 ? <ActivityIndicator size="small" color={colors.primary} /> : null}
-      />
-    )}
-  </View>
-);
+              {query.length < 3 ? t('enterMinChars') : t('noResults')}
+            </Text>
+          }
+          ListFooterComponent={() => isLoading && page > 1 ? <ActivityIndicator size="small" color={colors.primary} /> : null}
+        />
+      )}
+    </View>
+  );
 };
 
 const createStyles = (nightMode, fontSize, fontFamily) => {
-const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
+  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
 
-return {
-  container: {
-    flex: 1,
-    padding: 10,
-  },
-  searchInput: {
-    height: 40,
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    fontFamily,
-    fontSize: dynamicFontSize,
-  },
-  searchTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  searchTypeButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 2,
-    alignItems: 'center',
-  },
-  searchTypeText: {
-    fontSize: dynamicFontSize - 2,
-    fontFamily,
-  },
-  activeSearchTypeText: {
-    fontWeight: 'bold',
-  },
-  resultItem: {
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 5,
-  },
-  resultReference: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-    fontFamily,
-    fontSize: dynamicFontSize,
-  },
-  resultText: {
-    fontFamily,
-    fontSize: dynamicFontSize,
-  },
-  emptyResult: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontFamily,
-    fontSize: dynamicFontSize,
-  },
-};
+  return {
+    container: {
+      flex: 1,
+      padding: 10,
+    },
+    searchInput: {
+      height: 40,
+      borderWidth: 1,
+      borderRadius: 5,
+      paddingHorizontal: 10,
+      marginBottom: 10,
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+    searchTypeContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    },
+    searchTypeButton: {
+      flex: 1,
+      padding: 10,
+      borderRadius: 5,
+      marginHorizontal: 2,
+      alignItems: 'center',
+    },
+    searchTypeText: {
+      fontSize: dynamicFontSize - 2,
+      fontFamily,
+    },
+    activeSearchTypeText: {
+      fontWeight: 'bold',
+    },
+    resultItem: {
+      marginBottom: 10,
+      padding: 10,
+      borderRadius: 5,
+    },
+    resultReference: {
+      fontWeight: 'bold',
+      marginBottom: 5,
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+    resultText: {
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+    emptyResult: {
+      textAlign: 'center',
+      marginTop: 20,
+      fontFamily,
+      fontSize: dynamicFontSize,
+    },
+  };
 };
 
 export default withTheme(React.memo(SearchScreen));
