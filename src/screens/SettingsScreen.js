@@ -278,7 +278,6 @@ const createStyles = (colors, fontSize, fontFamily) => {
       marginLeft: 10,
     },
     selectedColorTheme: {
-      borderWidth: 2,
       borderColor: colors.text,
     },
   });

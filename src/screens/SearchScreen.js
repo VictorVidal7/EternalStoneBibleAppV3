@@ -75,7 +75,10 @@ const SearchScreen = ({ theme }) => {
     <SearchResultItem
       item={item}
       onPress={() => {
-        navigation.navigate('Verse', { book: item.book, chapter: item.chapter, verse: item.verse });
+        navigation.navigate('Bible', {
+          screen: 'Verse',
+          params: { book: item.book, chapter: item.chapter, verse: item.verse }
+        });
         AnalyticsService.logEvent('search_result_selected', { book: item.book, chapter: item.chapter, verse: item.verse });
       }}
       styles={styles}

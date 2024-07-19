@@ -29,10 +29,7 @@ const HomeScreen = ({ theme }) => {
 
   const renderButton = (text, onPress, testID) => (
     <TouchableOpacity 
-      style={[
-        styles.button,
-        { backgroundColor: colors.primary }
-      ]} 
+      style={[styles.button, { backgroundColor: colors.primary }]} 
       onPress={onPress} 
       testID={testID}
     >
