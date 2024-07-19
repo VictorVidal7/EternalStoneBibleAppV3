@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, Switch, TouchableOpacity, ScrollView, StyleSheet, TextInput } from 'react-native';
-import Slider from '@react-native-community/slider'; // Actualiza esta línea
+import Slider from '@react-native-community/slider';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import { useTheme } from '../context/ThemeContext';
 import NotificationService from '../services/NotificationService';
@@ -8,7 +8,6 @@ import { FONT_SIZES, FONT_FAMILIES } from '../constants/appConstants';
 import { withTheme } from '../hoc/withTheme';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
-
 
 const SettingsScreen = () => {
   const { 
