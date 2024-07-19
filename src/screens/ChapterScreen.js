@@ -5,6 +5,7 @@ import { useStyles } from '../hooks/useStyles';
 import { bibleBooks } from '../data/bibleVerses';
 import { useReadingProgress } from '../context/ReadingProgressContext';
 import { withTheme } from '../hoc/withTheme';
+import { AnalyticsService } from '../services/AnalyticsService';
 
 const ChapterScreen = ({ route, theme }) => {
   const navigation = useNavigation();
@@ -26,6 +27,7 @@ const ChapterScreen = ({ route, theme }) => {
         onPress={() => {
           console.log(`Navigating to Verse screen for ${book}, chapter ${item}`);
           navigation.navigate('Verse', { book, chapter: item });
+          AnalyticsService.logEvent('select_chapter', { book, chapter: item });
         }}
       >
         <Text style={[styles.chapterText, { color: colors.text }]}>Capítulo {item}</Text>
