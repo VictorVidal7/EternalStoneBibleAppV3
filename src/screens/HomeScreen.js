@@ -7,6 +7,7 @@ import { useStyles } from '../hooks/useStyles';
 import DailyVerse from '../components/DailyVerse';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
+import { AnalyticsService } from '../services/AnalyticsService';
 
 const HomeScreen = ({ theme }) => {
   const navigation = useNavigation();
@@ -46,11 +47,26 @@ const HomeScreen = ({ theme }) => {
         
         <DailyVerse />
         
-        {renderButton(t('exploreBible'), () => navigation.navigate('Bible', { screen: 'BibleList' }), 'explore-bible-button')}
-        {renderButton(t('myBookmarks'), () => navigation.navigate('Bookmarks'), 'bookmarks-button')}
-        {renderButton(t('viewReadingPlan'), () => navigation.navigate('ReadingPlan'), 'reading-plan-button')}
-        {renderButton(t('searchBible'), () => navigation.navigate('Search'), 'search-bible-button')}
-        {renderButton(t('settings'), () => navigation.navigate('Settings'), 'settings-button')}
+        {renderButton(t('exploreBible'), () => {
+          navigation.navigate('Bible', { screen: 'BibleList' });
+          AnalyticsService.logEvent('navigate_to_bible_list');
+        }, 'explore-bible-button')}
+        {renderButton(t('myBookmarks'), () => {
+          navigation.navigate('Bookmarks');
+          AnalyticsService.logEvent('navigate_to_bookmarks');
+        }, 'bookmarks-button')}
+        {renderButton(t('viewReadingPlan'), () => {
+          navigation.navigate('ReadingPlan');
+          AnalyticsService.logEvent('navigate_to_reading_plan');
+        }, 'reading-plan-button')}
+        {renderButton(t('searchBible'), () => {
+          navigation.navigate('Search');
+          AnalyticsService.logEvent('navigate_to_search');
+        }, 'search-bible-button')}
+        {renderButton(t('settings'), () => {
+          navigation.navigate('Settings');
+          AnalyticsService.logEvent('navigate_to_settings');
+        }, 'settings-button')}
 
         <View style={[styles.infoContainer, { backgroundColor: colors.secondary }]}>
           <Text style={[styles.infoText, { color: colors.text }]}>
