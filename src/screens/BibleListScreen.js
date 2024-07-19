@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { getAllBooks } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import { withTheme } from '../hoc/withTheme';
+import { AnalyticsService } from '../services/AnalyticsService';
 
 const BookItem = React.memo(({ item, onPress, styles, colors }) => (
   <TouchableOpacity
@@ -39,6 +40,7 @@ const BibleListScreen = ({ theme }) => {
   const navigateToChapter = useCallback((book) => {
     console.log(`Navigating to Chapter screen for book: ${book}`);
     navigation.navigate('Chapter', { book });
+    AnalyticsService.logEvent('select_book', { book });
   }, [navigation]);
 
   const renderBookItem = useCallback(({ item }) => (
