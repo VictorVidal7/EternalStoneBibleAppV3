@@ -46,7 +46,7 @@ const HomeScreen = ({ theme }) => {
         
         <DailyVerse />
         
-        {renderButton(t('exploreBible'), () => navigation.navigate('BibleList'), 'explore-bible-button')}
+        {renderButton(t('exploreBible'), () => navigation.navigate('Bible', { screen: 'BibleList' }), 'explore-bible-button')}
         {renderButton(t('myBookmarks'), () => navigation.navigate('Bookmarks'), 'bookmarks-button')}
         {renderButton(t('viewReadingPlan'), () => navigation.navigate('ReadingPlan'), 'reading-plan-button')}
         {renderButton(t('searchBible'), () => navigation.navigate('Search'), 'search-bible-button')}
@@ -82,8 +82,8 @@ const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
     borderRadius: 10,
     marginBottom: 15,
     alignItems: 'center',
-    elevation: 3, // for Android shadow
-    shadowColor: '#000', // for iOS shadow
+    elevation: 3,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
