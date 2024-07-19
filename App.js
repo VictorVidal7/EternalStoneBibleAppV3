@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import analytics from '@react-native-firebase/analytics';
@@ -45,26 +45,11 @@ const App = () => {
   }, []);
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Cargando Eternal Stone Bible App...</Text>
-      </View>
-    );
+    return <LoadingScreen message="Cargando Eternal Stone Bible App..." />;
   }
 
   if (initError) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>
-          Se produjo un error al inicializar la aplicación:
-        </Text>
-        <Text style={{ color: 'red', textAlign: 'center' }}>{initError}</Text>
-        <Text style={{ marginTop: 20, textAlign: 'center' }}>
-          Por favor, reinicie la aplicación. Si el problema persiste, contacte con soporte.
-        </Text>
-      </View>
-    );
+    return <ErrorScreen message={initError} />;
   }
 
   return (
@@ -76,12 +61,7 @@ const App = () => {
               <ReadingPlanProvider>
                 <NotesProvider>
                   <NavigationContainer>
-                    <React.Suspense fallback={
-                      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <ActivityIndicator size="large" color="#0000ff" />
-                        <Text>Cargando...</Text>
-                      </View>
-                    }>
+                    <React.Suspense fallback={<LoadingScreen message="Cargando..." />}>
                       <AppNavigator />
                     </React.Suspense>
                   </NavigationContainer>
@@ -94,5 +74,49 @@ const App = () => {
     </SafeAreaProvider>
   );
 };
+
+const LoadingScreen = ({ message }) => (
+  <View style={styles.centerContainer}>
+    <ActivityIndicator size="large" color="#0000ff" />
+    <Text style={styles.loadingText}>{message}</Text>
+  </View>
+);
+
+const ErrorScreen = ({ message }) => (
+  <View style={styles.centerContainer}>
+    <Text style={styles.errorTitle}>Se produjo un error al inicializar la aplicación:</Text>
+    <Text style={styles.errorMessage}>{message}</Text>
+    <Text style={styles.errorInstructions}>
+      Por favor, reinicie la aplicación. Si el problema persiste, contacte con soporte.
+    </Text>
+  </View>
+);
+
+const styles = StyleSheet.create({
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+  },
+  errorTitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  errorMessage: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  errorInstructions: {
+    marginTop: 20,
+    textAlign: 'center',
+  },
+});
 
 export default App;
