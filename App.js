@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import analytics from '@react-native-firebase/analytics';
 import { UserPreferencesProvider } from './src/context/UserPreferencesContext';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { ReadingProgressProvider } from './src/context/ReadingProgressContext';
 import { BookmarksProvider } from './src/context/BookmarksContext';
 import { ReadingPlanProvider } from './src/context/ReadingPlanContext';
@@ -13,6 +13,27 @@ import { resetDatabase, initializeBibleData, closeBibleDatabase, preloadFrequent
 import './src/i18n';
 
 const AppNavigator = React.lazy(() => import('./src/navigation/AppNavigator'));
+
+const AppContent = () => {
+  const theme = useTheme();
+  console.log('Theme in AppContent:', theme); // Depuración
+
+  return (
+    <ReadingProgressProvider>
+      <BookmarksProvider>
+        <ReadingPlanProvider>
+          <NotesProvider>
+            <NavigationContainer>
+              <React.Suspense fallback={<LoadingScreen message="Cargando..." />}>
+                <AppNavigator />
+              </React.Suspense>
+            </NavigationContainer>
+          </NotesProvider>
+        </ReadingPlanProvider>
+      </BookmarksProvider>
+    </ReadingProgressProvider>
+  );
+};
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -56,19 +77,7 @@ const App = () => {
     <SafeAreaProvider>
       <UserPreferencesProvider>
         <ThemeProvider>
-          <ReadingProgressProvider>
-            <BookmarksProvider>
-              <ReadingPlanProvider>
-                <NotesProvider>
-                  <NavigationContainer>
-                    <React.Suspense fallback={<LoadingScreen message="Cargando..." />}>
-                      <AppNavigator />
-                    </React.Suspense>
-                  </NavigationContainer>
-                </NotesProvider>
-              </ReadingPlanProvider>
-            </BookmarksProvider>
-          </ReadingProgressProvider>
+          <AppContent />
         </ThemeProvider>
       </UserPreferencesProvider>
     </SafeAreaProvider>

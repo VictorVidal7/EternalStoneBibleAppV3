@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useStyles } from '../hooks/useStyles';
+import { useTheme } from '../context/ThemeContext';
 import DailyVerseService from '../services/DailyVerseService';
+import { useTranslation } from 'react-i18next';
 
 const DailyVerse = () => {
   const [verse, setVerse] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
-  const styles = useStyles(createStyles);
+  const theme = useTheme();
+  const { t } = useTranslation();
+
+  console.log('Theme in DailyVerse:', theme); // Depuración
 
   useEffect(() => {
     const fetchDailyVerse = async () => {
@@ -35,10 +39,41 @@ const DailyVerse = () => {
     }
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      backgroundColor: theme.colors.card,
+      padding: 16,
+      borderRadius: theme.roundness,
+      margin: 16,
+      elevation: 2,
+      shadowColor: theme.colors.text,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.primary,
+      marginBottom: 8,
+    },
+    verseText: {
+      fontSize: 16,
+      color: theme.colors.text,
+      marginBottom: 8,
+      fontStyle: 'italic',
+    },
+    reference: {
+      fontSize: 14,
+      color: theme.colors.secondary,
+      textAlign: 'right',
+    },
+  });
+
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="small" color={styles.loadingColor} />
+        <ActivityIndicator size="small" color={theme.colors.primary} />
       </View>
     );
   }
@@ -49,47 +84,13 @@ const DailyVerse = () => {
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
-      <Text style={styles.title}>Versículo del Día</Text>
+      <Text style={styles.title}>{t('dailyVerse')}</Text>
       <Text style={styles.verseText}>{verse.text}</Text>
       <Text style={styles.reference}>
         {verse.book} {verse.chapter}:{verse.number}
       </Text>
     </TouchableOpacity>
   );
-};
-
-const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
-
-  return {
-    container: {
-      backgroundColor: nightMode ? '#2a2a2a' : '#f0f0f0',
-      padding: 15,
-      borderRadius: 10,
-      marginBottom: 20,
-    },
-    title: {
-      fontWeight: 'bold',
-      marginBottom: 10,
-      color: nightMode ? '#fff' : '#333',
-      fontFamily,
-      fontSize: dynamicFontSize + 2,
-    },
-    verseText: {
-      fontStyle: 'italic',
-      marginBottom: 5,
-      color: nightMode ? '#fff' : '#333',
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    reference: {
-      textAlign: 'right',
-      color: nightMode ? '#ccc' : '#666',
-      fontFamily,
-      fontSize: dynamicFontSize - 2,
-    },
-    loadingColor: nightMode ? '#ffffff' : '#000000',
-  };
 };
 
 export default DailyVerse;
