@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, Dimensions, TextInput, VirtualizedList, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, Dimensions, TextInput, FlatList, Animated } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -14,7 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
 
-const { width } = Dimensions.get('window');
+const INITIAL_VERSES_TO_LOAD = 20;
+const VERSES_PER_BATCH = 10;
 
 const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNoteModal, onCopyVerse, styles, colors, isBookmarked, isHighlighted }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -131,20 +132,22 @@ const VerseScreen = ({ route, theme }) => {
   const [isDistractionFreeMode, setIsDistractionFreeMode] = useState(false);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hasMoreVerses, setHasMoreVerses] = useState(true);
 
   const listRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const loadVerses = useCallback(async (bookToLoad, chapterToLoad) => {
+  const loadVerses = useCallback(async (bookToLoad, chapterToLoad, start = 0, limit = INITIAL_VERSES_TO_LOAD) => {
     try {
       setLoading(true);
       setError(null);
-      const chapterVerses = await getChapter(bookToLoad, chapterToLoad);
+      const chapterVerses = await getChapter(bookToLoad, chapterToLoad, start, limit);
       if (!chapterVerses || chapterVerses.length === 0) {
         throw new Error('No verses found for this chapter');
       }
-      setVerses(chapterVerses);
+      setVerses(prevVerses => start === 0 ? chapterVerses : [...prevVerses, ...chapterVerses]);
+      setHasMoreVerses(chapterVerses.length === limit);
       const bookChapters = await getBookChapters(bookToLoad);
       setTotalChapters(bookChapters);
       AnalyticsService.logScreenView(`Verse_${bookToLoad}_${chapterToLoad}`);
@@ -322,12 +325,17 @@ const VerseScreen = ({ route, theme }) => {
     />
   ), [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
 
-  const getItemCount = useCallback(() => verses.length, [verses]);
-  const getItem = useCallback((data, index) => data[index], []);
+  const keyExtractor = useCallback((item) => `verse-${item.number}`, []);
+
+  const onEndReached = useCallback(() => {
+    if (!loading && hasMoreVerses) {
+      loadVerses(book, chapter, verses.length, VERSES_PER_BATCH);
+    }
+  }, [loading, hasMoreVerses, book, chapter, verses.length, loadVerses]);
 
   const memoizedVerses = useMemo(() => verses, [verses]);
 
-  if (loading) {
+  if (loading && verses.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -360,60 +368,71 @@ const VerseScreen = ({ route, theme }) => {
 
   return (
     <View style={styles.container} testID="verse-screen-container">
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigateToChapter(chapter - 1)} 
-          disabled={chapter === 1}
-          accessibilityLabel={`Ir al capítulo anterior de ${book}`}
-          accessibilityHint="Navega al capítulo anterior del libro actual"
-          accessibilityRole="button"
-        >
-          <Icon name="chevron-left" size={24} color={chapter === 1 ? colors.secondary : colors.primary} />
-        </TouchableOpacity>
-        <Text style={styles.chapterTitle} accessibilityRole="header">{`${book} ${chapter}`}</Text>
-        <TouchableOpacity 
-          onPress={() => navigateToChapter(chapter + 1)} 
-          disabled={chapter === totalChapters}
-          accessibilityLabel={`Ir al siguiente capítulo de ${book}`}
-          accessibilityHint="Navega al siguiente capítulo del libro actual"
-          accessibilityRole="button"
-        >
-          <Icon name="chevron-right" size={24} color={chapter === totalChapters ? colors.secondary : colors.primary} />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder={t('searchInChapter')}
-          placeholderTextColor={colors.secondary}
-          accessibilityLabel="Buscar en el capítulo actual"
-          accessibilityHint="Ingresa texto para buscar en el capítulo actual"
+      <Animated.View style={[
+        styles.content,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateX: slideAnim }],
+        }
+      ]}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => navigateToChapter(chapter - 1)} 
+            disabled={chapter === 1}
+            accessibilityLabel={`Ir al capítulo anterior de ${book}`}
+            accessibilityHint="Navega al capítulo anterior del libro actual"
+            accessibilityRole="button"
+          >
+            <Icon name="chevron-left" size={24} color={chapter === 1 ? colors.secondary : colors.primary} />
+          </TouchableOpacity>
+          <Text style={styles.chapterTitle} accessibilityRole="header">{`${book} ${chapter}`}</Text>
+          <TouchableOpacity 
+            onPress={() => navigateToChapter(chapter + 1)} 
+            disabled={chapter === totalChapters}
+            accessibilityLabel={`Ir al siguiente capítulo de ${book}`}
+            accessibilityHint="Navega al siguiente capítulo del libro actual"
+            accessibilityRole="button"
+          >
+            <Icon name="chevron-right" size={24} color={chapter === totalChapters ? colors.secondary : colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder={t('searchInChapter')}
+            placeholderTextColor={colors.secondary}
+            accessibilityLabel="Buscar en el capítulo actual"
+            accessibilityHint="Ingresa texto para buscar en el capítulo actual"
+          />
+          <TouchableOpacity 
+            onPress={handleSearch}
+            accessibilityLabel="Buscar"
+            accessibilityHint="Inicia la búsqueda con el texto ingresado"
+            accessibilityRole="button"
+          >
+            <Icon name="search" size={24} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          ref={listRef}
+          data={memoizedVerses}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
+          initialNumToRender={INITIAL_VERSES_TO_LOAD}
+          maxToRenderPerBatch={VERSES_PER_BATCH}
+          windowSize={21}
+          removeClippedSubviews={true}
+          contentContainerStyle={styles.listContent}
+          style={styles.list}
+          ListFooterComponent={loading && verses.length > 0 ? (
+            <ActivityIndicator size="small" color={colors.primary} style={styles.loadingMore} />
+          ) : null}
         />
-        <TouchableOpacity 
-          onPress={handleSearch}
-          accessibilityLabel="Buscar"
-          accessibilityHint="Inicia la búsqueda con el texto ingresado"
-          accessibilityRole="button"
-        >
-          <Icon name="search" size={24} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
-      <VirtualizedList
-        ref={listRef}
-        data={memoizedVerses}
-        renderItem={renderItem}
-        keyExtractor={(item) => `verse-${item.number}`}
-        getItemCount={getItemCount}
-        getItem={getItem}
-        initialNumToRender={10}
-        maxToRenderPerBatch={20}
-        windowSize={21}
-        removeClippedSubviews={true}
-        contentContainerStyle={styles.listContent}
-        style={styles.list}
-      />
+      </Animated.View>
       <TouchableOpacity 
         style={styles.distractionFreeModeButton} 
         onPress={toggleDistractionFreeMode}
@@ -440,6 +459,9 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
     container: {
       flex: 1,
       backgroundColor: nightMode ? '#121212' : '#f5f5f5',
+    },
+    content: {
+      flex: 1,
     },
     loadingContainer: {
       flex: 1,
@@ -511,7 +533,6 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       borderBottomWidth: 1,
       borderBottomColor: nightMode ? '#333' : '#e0e0e0',
       marginBottom: 20,
-      minHeight: 150,
     },
     highlightedVerse: {
       backgroundColor: nightMode ? '#2C2C2C' : '#FFFDE7',
@@ -542,6 +563,9 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       padding: 10,
       backgroundColor: nightMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
       borderRadius: 20,
+    },
+    loadingMore: {
+      paddingVertical: 20,
     },
   };
 };
