@@ -29,12 +29,12 @@ const HomeScreen = () => {
     headerTitle: {
       fontSize: 24,
       fontWeight: 'bold',
-      color: theme.colors.card,
+      color: theme.isDarkMode ? theme.colors.background : theme.colors.card,
       marginBottom: 8,
     },
     headerSubtitle: {
       fontSize: 16,
-      color: theme.colors.card,
+      color: theme.isDarkMode ? theme.colors.background : theme.colors.card,
       opacity: 0.8,
     },
     menuContainer: {
@@ -82,10 +82,15 @@ const HomeScreen = () => {
       
       <View style={styles.menuContainer}>
         {menuItems.map((item, index) => (
-          <Animated.View key={index} style={{ opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [50, 0]
-          }) }] }}>
+          <Animated.View key={index} style={{ 
+            opacity: fadeAnim, 
+            transform: [{ 
+              translateY: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [50, 0]
+              }) 
+            }] 
+          }}>
             <ListItem
               title={item.title}
               iconName={item.icon}

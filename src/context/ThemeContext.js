@@ -1,6 +1,5 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserPreferences } from './UserPreferencesContext';
 
 const ThemeContext = createContext();
@@ -14,7 +13,7 @@ export const ThemeProvider = ({ children }) => {
     setIsDarkMode(nightMode);
   }, [nightMode]);
 
-  const theme = React.useMemo(() => {
+  const theme = useMemo(() => {
     const baseTheme = COLOR_THEMES[colorTheme];
     return {
       isDarkMode,
@@ -22,7 +21,11 @@ export const ThemeProvider = ({ children }) => {
         ...baseTheme,
         background: isDarkMode ? '#121212' : baseTheme.background,
         text: isDarkMode ? '#FFFFFF' : baseTheme.text,
+        card: isDarkMode ? '#1E1E1E' : baseTheme.card,
+        primary: isDarkMode ? baseTheme.primary : baseTheme.primary,
+        secondary: isDarkMode ? baseTheme.secondary : baseTheme.secondary,
       },
+      roundness: 8, // Puedes ajustar este valor según tus preferencias
     };
   }, [isDarkMode, colorTheme, COLOR_THEMES]);
 

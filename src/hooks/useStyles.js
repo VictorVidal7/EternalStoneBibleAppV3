@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { StyleSheet } from 'react-native'; // Asegúrate de que esta línea esté presente
 import { useTheme } from '../context/ThemeContext';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 

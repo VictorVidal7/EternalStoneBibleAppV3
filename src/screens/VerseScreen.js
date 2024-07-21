@@ -1,12 +1,28 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ToastAndroid, Platform, Alert, Share, Dimensions, TextInput, FlatList, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  ToastAndroid,
+  Platform,
+  Alert,
+  Share,
+  Dimensions,
+  TextInput,
+  FlatList,
+  Animated,
+  StyleSheet
+} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import Slider from '@react-native-community/slider';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import { useNotes } from '../context/NotesContext';
-import { getChapter, getBookChapters } from '../services/bibleDataManager';
+import { getChapter, getBookChapters, getNextChapter, getPreviousChapter } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import NoteModal from '../components/NoteModal';
 import DistractionFreeMode from '../components/DistractionFreeMode';
@@ -14,6 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
 
+const { width } = Dimensions.get('window');
 const INITIAL_VERSES_TO_LOAD = 20;
 const VERSES_PER_BATCH = 10;
 
@@ -116,7 +133,8 @@ const VerseScreen = ({ route, theme }) => {
   const [chapter, setChapter] = useState(initialChapter);
   const { bookmarks, addBookmark, removeBookmark } = useBookmarks();
   const { addNote, getNote } = useNotes();
-  const { fontSize, fontFamily, lineSpacing } = useUserPreferences();
+  const { fontSize, changeFontSize, fontFamily, lineSpacing } = useUserPreferences();
+  const [localFontSize, setLocalFontSize] = useState(fontSize);
   const { colors } = theme;
   const styles = useStyles(createStyles);
   const [verses, setVerses] = useState([]);
@@ -294,6 +312,22 @@ const VerseScreen = ({ route, theme }) => {
     }
   }, [totalChapters, chapter, book, animateTransition, isTransitioning, loadVerses]);
 
+  const handleGesture = ({ nativeEvent }) => {
+    if (nativeEvent.state === State.END) {
+      if (nativeEvent.translationX > 50) {
+        const prevChapter = getPreviousChapter(book, chapter);
+        if (prevChapter) {
+          navigateToChapter(prevChapter.chapter);
+        }
+      } else if (nativeEvent.translationX < -50) {
+        const nextChapter = getNextChapter(book, chapter);
+        if (nextChapter) {
+          navigateToChapter(nextChapter.chapter);
+        }
+      }
+    }
+  };
+
   const toggleDistractionFreeMode = useCallback(() => {
     setIsDistractionFreeMode(prev => !prev);
     AnalyticsService.logEvent('toggle_distraction_free_mode', { enabled: !isDistractionFreeMode });
@@ -310,6 +344,12 @@ const VerseScreen = ({ route, theme }) => {
       setCurrentVerseIndex(prev => prev - 1);
     }
   }, [currentVerseIndex]);
+
+  const handleFontSizeChange = useCallback((value) => {
+    const newSize = Math.round(value);
+    setLocalFontSize(newSize);
+    changeFontSize(newSize);
+  }, [changeFontSize]);
 
   const renderItem = useCallback(({ item }) => (
     <VerseItem
@@ -367,98 +407,112 @@ const VerseScreen = ({ route, theme }) => {
   }
 
   return (
-    <View style={styles.container} testID="verse-screen-container">
-      <Animated.View style={[
-        styles.content,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateX: slideAnim }],
-        }
-      ]}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => navigateToChapter(chapter - 1)} 
-            disabled={chapter === 1}
-            accessibilityLabel={`Ir al capítulo anterior de ${book}`}
-            accessibilityHint="Navega al capítulo anterior del libro actual"
-            accessibilityRole="button"
-          >
-            <Icon name="chevron-left" size={24} color={chapter === 1 ? colors.secondary : colors.primary} />
-          </TouchableOpacity>
-          <Text style={styles.chapterTitle} accessibilityRole="header">{`${book} ${chapter}`}</Text>
-          <TouchableOpacity 
-            onPress={() => navigateToChapter(chapter + 1)} 
-            disabled={chapter === totalChapters}
-            accessibilityLabel={`Ir al siguiente capítulo de ${book}`}
-            accessibilityHint="Navega al siguiente capítulo del libro actual"
-            accessibilityRole="button"
-          >
-            <Icon name="chevron-right" size={24} color={chapter === totalChapters ? colors.secondary : colors.primary} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder={t('searchInChapter')}
-            placeholderTextColor={colors.secondary}
-            accessibilityLabel="Buscar en el capítulo actual"
-            accessibilityHint="Ingresa texto para buscar en el capítulo actual"
+    <PanGestureHandler onHandlerStateChange={handleGesture}>
+      <View style={styles.container} testID="verse-screen-container">
+        <Animated.View style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateX: slideAnim }],
+          }
+        ]}>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              onPress={() => navigateToChapter(chapter - 1)} 
+              disabled={chapter === 1}
+              accessibilityLabel={`Ir al capítulo anterior de ${book}`}
+              accessibilityHint="Navega al capítulo anterior del libro actual"
+              accessibilityRole="button"
+            >
+              <Icon name="chevron-left" size={24} color={chapter === 1 ? colors.secondary : colors.primary} />
+            </TouchableOpacity>
+            <Text style={styles.chapterTitle} accessibilityRole="header">{`${book} ${chapter}`}</Text>
+            <TouchableOpacity 
+              onPress={() => navigateToChapter(chapter + 1)} 
+              disabled={chapter === totalChapters}
+              accessibilityLabel={`Ir al siguiente capítulo de ${book}`}
+              accessibilityHint="Navega al siguiente capítulo del libro actual"
+              accessibilityRole="button"
+            >
+              <Icon name="chevron-right" size={24} color={chapter === totalChapters ? colors.secondary : colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={t('searchInChapter')}
+              placeholderTextColor={colors.secondary}
+              accessibilityLabel="Buscar en el capítulo actual"
+              accessibilityHint="Ingresa texto para buscar en el capítulo actual"
+            />
+            <TouchableOpacity 
+              onPress={handleSearch}
+              accessibilityLabel="Buscar"
+              accessibilityHint="Inicia la búsqueda con el texto ingresado"
+              accessibilityRole="button"
+            >
+              <Icon name="search" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.settingsContainer}>
+            <Text style={styles.settingLabel}>{t('fontSize')}: {localFontSize}</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={12}
+              maximumValue={24}
+              step={1}
+              value={localFontSize}
+              onValueChange={handleFontSizeChange}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.secondary}
+              thumbTintColor={colors.primary}
+            />
+          </View>
+          <FlatList
+            ref={listRef}
+            data={memoizedVerses}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            onEndReached={onEndReached}
+            onEndReachedThreshold={0.5}
+            initialNumToRender={INITIAL_VERSES_TO_LOAD}
+            maxToRenderPerBatch={VERSES_PER_BATCH}
+            windowSize={21}
+            removeClippedSubviews={true}
+            contentContainerStyle={styles.listContent}
+            style={styles.list}
+            ListFooterComponent={loading && verses.length > 0 ? (
+              <ActivityIndicator size="small" color={colors.primary} style={styles.loadingMore} />
+            ) : null}
           />
-          <TouchableOpacity 
-            onPress={handleSearch}
-            accessibilityLabel="Buscar"
-            accessibilityHint="Inicia la búsqueda con el texto ingresado"
-            accessibilityRole="button"
-          >
-            <Icon name="search" size={24} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          ref={listRef}
-          data={memoizedVerses}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          initialNumToRender={INITIAL_VERSES_TO_LOAD}
-          maxToRenderPerBatch={VERSES_PER_BATCH}
-          windowSize={21}
-          removeClippedSubviews={true}
-          contentContainerStyle={styles.listContent}
-          style={styles.list}
-          ListFooterComponent={loading && verses.length > 0 ? (
-            <ActivityIndicator size="small" color={colors.primary} style={styles.loadingMore} />
-          ) : null}
+        </Animated.View>
+        <TouchableOpacity 
+          style={styles.distractionFreeModeButton} 
+          onPress={toggleDistractionFreeMode}
+          accessibilityLabel="Activar modo de lectura sin distracciones"
+          accessibilityRole="button"
+        >
+          <Icon name="fullscreen" size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <NoteModal 
+          visible={noteModalVisible}
+          onClose={closeNoteModal}
+          verse={currentVerse}
+          onSave={saveNote}
+          initialNote={currentVerse ? getNote(book, chapter, currentVerse.number) : ''}
         />
-      </Animated.View>
-      <TouchableOpacity 
-        style={styles.distractionFreeModeButton} 
-        onPress={toggleDistractionFreeMode}
-        accessibilityLabel="Activar modo de lectura sin distracciones"
-        accessibilityRole="button"
-      >
-        <Icon name="fullscreen" size={24} color={colors.primary} />
-      </TouchableOpacity>
-      <NoteModal 
-        visible={noteModalVisible}
-        onClose={closeNoteModal}
-        verse={currentVerse}
-        onSave={saveNote}
-        initialNote={currentVerse ? getNote(book, chapter, currentVerse.number) : ''}
-      />
-    </View>
+      </View>
+    </PanGestureHandler>
   );
 };
 
-const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
-
-  return {
+const createStyles = (colors, fontSize, fontFamily) => {
+  return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
+      backgroundColor: colors.background,
     },
     content: {
       flex: 1,
@@ -467,27 +521,27 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
+      backgroundColor: colors.background,
     },
     errorContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: nightMode ? '#121212' : '#f5f5f5',
+      backgroundColor: colors.background,
     },
     errorText: {
-      color: nightMode ? '#fff' : '#333',
+      color: colors.text,
       fontSize: 16,
       marginBottom: 20,
       textAlign: 'center',
     },
     retryButton: {
-      backgroundColor: nightMode ? '#2196F3' : '#007AFF',
+      backgroundColor: colors.primary,
       padding: 10,
       borderRadius: 5,
     },
     retryButtonText: {
-      color: '#fff',
+      color: colors.background,
       fontSize: 16,
     },
     header: {
@@ -495,31 +549,46 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: 10,
-      backgroundColor: nightMode ? '#1E1E1E' : '#FFFFFF',
+      backgroundColor: colors.card,
     },
     chapterTitle: {
-      fontSize: dynamicFontSize + 2,
+      fontSize: fontSize + 2,
       fontWeight: 'bold',
-      color: nightMode ? '#FFFFFF' : '#000000',
+      color: colors.text,
       fontFamily,
     },
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 10,
-      backgroundColor: nightMode ? '#1E1E1E' : '#FFFFFF',
+      backgroundColor: colors.card,
     },
     searchInput: {
       flex: 1,
       height: 40,
       borderWidth: 1,
-      borderColor: nightMode ? '#333333' : '#CCCCCC',
+      borderColor: colors.border,
       borderRadius: 5,
       paddingHorizontal: 10,
       marginRight: 10,
-      color: nightMode ? '#FFFFFF' : '#000000',
+      color: colors.text,
       fontFamily,
-      fontSize: dynamicFontSize,
+      fontSize: fontSize,
+    },
+    settingsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 10,
+      backgroundColor: colors.card,
+    },
+    settingLabel: {
+      color: colors.text,
+      fontFamily,
+      fontSize: fontSize,
+      marginRight: 10,
+    },
+    slider: {
+      flex: 1,
     },
     list: {
       flex: 1,
@@ -531,25 +600,25 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       flexDirection: 'column',
       padding: 20,
       borderBottomWidth: 1,
-      borderBottomColor: nightMode ? '#333' : '#e0e0e0',
+      borderBottomColor: colors.border,
       marginBottom: 20,
     },
     highlightedVerse: {
-      backgroundColor: nightMode ? '#2C2C2C' : '#FFFDE7',
+      backgroundColor: colors.highlight,
     },
     verseNumber: {
       marginRight: 10,
-      color: nightMode ? '#888' : '#666',
+      color: colors.secondary,
       fontFamily,
-      fontSize: dynamicFontSize - 2,
+      fontSize: fontSize - 2,
       minWidth: 30,
       textAlign: 'right',
     },
     verseText: {
       flex: 1,
-      color: nightMode ? '#fff' : '#333',
+      color: colors.text,
       fontFamily,
-      fontSize: dynamicFontSize,
+      fontSize: fontSize,
     },
     actionsContainer: {
       flexDirection: 'row',
@@ -561,13 +630,13 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
       right: 10,
       bottom: 10,
       padding: 10,
-      backgroundColor: nightMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+      backgroundColor: colors.card,
       borderRadius: 20,
     },
     loadingMore: {
       paddingVertical: 20,
     },
-  };
+  });
 };
 
 export default React.memo(withTheme(VerseScreen));
