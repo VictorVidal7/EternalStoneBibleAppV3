@@ -1,16 +1,19 @@
-import React, { useEffect, useCallback } from 'react';
-import { View, ScrollView, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import React, { useEffect, useCallback, useState } from 'react';
+import { View, ScrollView, Text, StyleSheet, Animated, TouchableOpacity, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import DailyVerse from '../components/DailyVerse';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
+import { useReadingProgress } from '../context/ReadingProgressContext';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const theme = useTheme();
   const { t } = useTranslation();
+  const readingProgressContext = useReadingProgress();
+  const [lastRead, setLastRead] = useState(null);
 
   const fadeAnim = new Animated.Value(0);
   const translateY = new Animated.Value(50);
@@ -29,55 +32,82 @@ const HomeScreen = () => {
         useNativeDriver: true,
       })
     ]).start();
-  }, []);
+
+    const loadLastRead = async () => {
+      try {
+        if (readingProgressContext && typeof readingProgressContext.getLastReadPosition === 'function') {
+          const position = await readingProgressContext.getLastReadPosition();
+          if (position) {
+            setLastRead(position);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading last read position:', error);
+      }
+    };
+    loadLastRead();
+  }, [readingProgressContext]);
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.colors.background,
+      backgroundColor: theme.isDarkMode ? '#121212' : '#F5F5F5',
     },
     header: {
-      backgroundColor: theme.colors.primary,
       padding: 20,
-      alignItems: 'center',
-      borderBottomLeftRadius: theme.roundness,
-      borderBottomRightRadius: theme.roundness,
+      paddingTop: StatusBar.currentHeight + 20,
+      backgroundColor: theme.colors.primary,
     },
     headerTitle: {
       fontSize: 28,
       fontWeight: 'bold',
-      color: theme.colors.background,
+      color: '#FFFFFF',
       marginBottom: 8,
     },
     headerSubtitle: {
       fontSize: 18,
-      color: theme.colors.background,
+      color: '#FFFFFF',
       opacity: 0.8,
     },
-    menuContainer: {
-      marginTop: 20,
-      borderRadius: theme.roundness,
-      overflow: 'hidden',
-      marginHorizontal: 16,
+    section: {
+      margin: 20,
+    },
+    sectionTitle: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+      marginBottom: 15,
     },
     menuItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: theme.colors.card,
-      padding: 16,
-      marginBottom: 8,
-      borderRadius: theme.roundness,
-      elevation: 3,
-      shadowColor: theme.colors.text,
+      backgroundColor: theme.isDarkMode ? '#1E1E1E' : '#FFFFFF',
+      padding: 15,
+      marginBottom: 10,
+      borderRadius: 10,
+      elevation: 2,
+      shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
     },
     menuItemText: {
-      marginLeft: 16,
-      fontSize: 18,
+      marginLeft: 15,
+      fontSize: 16,
       color: theme.colors.text,
       flex: 1,
+    },
+    startReadingButton: {
+      backgroundColor: '#4CAF50',
+      padding: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginVertical: 20,
+    },
+    startReadingText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
     },
   });
 
@@ -94,18 +124,38 @@ const HomeScreen = () => {
     AnalyticsService.logEvent(`navigate_to_${screen.toLowerCase()}`);
   }, [navigation]);
 
+  const handleStartReading = useCallback(() => {
+    if (lastRead) {
+      navigation.navigate('Bible', {
+        screen: 'Verse',
+        params: { book: lastRead.book, chapter: lastRead.chapter, verse: lastRead.verse }
+      });
+    } else {
+      navigation.navigate('Bible', { screen: 'BibleList' });
+    }
+    AnalyticsService.logEvent('start_reading');
+  }, [navigation, lastRead]);
+
   return (
     <ScrollView style={styles.container}>
-      <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
+      <StatusBar backgroundColor={theme.colors.primary} barStyle="light-content" />
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('appName')}</Text>
         <Text style={styles.headerSubtitle}>{t('dailyInspiration')}</Text>
-      </Animated.View>
+      </View>
       
       <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
         <DailyVerse />
       </Animated.View>
-      
-      <View style={styles.menuContainer}>
+
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.startReadingButton} onPress={handleStartReading}>
+          <Text style={styles.startReadingText}>
+            {lastRead ? t('continueReading') : t('startReading')}
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.sectionTitle}>{t('quickAccess')}</Text>
         {menuItems.map((item, index) => (
           <Animated.View key={index} style={{ 
             opacity: fadeAnim, 

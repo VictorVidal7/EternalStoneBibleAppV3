@@ -45,12 +45,32 @@ export const ReadingProgressProvider = ({ children }) => {
     return progress[book]?.[chapter] || 0;
   };
 
+  const getLastReadPosition = async () => {
+    try {
+      const lastPosition = await AsyncStorage.getItem('lastReadPosition');
+      return lastPosition ? JSON.parse(lastPosition) : null;
+    } catch (error) {
+      console.error('Error getting last read position:', error);
+      return null;
+    }
+  };
+
+  const setLastReadPosition = async (book, chapter, verse) => {
+    try {
+      await AsyncStorage.setItem('lastReadPosition', JSON.stringify({ book, chapter, verse }));
+    } catch (error) {
+      console.error('Error setting last read position:', error);
+    }
+  };
+
   return (
     <ReadingProgressContext.Provider
       value={{
         progress,
         updateChapterProgress,
-        getChapterProgress
+        getChapterProgress,
+        getLastReadPosition,
+        setLastReadPosition
       }}
     >
       {children}
