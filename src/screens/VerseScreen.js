@@ -76,54 +76,56 @@ const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNote
       accessibilityLabel={`Versículo ${item.number}: ${item.text}`}
       accessibilityRole="text"
     >
-      <Text style={styles.verseNumber}>{item.number}</Text>
-      <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity 
-          onPress={() => {
-            animatePress();
-            onToggleBookmark(item.number);
-          }}
-          accessibilityLabel={isBookmarked(item.number) ? 'Quitar marcador' : 'Añadir marcador'}
-          accessibilityRole="button"
-        >
-          <Icon 
-            name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
-            size={24} 
-            color={colors.primary}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => {
-            animatePress();
-            onShareVerse(item);
-          }}
-          accessibilityLabel="Compartir versículo"
-          accessibilityRole="button"
-        >
-          <Icon name="share" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => {
-            animatePress();
-            onOpenNoteModal(item);
-          }}
-          accessibilityLabel="Añadir nota"
-          accessibilityRole="button"
-        >
-          <Icon name="note-add" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => {
-            animatePress();
-            onCopyVerse(item);
-          }}
-          accessibilityLabel="Copiar versículo"
-          accessibilityRole="button"
-        >
-          <Icon name="content-copy" size={24} color={colors.primary} />
-        </TouchableOpacity>
+      <View style={styles.verseHeader}>
+        <Text style={styles.verseNumber}>{item.number}</Text>
+        <View style={styles.verseActions}>
+          <TouchableOpacity 
+            onPress={() => {
+              animatePress();
+              onToggleBookmark(item.number);
+            }}
+            accessibilityLabel={isBookmarked(item.number) ? 'Quitar marcador' : 'Añadir marcador'}
+            accessibilityRole="button"
+          >
+            <Icon 
+              name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
+              size={24} 
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => {
+              animatePress();
+              onShareVerse(item);
+            }}
+            accessibilityLabel="Compartir versículo"
+            accessibilityRole="button"
+          >
+            <Icon name="share" size={24} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => {
+              animatePress();
+              onOpenNoteModal(item);
+            }}
+            accessibilityLabel="Añadir nota"
+            accessibilityRole="button"
+          >
+            <Icon name="note-add" size={24} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => {
+              animatePress();
+              onCopyVerse(item);
+            }}
+            accessibilityLabel="Copiar versículo"
+            accessibilityRole="button"
+          >
+            <Icon name="content-copy" size={24} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
+      <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
     </Animated.View>
   );
 });
@@ -351,21 +353,19 @@ const VerseScreen = ({ route, theme }) => {
     changeFontSize(newSize);
   }, [changeFontSize]);
 
-  const memoizedRenderItem = useMemo(() => 
-    ({ item }) => (
-      <VerseItem
-        item={item}
-        onToggleBookmark={toggleBookmark}
-        onShareVerse={shareVerse}
-        onOpenNoteModal={openNoteModal}
-        onCopyVerse={copyVerse}
-        styles={styles}
-        colors={colors}
-        isBookmarked={isBookmarked}
-        isHighlighted={highlightedVerses.includes(item.number)}
-      />
-    ),
-  [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
+  const renderItem = useCallback(({ item }) => (
+    <VerseItem
+      item={item}
+      onToggleBookmark={toggleBookmark}
+      onShareVerse={shareVerse}
+      onOpenNoteModal={openNoteModal}
+      onCopyVerse={copyVerse}
+      styles={styles}
+      colors={colors}
+      isBookmarked={isBookmarked}
+      isHighlighted={highlightedVerses.includes(item.number)}
+    />
+  ), [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
 
   const keyExtractor = useCallback((item) => `verse-${item.number}`, []);
 
@@ -475,7 +475,7 @@ const VerseScreen = ({ route, theme }) => {
           <FlatList
             ref={listRef}
             data={memoizedVerses}
-            renderItem={memoizedRenderItem}
+            renderItem={renderItem}
             keyExtractor={keyExtractor}
             onEndReached={onEndReached}
             onEndReachedThreshold={0.5}
@@ -496,7 +496,7 @@ const VerseScreen = ({ route, theme }) => {
           accessibilityLabel="Activar modo de lectura sin distracciones"
           accessibilityRole="button"
         >
-          <Icon name="fullscreen" size={24} color={colors.primary} />
+          <Icon name="fullscreen" size={24} color={colors.background} />
         </TouchableOpacity>
         <NoteModal 
           visible={noteModalVisible}
@@ -510,135 +510,141 @@ const VerseScreen = ({ route, theme }) => {
   );
 };
 
-const createStyles = (colors, fontSize, fontFamily) => {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-    },
-    errorContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-    },
-    errorText: {
-      color: colors.text,
-      fontSize: 16,
-      marginBottom: 20,
-      textAlign: 'center',
-    },
-    retryButton: {
-      backgroundColor: colors.primary,
-      padding: 10,
-      borderRadius: 5,
-    },
-    retryButtonText: {
-      color: colors.background,
-      fontSize: 16,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 10,
-      backgroundColor: colors.card,
-    },
-    chapterTitle: {
-      fontSize: fontSize + 2,
-      fontWeight: 'bold',
-      color: colors.text,
-      fontFamily,
-    },
-    searchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 10,
-      backgroundColor: colors.card,
-    },
-    searchInput: {
-      flex: 1,
-      height: 40,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 5,
-      paddingHorizontal: 10,
-      marginRight: 10,
-      color: colors.text,
-      fontFamily,
-      fontSize: fontSize,
-    },
-    settingsContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 10,
-      backgroundColor: colors.card,
-    },
-    settingLabel: {
-      color: colors.text,
-      fontFamily,
-      fontSize: fontSize,
-      marginRight: 10,
-    },
-    slider: {
-      flex: 1,
-    },
-    list: {
-      flex: 1,
-    },
-    listContent: {
-      paddingBottom: 40,
-    },
-    verseContainer: {
-      flexDirection: 'column',
-      padding: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      marginBottom: 20,
-    },
-    highlightedVerse: {
-      backgroundColor: colors.highlight,
-    },
-    verseNumber: {
-      marginRight: 10,
-      color: colors.secondary,
-      fontFamily,
-      fontSize: fontSize - 2,
-      minWidth: 30,
-      textAlign: 'right',
-    },
-    verseText: {
-      flex: 1,
-      color: colors.text,
-      fontFamily,
-      fontSize: fontSize,
-    },
-    actionsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: 10,
-    },
-    distractionFreeModeButton: {
-      position: 'absolute',
-      right: 10,
-      bottom: 10,
-      padding: 10,
-      backgroundColor: colors.card,
-      borderRadius: 20,
-    },
-    loadingMore: {
-      paddingVertical: 20,
-    },
-  });
-};
+const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  errorText: {
+    color: colors.text,
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    padding: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: colors.background,
+    fontSize: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  chapterTitle: {
+    fontSize: fontSize + 4,
+    fontWeight: 'bold',
+    color: colors.text,
+    fontFamily,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginRight: 10,
+    color: colors.text,
+    fontFamily,
+    fontSize: fontSize,
+  },
+  settingsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  settingLabel: {
+    color: colors.text,
+    fontFamily,
+    fontSize: fontSize,
+    marginRight: 10,
+  },
+  slider: {
+    flex: 1,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingBottom: 40,
+  },
+  verseContainer: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  verseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  verseNumber: {
+    color: colors.secondary,
+    fontFamily,
+    fontSize: fontSize - 2,
+    fontWeight: 'bold',
+  },
+  verseActions: {
+    flexDirection: 'row',
+  },
+  highlightedVerse: {
+    backgroundColor: colors.highlight,
+  },
+  verseText: {
+    color: colors.text,
+    fontFamily,
+    fontSize: fontSize,
+    lineHeight: fontSize * 1.5,
+  },
+  distractionFreeModeButton: {
+    position: 'absolute',
+    right: 15,
+    bottom: 15,
+    padding: 10,
+    backgroundColor: colors.primary,
+    borderRadius: 25,
+    elevation: 5,
+  },
+  loadingMore: {
+    paddingVertical: 20,
+  },
+});
 
 export default React.memo(withTheme(VerseScreen));
