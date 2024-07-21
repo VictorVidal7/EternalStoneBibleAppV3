@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, SectionList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SectionList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getAllBooks } from '../services/bibleDataManager';
