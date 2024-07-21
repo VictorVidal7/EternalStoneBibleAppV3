@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import { View, ScrollView, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useCallback } from 'react';
+import { View, ScrollView, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import ListItem from '../components/ListItem';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import DailyVerse from '../components/DailyVerse';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
@@ -12,7 +12,24 @@ const HomeScreen = () => {
   const theme = useTheme();
   const { t } = useTranslation();
 
-  console.log('Theme in HomeScreen:', theme); // Depuración
+  const fadeAnim = new Animated.Value(0);
+  const translateY = new Animated.Value(50);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateY, {
+        toValue: 0,
+        tension: 20,
+        friction: 7,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -27,14 +44,14 @@ const HomeScreen = () => {
       borderBottomRightRadius: theme.roundness,
     },
     headerTitle: {
-      fontSize: 24,
+      fontSize: 28,
       fontWeight: 'bold',
-      color: theme.isDarkMode ? theme.colors.background : theme.colors.card,
+      color: theme.colors.background,
       marginBottom: 8,
     },
     headerSubtitle: {
-      fontSize: 16,
-      color: theme.isDarkMode ? theme.colors.background : theme.colors.card,
+      fontSize: 18,
+      color: theme.colors.background,
       opacity: 0.8,
     },
     menuContainer: {
@@ -42,19 +59,27 @@ const HomeScreen = () => {
       borderRadius: theme.roundness,
       overflow: 'hidden',
       marginHorizontal: 16,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
       backgroundColor: theme.colors.card,
+      padding: 16,
+      marginBottom: 8,
+      borderRadius: theme.roundness,
+      elevation: 3,
+      shadowColor: theme.colors.text,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    menuItemText: {
+      marginLeft: 16,
+      fontSize: 18,
+      color: theme.colors.text,
+      flex: 1,
     },
   });
-
-  const fadeAnim = new Animated.Value(0);
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-  }, []);
 
   const menuItems = [
     { title: t('exploreBible'), icon: 'menu-book', screen: 'Bible' },
@@ -64,10 +89,10 @@ const HomeScreen = () => {
     { title: t('settings'), icon: 'settings', screen: 'Settings' },
   ];
 
-  const handleNavigation = (screen) => {
+  const handleNavigation = useCallback((screen) => {
     navigation.navigate(screen);
     AnalyticsService.logEvent(`navigate_to_${screen.toLowerCase()}`);
-  };
+  }, [navigation]);
 
   return (
     <ScrollView style={styles.container}>
@@ -76,7 +101,7 @@ const HomeScreen = () => {
         <Text style={styles.headerSubtitle}>{t('dailyInspiration')}</Text>
       </Animated.View>
       
-      <Animated.View style={{ opacity: fadeAnim }}>
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
         <DailyVerse />
       </Animated.View>
       
@@ -87,16 +112,20 @@ const HomeScreen = () => {
             transform: [{ 
               translateY: fadeAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: [50, 0]
+                outputRange: [50 + index * 10, 0]
               }) 
             }] 
           }}>
-            <ListItem
-              title={item.title}
-              iconName={item.icon}
+            <TouchableOpacity
+              style={styles.menuItem}
               onPress={() => handleNavigation(item.screen)}
-              theme={theme}
-            />
+              accessibilityLabel={item.title}
+              accessibilityRole="button"
+            >
+              <Icon name={item.icon} size={24} color={theme.colors.primary} />
+              <Text style={styles.menuItemText}>{item.title}</Text>
+              <Icon name="chevron-right" size={24} color={theme.colors.secondary} />
+            </TouchableOpacity>
           </Animated.View>
         ))}
       </View>
@@ -104,4 +133,4 @@ const HomeScreen = () => {
   );
 };
 
-export default HomeScreen;
+export default React.memo(HomeScreen);
