@@ -351,19 +351,21 @@ const VerseScreen = ({ route, theme }) => {
     changeFontSize(newSize);
   }, [changeFontSize]);
 
-  const renderItem = useCallback(({ item }) => (
-    <VerseItem
-      item={item}
-      onToggleBookmark={toggleBookmark}
-      onShareVerse={shareVerse}
-      onOpenNoteModal={openNoteModal}
-      onCopyVerse={copyVerse}
-      styles={styles}
-      colors={colors}
-      isBookmarked={isBookmarked}
-      isHighlighted={highlightedVerses.includes(item.number)}
-    />
-  ), [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
+  const memoizedRenderItem = useMemo(() => 
+    ({ item }) => (
+      <VerseItem
+        item={item}
+        onToggleBookmark={toggleBookmark}
+        onShareVerse={shareVerse}
+        onOpenNoteModal={openNoteModal}
+        onCopyVerse={copyVerse}
+        styles={styles}
+        colors={colors}
+        isBookmarked={isBookmarked}
+        isHighlighted={highlightedVerses.includes(item.number)}
+      />
+    ),
+  [toggleBookmark, shareVerse, openNoteModal, copyVerse, styles, colors, isBookmarked, highlightedVerses]);
 
   const keyExtractor = useCallback((item) => `verse-${item.number}`, []);
 
@@ -473,7 +475,7 @@ const VerseScreen = ({ route, theme }) => {
           <FlatList
             ref={listRef}
             data={memoizedVerses}
-            renderItem={renderItem}
+            renderItem={memoizedRenderItem}
             keyExtractor={keyExtractor}
             onEndReached={onEndReached}
             onEndReachedThreshold={0.5}
