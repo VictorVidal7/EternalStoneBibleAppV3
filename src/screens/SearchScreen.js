@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, memo } from 'react';
+import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { View, Text, TextInput, VirtualizedList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useStyles } from '../hooks/useStyles';
@@ -6,6 +6,7 @@ import { searchBible } from '../services/bibleDataManager';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
+import { debounce } from 'lodash';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -57,15 +58,19 @@ const SearchScreen = ({ theme }) => {
     }
   }, [query, searchType, page]);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (query.length >= 3) {
+  const debouncedSearch = useMemo(
+    () => debounce((searchQuery) => {
+      if (searchQuery.length >= 3) {
         handleSearch(true);
       }
-    }, 300);
+    }, 300),
+    [handleSearch]
+  );
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [query, searchType]);
+  useEffect(() => {
+    debouncedSearch(query);
+    return () => debouncedSearch.cancel();
+  }, [query, debouncedSearch]);
 
   const getItem = useCallback((data, index) => data[index], []);
   const getItemCount = useCallback((data) => data.length, []);
