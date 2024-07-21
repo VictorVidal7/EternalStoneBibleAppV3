@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
-import { View, Text, TextInput, VirtualizedList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, VirtualizedList, TouchableOpacity, ActivityIndicator, StyleSheet, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useStyles } from '../hooks/useStyles';
 import { searchBible } from '../services/bibleDataManager';
 import { useTranslation } from 'react-i18next';
@@ -10,19 +11,34 @@ import { debounce } from 'lodash';
 
 const ITEMS_PER_PAGE = 20;
 
-const SearchResultItem = memo(({ item, onPress, styles, colors }) => (
-  <TouchableOpacity
-    style={[styles.resultItem, { backgroundColor: colors.secondary }]}
-    onPress={onPress}
-  >
-    <Text style={[styles.resultReference, { color: colors.text }]}>
-      {item.book} {item.chapter}:{item.verse}
-    </Text>
-    <Text style={[styles.resultText, { color: colors.text }]} numberOfLines={2}>
-      {item.text}
-    </Text>
-  </TouchableOpacity>
-));
+const SearchResultItem = memo(({ item, onPress, styles, colors, index }) => {
+  const opacity = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 500,
+      delay: index * 100,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity }}>
+      <TouchableOpacity
+        style={[styles.resultItem, { backgroundColor: colors.card }]}
+        onPress={onPress}
+      >
+        <Text style={[styles.resultReference, { color: colors.primary }]}>
+          {item.book} {item.chapter}:{item.verse}
+        </Text>
+        <Text style={[styles.resultText, { color: colors.text }]} numberOfLines={2}>
+          {item.text}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
 
 const SearchScreen = ({ theme }) => {
   const navigation = useNavigation();
@@ -76,9 +92,10 @@ const SearchScreen = ({ theme }) => {
   const getItemCount = useCallback((data) => data.length, []);
   const keyExtractor = useCallback((item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`, []);
 
-  const renderSearchResult = useCallback(({ item }) => (
+  const renderSearchResult = useCallback(({ item, index }) => (
     <SearchResultItem
       item={item}
+      index={index}
       onPress={() => {
         navigation.navigate('Bible', {
           screen: 'Verse',
@@ -99,13 +116,21 @@ const SearchScreen = ({ theme }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <TextInput
-        style={[styles.searchInput, { color: colors.text, borderColor: colors.secondary }]}
-        value={query}
-        onChangeText={setQuery}
-        placeholder={t('searchPlaceholder')}
-        placeholderTextColor={colors.secondary}
-      />
+      <View style={styles.searchInputContainer}>
+        <Icon name="search" size={24} color={colors.secondary} style={styles.searchIcon} />
+        <TextInput
+          style={[styles.searchInput, { color: colors.text, borderColor: colors.secondary }]}
+          value={query}
+          onChangeText={setQuery}
+          placeholder={t('searchPlaceholder')}
+          placeholderTextColor={colors.secondary}
+        />
+        {query.length > 0 && (
+          <TouchableOpacity onPress={() => setQuery('')}>
+            <Icon name="close" size={24} color={colors.secondary} />
+          </TouchableOpacity>
+        )}
+      </View>
       <View style={styles.searchTypeContainer}>
         {['all', 'ot', 'nt'].map((type) => (
           <TouchableOpacity
@@ -113,21 +138,21 @@ const SearchScreen = ({ theme }) => {
             style={[
               styles.searchTypeButton,
               searchType === type && styles.activeSearchType,
-              { backgroundColor: searchType === type ? colors.primary : colors.secondary }
+              { backgroundColor: searchType === type ? colors.primary : colors.card }
             ]}
             onPress={() => {
               setSearchType(type);
               AnalyticsService.logEvent('search_type_changed', { newType: type });
             }}
           >
-            <Text style={[styles.searchTypeText, searchType === type && styles.activeSearchTypeText, { color: colors.text }]}>
+            <Text style={[styles.searchTypeText, searchType === type && styles.activeSearchTypeText, { color: searchType === type ? colors.card : colors.text }]}>
               {t(`searchType${type.toUpperCase()}Short`)}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
       {isLoading && page === 1 ? (
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
         <VirtualizedList
           data={results}
@@ -154,64 +179,72 @@ const SearchScreen = ({ theme }) => {
   );
 };
 
-const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
-
-  return {
-    container: {
-      flex: 1,
-      padding: 10,
-    },
-    searchInput: {
-      height: 40,
-      borderWidth: 1,
-      borderRadius: 5,
-      paddingHorizontal: 10,
-      marginBottom: 10,
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    searchTypeContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 10,
-    },
-    searchTypeButton: {
-      flex: 1,
-      padding: 10,
-      borderRadius: 5,
-      marginHorizontal: 2,
-      alignItems: 'center',
-    },
-    searchTypeText: {
-      fontSize: dynamicFontSize - 2,
-      fontFamily,
-    },
-    activeSearchTypeText: {
-      fontWeight: 'bold',
-    },
-    resultItem: {
-      marginBottom: 10,
-      padding: 10,
-      borderRadius: 5,
-    },
-    resultReference: {
-      fontWeight: 'bold',
-      marginBottom: 5,
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    resultText: {
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    emptyResult: {
-      textAlign: 'center',
-      marginTop: 20,
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-  };
-};
+const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 50,
+    fontSize: fontSize,
+    fontFamily,
+  },
+  searchTypeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  searchTypeButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 20,
+    marginHorizontal: 4,
+    alignItems: 'center',
+  },
+  searchTypeText: {
+    fontSize: fontSize - 2,
+    fontFamily,
+  },
+  activeSearchTypeText: {
+    fontWeight: 'bold',
+  },
+  resultItem: {
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  resultReference: {
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily,
+    fontSize: fontSize,
+  },
+  resultText: {
+    fontFamily,
+    fontSize: fontSize - 2,
+  },
+  emptyResult: {
+    textAlign: 'center',
+    marginTop: 32,
+    fontFamily,
+    fontSize: fontSize,
+  },
+  loader: {
+    marginTop: 32,
+  },
+});
 
 export default withTheme(React.memo(SearchScreen));
