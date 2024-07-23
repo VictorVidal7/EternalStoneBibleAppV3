@@ -6,15 +6,18 @@ import { useStyles } from '../hooks/useStyles';
 import { withTheme } from '../hoc/withTheme';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
+import CustomIconButton from '../components/CustomIconButton';
 
 const BookmarkItem = React.memo(({ item, onPress, onRemove, styles, colors }) => (
-  <View style={[styles.bookmarkItem, { backgroundColor: colors.secondary }]}>
-    <TouchableOpacity onPress={onPress}>
+  <View style={[styles.bookmarkItem, { backgroundColor: colors.card }]}>
+    <TouchableOpacity onPress={onPress} style={styles.bookmarkContent}>
       <Text style={[styles.bookmarkText, { color: colors.text }]}>{item.book} {item.chapter}:{item.verse}</Text>
     </TouchableOpacity>
-    <TouchableOpacity style={styles.removeButton} onPress={onRemove}>
-      <Text style={[styles.removeButtonText, { color: colors.primary }]}>Quitar</Text>
-    </TouchableOpacity>
+    <CustomIconButton
+      name="delete"
+      onPress={onRemove}
+      color={colors.primary}
+    />
   </View>
 ));
 
@@ -68,44 +71,37 @@ const BookmarksScreen = ({ theme }) => {
   );
 };
 
-const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
-
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 10,
-    },
-    title: {
-      fontSize: dynamicFontSize + 4,
-      fontWeight: 'bold',
-      marginBottom: 15,
-      textAlign: 'center',
-    },
-    bookmarkItem: {
-      padding: 15,
-      borderRadius: 5,
-      marginBottom: 10,
-    },
-    bookmarkText: {
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-    removeButton: {
-      marginTop: 5,
-      alignSelf: 'flex-end',
-    },
-    removeButtonText: {
-      fontFamily,
-      fontSize: dynamicFontSize - 2,
-    },
-    emptyText: {
-      textAlign: 'center',
-      marginTop: 20,
-      fontFamily,
-      fontSize: dynamicFontSize,
-    },
-  });
-};
+const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+  title: {
+    fontSize: fontSize + 4,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  bookmarkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  bookmarkContent: {
+    flex: 1,
+  },
+  bookmarkText: {
+    fontFamily,
+    fontSize: fontSize,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontFamily,
+    fontSize: fontSize,
+  },
+});
 
 export default withTheme(React.memo(BookmarksScreen));
