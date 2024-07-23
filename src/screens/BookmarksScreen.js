@@ -13,7 +13,7 @@ const BookmarkItem = React.memo(({ item, onPress, onRemove, styles, colors }) =>
       <Text style={[styles.bookmarkText, { color: colors.text }]}>{item.book} {item.chapter}:{item.verse}</Text>
     </TouchableOpacity>
     <TouchableOpacity style={styles.removeButton} onPress={onRemove}>
-      <Text style={[styles.removeButtonText, { color: colors.primary }]}>Eliminar</Text>
+      <Text style={[styles.removeButtonText, { color: colors.primary }]}>Quitar</Text>
     </TouchableOpacity>
   </View>
 ));
@@ -33,15 +33,15 @@ const BookmarksScreen = ({ theme }) => {
     <BookmarkItem
       item={item}
       onPress={() => {
-        navigation.navigate('Bible', {
+        navigation.navigate('Biblia', {
           screen: 'Verse',
           params: { book: item.book, chapter: item.chapter, verse: item.verse }
         });
-        AnalyticsService.logEvent('bookmark_selected', { book: item.book, chapter: item.chapter, verse: item.verse });
+        AnalyticsService.logEvent('favorite_verse_selected', { book: item.book, chapter: item.chapter, verse: item.verse });
       }}
       onRemove={() => {
         removeBookmark(item.book, item.chapter, item.verse);
-        AnalyticsService.logEvent('bookmark_removed', { book: item.book, chapter: item.chapter, verse: item.verse });
+        AnalyticsService.logEvent('favorite_verse_removed', { book: item.book, chapter: item.chapter, verse: item.verse });
       }}
       styles={styles}
       colors={colors}
@@ -50,6 +50,7 @@ const BookmarksScreen = ({ theme }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>{t('Mis versículos favoritos')}</Text>
       <VirtualizedList
         data={bookmarks}
         initialNumToRender={10}
@@ -61,7 +62,7 @@ const BookmarksScreen = ({ theme }) => {
         windowSize={21}
         updateCellsBatchingPeriod={50}
         removeClippedSubviews={true}
-        ListEmptyComponent={<Text style={[styles.emptyText, { color: colors.text }]}>{t('noBookmarks')}</Text>}
+        ListEmptyComponent={<Text style={[styles.emptyText, { color: colors.text }]}>{t('Aún no tienes versículos favoritos')}</Text>}
       />
     </View>
   );
@@ -74,6 +75,12 @@ const createStyles = (nightMode, fontSize, fontFamily) => {
     container: {
       flex: 1,
       padding: 10,
+    },
+    title: {
+      fontSize: dynamicFontSize + 4,
+      fontWeight: 'bold',
+      marginBottom: 15,
+      textAlign: 'center',
     },
     bookmarkItem: {
       padding: 15,

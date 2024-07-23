@@ -43,7 +43,7 @@ const HomeScreen = () => {
           }
         }
       } catch (error) {
-        console.error('Error loading last read position:', error);
+        console.error('Error al cargar la última posición de lectura:', error);
       }
     };
     loadLastRead();
@@ -115,26 +115,30 @@ const HomeScreen = () => {
   });
 
   const menuItems = [
-    { title: t('exploreTheBible'), icon: 'menu-book', screen: 'Bible' },
-    { title: t('myFavoriteVerses'), icon: 'bookmark', screen: 'Bookmarks' },
-    { title: t('bibleStudyPlan'), icon: 'event-note', screen: 'ReadingPlan' },
-    { title: t('searchScriptures'), icon: 'search', screen: 'Search' },
-    { title: t('appSettings'), icon: 'settings', screen: 'Settings' },
+    { title: t('Explorar la Biblia'), icon: 'menu-book', screen: 'Bible' },
+    { title: t('Mis Versículos Favoritos'), icon: 'bookmark', screen: 'Favoritos' },
+    { title: t('Plan de Estudio Bíblico'), icon: 'event-note', screen: 'ReadingPlan' },
+    { title: t('Buscar en las Escrituras'), icon: 'search', screen: 'Buscar' },
+    { title: t('Ajustes de la App'), icon: 'settings', screen: 'Ajustes' },
   ];
 
   const handleNavigation = useCallback((screen) => {
-    navigation.navigate(screen);
+    if (screen === 'Bible') {
+      navigation.navigate('Biblia', { screen: 'BibleList' });
+    } else {
+      navigation.navigate(screen);
+    }
     AnalyticsService.logEvent(`navigate_to_${screen.toLowerCase()}`);
   }, [navigation]);
 
   const handleStartReading = useCallback(() => {
     if (lastRead) {
-      navigation.navigate('Bible', {
+      navigation.navigate('Biblia', {
         screen: 'Verse',
         params: { book: lastRead.book, chapter: lastRead.chapter, verse: lastRead.verse }
       });
     } else {
-      navigation.navigate('Bible', { screen: 'BibleList' });
+      navigation.navigate('Biblia', { screen: 'BibleList' });
     }
     AnalyticsService.logEvent('start_reading');
   }, [navigation, lastRead]);
@@ -147,8 +151,8 @@ const HomeScreen = () => {
         style={styles.gradientHeader}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>{t('eternalStoneBible')}</Text>
-          <Text style={styles.headerSubtitle}>{t('dailyBibleInspiration')}</Text>
+          <Text style={styles.headerTitle}>Biblia Eterna</Text>
+          <Text style={styles.headerSubtitle}>Inspiración Bíblica Diaria</Text>
         </View>
       </LinearGradient>
       
@@ -159,11 +163,11 @@ const HomeScreen = () => {
       <View style={styles.section}>
         <TouchableOpacity style={styles.startReadingButton} onPress={handleStartReading}>
           <Text style={styles.startReadingText}>
-            {lastRead ? t('continueYourBibleReading') : t('startYourBibleJourney')}
+            {lastRead ? t('Continuar tu Lectura Bíblica') : t('Comenzar tu Viaje Bíblico')}
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>{t('quickBibleAccess')}</Text>
+        <Text style={styles.sectionTitle}>{t('Acceso Rápido a la Biblia')}</Text>
         {menuItems.map((item, index) => (
           <Animated.View key={index} style={{ 
             opacity: fadeAnim, 

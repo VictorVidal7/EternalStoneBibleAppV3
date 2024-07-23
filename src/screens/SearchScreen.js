@@ -97,7 +97,7 @@ const SearchScreen = ({ theme }) => {
       item={item}
       index={index}
       onPress={() => {
-        navigation.navigate('Bible', {
+        navigation.navigate('Biblia', {
           screen: 'Verse',
           params: { book: item.book, chapter: item.chapter, verse: item.verse }
         });
@@ -122,7 +122,7 @@ const SearchScreen = ({ theme }) => {
           style={[styles.searchInput, { color: colors.text, borderColor: colors.secondary }]}
           value={query}
           onChangeText={setQuery}
-          placeholder={t('searchPlaceholder')}
+          placeholder={t('Buscar en la Biblia')}
           placeholderTextColor={colors.secondary}
         />
         {query.length > 0 && (
@@ -169,7 +169,7 @@ const SearchScreen = ({ theme }) => {
           removeClippedSubviews={true}
           ListEmptyComponent={
             <Text style={[styles.emptyResult, { color: colors.text }]}>
-              {query.length < 3 ? t('enterMinChars') : t('noResults')}
+              {query.length < 3 ? t('Escribe al menos 3 letras') : t('No hay resultados. Intenta con otras palabras.')}
             </Text>
           }
           ListFooterComponent={() => isLoading && page > 1 ? <ActivityIndicator size="small" color={colors.primary} /> : null}

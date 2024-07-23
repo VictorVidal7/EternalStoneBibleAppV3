@@ -12,15 +12,13 @@ const DailyVerse = () => {
   const theme = useTheme();
   const { t } = useTranslation();
 
-  console.log('Theme in DailyVerse:', theme); // Depuración
-
   useEffect(() => {
     const fetchDailyVerse = async () => {
       try {
         const dailyVerse = await DailyVerseService.getDailyVerse();
         setVerse(dailyVerse);
       } catch (error) {
-        console.error('Error fetching daily verse:', error);
+        console.error('Error al obtener el versículo del día:', error);
       } finally {
         setLoading(false);
       }
@@ -84,7 +82,7 @@ const DailyVerse = () => {
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
-      <Text style={styles.title}>{t('dailyVerse')}</Text>
+      <Text style={styles.title}>{t('Versículo del día')}</Text>
       <Text style={styles.verseText}>{verse.text}</Text>
       <Text style={styles.reference}>
         {verse.book} {verse.chapter}:{verse.number}

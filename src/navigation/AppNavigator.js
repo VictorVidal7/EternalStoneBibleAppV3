@@ -22,7 +22,7 @@ const BibleStack = () => (
     <Stack.Screen 
       name="BibleList" 
       component={BibleListScreen} 
-      options={{ title: 'Libros de la Biblia' }}
+      options={{ title: 'Libros' }}
     />
     <Stack.Screen 
       name="Chapter" 
@@ -60,15 +60,15 @@ const AppNavigator = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === 'Home') {
+          if (route.name === 'Inicio') {
             iconName = 'home';
-          } else if (route.name === 'Bible') {
+          } else if (route.name === 'Biblia') {
             iconName = 'book';
-          } else if (route.name === 'Bookmarks') {
+          } else if (route.name === 'Favoritos') {
             iconName = 'bookmark';
-          } else if (route.name === 'Search') {
+          } else if (route.name === 'Buscar') {
             iconName = 'search';
-          } else if (route.name === 'Settings') {
+          } else if (route.name === 'Ajustes') {
             iconName = 'settings';
           }
 
@@ -77,7 +77,7 @@ const AppNavigator = () => {
       })}
     >
       <Tab.Screen 
-        name="Home" 
+        name="Inicio" 
         component={HomeStack} 
         options={{ 
           headerShown: false,
@@ -85,7 +85,7 @@ const AppNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="Bible" 
+        name="Biblia" 
         component={BibleStack} 
         options={{ 
           headerShown: false,
@@ -93,17 +93,17 @@ const AppNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="Bookmarks" 
+        name="Favoritos" 
         component={BookmarksScreen} 
-        options={{ title: 'Marcadores' }}
+        options={{ title: 'Favoritos' }}
       />
       <Tab.Screen 
-        name="Search" 
+        name="Buscar" 
         component={SearchScreen} 
-        options={{ title: 'Búsqueda' }}
+        options={{ title: 'Buscar' }}
       />
       <Tab.Screen 
-        name="Settings" 
+        name="Ajustes" 
         component={SettingsScreen} 
         options={{ title: 'Ajustes' }}
       />

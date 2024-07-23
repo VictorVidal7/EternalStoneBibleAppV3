@@ -144,14 +144,14 @@ const SettingsScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {renderSectionTitle(t("appearance"))}
-      {renderToggleOption(t("darkMode"), nightMode, () => handleSettingChange('nightMode', !nightMode))}
-      {renderButtonGroup(t("fontSize"), Object.values(FONT_SIZES), fontSize, (size) => handleSettingChange('fontSize', size))}
-      {renderButtonGroup(t("fontFamily"), Object.values(FONT_FAMILIES), fontFamily, (family) => handleSettingChange('fontFamily', family))}
-      {renderButtonGroup(t("lineSpacing"), ['1.0', '1.5', '2.0'], lineSpacing, (spacing) => handleSettingChange('lineSpacing', spacing))}
+      {renderSectionTitle(t("Personalizar lectura"))}
+      {renderToggleOption(t("Modo noche"), nightMode, () => handleSettingChange('nightMode', !nightMode))}
+      {renderButtonGroup(t("Tamaño del texto"), Object.values(FONT_SIZES), fontSize, (size) => handleSettingChange('fontSize', size))}
+      {renderButtonGroup(t("Estilo de letra"), Object.values(FONT_FAMILIES), fontFamily, (family) => handleSettingChange('fontFamily', family))}
+      {renderButtonGroup(t("Espacio entre líneas"), ['1.0', '1.5', '2.0'], lineSpacing, (spacing) => handleSettingChange('lineSpacing', spacing))}
       
       <View style={styles.settingRow}>
-        <Text style={styles.settingLabel}>{t("textZoom")}</Text>
+        <Text style={styles.settingLabel}>{t("Ampliar texto")}</Text>
         <Slider
           style={{width: 200, height: 40}}
           minimumValue={50}
@@ -166,7 +166,7 @@ const SettingsScreen = () => {
       </View>
 
       <View style={styles.settingRow}>
-        <Text style={styles.settingLabel}>{t("colorTheme")}</Text>
+        <Text style={styles.settingLabel}>{t("Esquema de colores")}</Text>
         <View style={styles.colorThemeContainer}>
           {Object.keys(COLOR_THEMES).map((theme) => (
             <TouchableOpacity
@@ -182,11 +182,11 @@ const SettingsScreen = () => {
         </View>
       </View>
 
-      {renderSectionTitle(t("notifications"))}
-      {renderToggleOption(t("dailyReadingNotifications"), notificationsEnabled, toggleNotifications)}
+      {renderSectionTitle(t("Recordatorios de lectura"))}
+      {renderToggleOption(t("Recordatorio diario"), notificationsEnabled, toggleNotifications)}
       {notificationsEnabled && (
         <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>{t("notificationTime")}:</Text>
+          <Text style={styles.settingLabel}>{t("Hora del recordatorio")}:</Text>
           <TextInput
             style={styles.timeInput}
             value={notificationTimeInput}
