@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useState } from 'react';
 import { View, ScrollView, Text, StyleSheet, Animated, TouchableOpacity, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import CustomIconButton from '../components/CustomIconButton';
 import DailyVerse from '../components/DailyVerse';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
@@ -115,7 +115,7 @@ const HomeScreen = () => {
   });
 
   const menuItems = [
-    { title: t('Explorar la Biblia'), icon: 'menu-book', screen: 'Bible' },
+    { title: t('Explorar la Biblia'), icon: 'book', screen: 'Bible' },
     { title: t('Mis Versículos Favoritos'), icon: 'bookmark', screen: 'Favoritos' },
     { title: t('Plan de Estudio Bíblico'), icon: 'event-note', screen: 'ReadingPlan' },
     { title: t('Buscar en las Escrituras'), icon: 'search', screen: 'Buscar' },
@@ -123,22 +123,18 @@ const HomeScreen = () => {
   ];
 
   const handleNavigation = useCallback((screen) => {
-    if (screen === 'Bible') {
-      navigation.navigate('Biblia', { screen: 'BibleList' });
-    } else {
-      navigation.navigate(screen);
-    }
+    navigation.navigate(screen);
     AnalyticsService.logEvent(`navigate_to_${screen.toLowerCase()}`);
   }, [navigation]);
 
   const handleStartReading = useCallback(() => {
     if (lastRead) {
-      navigation.navigate('Biblia', {
+      navigation.navigate('Bible', {
         screen: 'Verse',
         params: { book: lastRead.book, chapter: lastRead.chapter, verse: lastRead.verse }
       });
     } else {
-      navigation.navigate('Biblia', { screen: 'BibleList' });
+      navigation.navigate('Bible', { screen: 'BibleList' });
     }
     AnalyticsService.logEvent('start_reading');
   }, [navigation, lastRead]);
@@ -184,9 +180,9 @@ const HomeScreen = () => {
               accessibilityLabel={item.title}
               accessibilityRole="button"
             >
-              <Icon name={item.icon} size={24} color={colors.primary} />
+              <CustomIconButton name={item.icon} color={colors.primary} />
               <Text style={styles.menuItemText}>{item.title}</Text>
-              <Icon name="chevron-right" size={24} color={colors.secondary} />
+              <CustomIconButton name="chevron-right" color={colors.secondary} />
             </TouchableOpacity>
           </Animated.View>
         ))}
