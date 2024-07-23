@@ -7,10 +7,11 @@ import DailyVerse from '../components/DailyVerse';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
 import { useReadingProgress } from '../context/ReadingProgressContext';
+import LinearGradient from 'react-native-linear-gradient';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const theme = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const { t } = useTranslation();
   const readingProgressContext = useReadingProgress();
   const [lastRead, setLastRead] = useState(null);
@@ -51,40 +52,42 @@ const HomeScreen = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.isDarkMode ? '#121212' : '#F5F5F5',
+      backgroundColor: isDarkMode ? '#121212' : '#F5F5F5',
+    },
+    gradientHeader: {
+      height: 120,
     },
     header: {
-      padding: 20,
-      paddingTop: StatusBar.currentHeight + 20,
-      backgroundColor: theme.colors.primary,
+      padding: 15,
+      paddingTop: StatusBar.currentHeight + 10,
     },
     headerTitle: {
-      fontSize: 28,
+      fontSize: 24,
       fontWeight: 'bold',
-      color: '#FFFFFF',
-      marginBottom: 8,
+      color: isDarkMode ? '#FFFFFF' : '#000000',
+      marginBottom: 4,
     },
     headerSubtitle: {
-      fontSize: 18,
-      color: '#FFFFFF',
+      fontSize: 16,
+      color: isDarkMode ? '#CCCCCC' : '#666666',
       opacity: 0.8,
     },
     section: {
-      margin: 20,
+      margin: 15,
     },
     sectionTitle: {
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: 'bold',
-      color: theme.colors.text,
-      marginBottom: 15,
+      color: colors.text,
+      marginBottom: 10,
     },
     menuItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: theme.isDarkMode ? '#1E1E1E' : '#FFFFFF',
-      padding: 15,
-      marginBottom: 10,
-      borderRadius: 10,
+      backgroundColor: isDarkMode ? '#1E1E1E' : '#FFFFFF',
+      padding: 12,
+      marginBottom: 8,
+      borderRadius: 8,
       elevation: 2,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
@@ -92,31 +95,31 @@ const HomeScreen = () => {
       shadowRadius: 4,
     },
     menuItemText: {
-      marginLeft: 15,
+      marginLeft: 12,
       fontSize: 16,
-      color: theme.colors.text,
+      color: colors.text,
       flex: 1,
     },
     startReadingButton: {
-      backgroundColor: '#4CAF50',
-      padding: 15,
-      borderRadius: 10,
+      backgroundColor: colors.primary,
+      padding: 12,
+      borderRadius: 8,
       alignItems: 'center',
-      marginVertical: 20,
+      marginVertical: 15,
     },
     startReadingText: {
       color: '#FFFFFF',
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: 'bold',
     },
   });
 
   const menuItems = [
-    { title: t('exploreBible'), icon: 'menu-book', screen: 'Bible' },
-    { title: t('myBookmarks'), icon: 'bookmark', screen: 'Bookmarks' },
-    { title: t('readingPlan'), icon: 'event-note', screen: 'ReadingPlan' },
-    { title: t('search'), icon: 'search', screen: 'Search' },
-    { title: t('settings'), icon: 'settings', screen: 'Settings' },
+    { title: t('exploreTheBible'), icon: 'menu-book', screen: 'Bible' },
+    { title: t('myFavoriteVerses'), icon: 'bookmark', screen: 'Bookmarks' },
+    { title: t('bibleStudyPlan'), icon: 'event-note', screen: 'ReadingPlan' },
+    { title: t('searchScriptures'), icon: 'search', screen: 'Search' },
+    { title: t('appSettings'), icon: 'settings', screen: 'Settings' },
   ];
 
   const handleNavigation = useCallback((screen) => {
@@ -138,11 +141,16 @@ const HomeScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <StatusBar backgroundColor={theme.colors.primary} barStyle="light-content" />
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('appName')}</Text>
-        <Text style={styles.headerSubtitle}>{t('dailyInspiration')}</Text>
-      </View>
+      <StatusBar backgroundColor={colors.primary} barStyle={isDarkMode ? "light-content" : "dark-content"} />
+      <LinearGradient
+        colors={[colors.primary, isDarkMode ? '#121212' : '#F5F5F5']}
+        style={styles.gradientHeader}
+      >
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{t('eternalStoneBible')}</Text>
+          <Text style={styles.headerSubtitle}>{t('dailyBibleInspiration')}</Text>
+        </View>
+      </LinearGradient>
       
       <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
         <DailyVerse />
@@ -151,11 +159,11 @@ const HomeScreen = () => {
       <View style={styles.section}>
         <TouchableOpacity style={styles.startReadingButton} onPress={handleStartReading}>
           <Text style={styles.startReadingText}>
-            {lastRead ? t('continueReading') : t('startReading')}
+            {lastRead ? t('continueYourBibleReading') : t('startYourBibleJourney')}
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>{t('quickAccess')}</Text>
+        <Text style={styles.sectionTitle}>{t('quickBibleAccess')}</Text>
         {menuItems.map((item, index) => (
           <Animated.View key={index} style={{ 
             opacity: fadeAnim, 
@@ -172,9 +180,9 @@ const HomeScreen = () => {
               accessibilityLabel={item.title}
               accessibilityRole="button"
             >
-              <Icon name={item.icon} size={24} color={theme.colors.primary} />
+              <Icon name={item.icon} size={24} color={colors.primary} />
               <Text style={styles.menuItemText}>{item.title}</Text>
-              <Icon name="chevron-right" size={24} color={theme.colors.secondary} />
+              <Icon name="chevron-right" size={24} color={colors.secondary} />
             </TouchableOpacity>
           </Animated.View>
         ))}
