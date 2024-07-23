@@ -2,20 +2,17 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import {
   View,
   Text,
-  TouchableOpacity,
   ActivityIndicator,
   ToastAndroid,
   Platform,
   Alert,
   Share,
-  Dimensions,
   TextInput,
   FlatList,
   Animated,
   StyleSheet
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Slider from '@react-native-community/slider';
@@ -29,8 +26,8 @@ import DistractionFreeMode from '../components/DistractionFreeMode';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
+import CustomIconButton from '../components/CustomIconButton';
 
-const { width } = Dimensions.get('window');
 const INITIAL_VERSES_TO_LOAD = 20;
 const VERSES_PER_BATCH = 10;
 
@@ -79,50 +76,38 @@ const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNote
       <View style={styles.verseHeader}>
         <Text style={styles.verseNumber}>{item.number}</Text>
         <View style={styles.verseActions}>
-          <TouchableOpacity 
+          <CustomIconButton 
+            name={isBookmarked(item.number) ? "bookmark-filled" : "bookmark"}
             onPress={() => {
               animatePress();
               onToggleBookmark(item.number);
             }}
-            accessibilityLabel={isBookmarked(item.number) ? 'Quitar marcador' : 'Añadir marcador'}
-            accessibilityRole="button"
-          >
-            <Icon 
-              name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"} 
-              size={24} 
-              color={colors.primary}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity 
+            color={colors.primary}
+          />
+          <CustomIconButton 
+            name="share"
             onPress={() => {
               animatePress();
               onShareVerse(item);
             }}
-            accessibilityLabel="Compartir versículo"
-            accessibilityRole="button"
-          >
-            <Icon name="share" size={24} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
+            color={colors.primary}
+          />
+          <CustomIconButton 
+            name="note-add"
             onPress={() => {
               animatePress();
               onOpenNoteModal(item);
             }}
-            accessibilityLabel="Añadir nota"
-            accessibilityRole="button"
-          >
-            <Icon name="note-add" size={24} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
+            color={colors.primary}
+          />
+          <CustomIconButton 
+            name="content-copy"
             onPress={() => {
               animatePress();
               onCopyVerse(item);
             }}
-            accessibilityLabel="Copiar versículo"
-            accessibilityRole="button"
-          >
-            <Icon name="content-copy" size={24} color={colors.primary} />
-          </TouchableOpacity>
+            color={colors.primary}
+          />
         </View>
       </View>
       <Text style={styles.verseText} testID={`verse-text-${item.number}`}>{item.text}</Text>
@@ -164,7 +149,7 @@ const VerseScreen = ({ route, theme }) => {
       setError(null);
       const chapterVerses = await getChapter(bookToLoad, chapterToLoad, start, limit);
       if (!chapterVerses || chapterVerses.length === 0) {
-        throw new Error('No verses found for this chapter');
+        throw new Error('No se encontraron versículos para este capítulo');
       }
       setVerses(prevVerses => start === 0 ? chapterVerses : [...prevVerses, ...chapterVerses]);
       setHasMoreVerses(chapterVerses.length === limit);
@@ -172,7 +157,7 @@ const VerseScreen = ({ route, theme }) => {
       setTotalChapters(bookChapters);
       AnalyticsService.logScreenView(`Verse_${bookToLoad}_${chapterToLoad}`);
     } catch (error) {
-      console.error('Error loading verses:', error);
+      console.error('Error al cargar versículos:', error);
       setError(t('errorLoadingVerses'));
     } finally {
       setLoading(false);
@@ -247,11 +232,11 @@ const VerseScreen = ({ route, theme }) => {
         title: t('shareVerseTitle', { book, chapter, number: verse.number }),
       });
       if (result.action === Share.sharedAction) {
-        console.log('Shared successfully');
+        console.log('Compartido exitosamente');
         AnalyticsService.logEvent('share_verse', { book, chapter, verse: verse.number });
       }
     } catch (error) {
-      console.error('Error sharing verse:', error);
+      console.error('Error al compartir versículo:', error);
       Alert.alert(t('error'), t('errorSharingVerse'));
     }
   }, [book, chapter, t]);
@@ -389,9 +374,12 @@ const VerseScreen = ({ route, theme }) => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => loadVerses(book, chapter)}>
-          <Text style={styles.retryButtonText}>{t('retry')}</Text>
-        </TouchableOpacity>
+        <CustomIconButton
+          name="refresh"
+          onPress={() => loadVerses(book, chapter)}
+          color={colors.primary}
+          style={styles.retryButton}
+        />
       </View>
     );
   }
@@ -419,25 +407,19 @@ const VerseScreen = ({ route, theme }) => {
           }
         ]}>
           <View style={styles.header}>
-            <TouchableOpacity 
+            <CustomIconButton 
+              name="chevron-left" 
               onPress={() => navigateToChapter(chapter - 1)} 
               disabled={chapter === 1}
-              accessibilityLabel={`Ir al capítulo anterior de ${book}`}
-              accessibilityHint="Navega al capítulo anterior del libro actual"
-              accessibilityRole="button"
-            >
-              <Icon name="chevron-left" size={24} color={chapter === 1 ? colors.secondary : colors.primary} />
-            </TouchableOpacity>
+              color={chapter === 1 ? colors.secondary : colors.primary}
+            />
             <Text style={styles.chapterTitle} accessibilityRole="header">{`${book} ${chapter}`}</Text>
-            <TouchableOpacity 
+            <CustomIconButton 
+              name="chevron-right" 
               onPress={() => navigateToChapter(chapter + 1)} 
               disabled={chapter === totalChapters}
-              accessibilityLabel={`Ir al siguiente capítulo de ${book}`}
-              accessibilityHint="Navega al siguiente capítulo del libro actual"
-              accessibilityRole="button"
-            >
-              <Icon name="chevron-right" size={24} color={chapter === totalChapters ? colors.secondary : colors.primary} />
-            </TouchableOpacity>
+              color={chapter === totalChapters ? colors.secondary : colors.primary}
+            />
           </View>
           <View style={styles.searchContainer}>
             <TextInput
@@ -449,14 +431,11 @@ const VerseScreen = ({ route, theme }) => {
               accessibilityLabel="Buscar en el capítulo actual"
               accessibilityHint="Ingresa texto para buscar en el capítulo actual"
             />
-            <TouchableOpacity 
+            <CustomIconButton 
+              name="search"
               onPress={handleSearch}
-              accessibilityLabel="Buscar"
-              accessibilityHint="Inicia la búsqueda con el texto ingresado"
-              accessibilityRole="button"
-            >
-              <Icon name="search" size={24} color={colors.primary} />
-            </TouchableOpacity>
+              color={colors.primary}
+            />
           </View>
           <View style={styles.settingsContainer}>
             <Text style={styles.settingLabel}>{t('fontSize')}: {localFontSize}</Text>
@@ -490,14 +469,12 @@ const VerseScreen = ({ route, theme }) => {
             ) : null}
           />
         </Animated.View>
-        <TouchableOpacity 
-          style={styles.distractionFreeModeButton} 
+        <CustomIconButton 
+          name="fullscreen"
           onPress={toggleDistractionFreeMode}
-          accessibilityLabel="Activar modo de lectura sin distracciones"
-          accessibilityRole="button"
-        >
-          <Icon name="fullscreen" size={24} color={colors.background} />
-        </TouchableOpacity>
+          style={styles.distractionFreeModeButton}
+          color={colors.background}
+        />
         <NoteModal 
           visible={noteModalVisible}
           onClose={closeNoteModal}
@@ -540,10 +517,6 @@ const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
     backgroundColor: colors.primary,
     padding: 10,
     borderRadius: 5,
-  },
-  retryButtonText: {
-    color: colors.background,
-    fontSize: 16,
   },
   header: {
     flexDirection: 'row',
@@ -637,10 +610,7 @@ const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
     position: 'absolute',
     right: 15,
     bottom: 15,
-    padding: 10,
     backgroundColor: colors.primary,
-    borderRadius: 25,
-    elevation: 5,
   },
   loadingMore: {
     paddingVertical: 20,
