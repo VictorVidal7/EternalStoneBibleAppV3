@@ -1,101 +1,50 @@
-import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
-import { View, Text, TextInput, VirtualizedList, TouchableOpacity, ActivityIndicator, StyleSheet, Animated } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, TextInput, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useStyles } from '../hooks/useStyles';
 import { searchBible } from '../services/bibleDataManager';
 import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
-import { debounce } from 'lodash';
-
-const ITEMS_PER_PAGE = 20;
-
-const SearchResultItem = memo(({ item, onPress, styles, colors, index }) => {
-  const opacity = React.useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
-    Animated.timing(opacity, {
-      toValue: 1,
-      duration: 500,
-      delay: index * 100,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
-  return (
-    <Animated.View style={{ opacity }}>
-      <TouchableOpacity
-        style={[styles.resultItem, { backgroundColor: colors.card }]}
-        onPress={onPress}
-      >
-        <Text style={[styles.resultReference, { color: colors.primary }]}>
-          {item.book} {item.chapter}:{item.verse}
-        </Text>
-        <Text style={[styles.resultText, { color: colors.text }]} numberOfLines={2}>
-          {item.text}
-        </Text>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-});
+import CustomIconButton from '../components/CustomIconButton';
 
 const SearchScreen = ({ theme }) => {
   const navigation = useNavigation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
-  const [searchType, setSearchType] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const { colors } = theme;
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
 
-  const handleSearch = useCallback(async (newSearch = false) => {
-    if (query.length < 3) {
-      setResults([]);
-      return;
-    }
+  const handleSearch = useCallback(async () => {
+    if (query.length < 3) return;
     setIsLoading(true);
     try {
-      const currentPage = newSearch ? 1 : page;
-      const searchResults = await searchBible(query, searchType, currentPage, ITEMS_PER_PAGE);
-      setResults(prevResults => newSearch ? searchResults : [...prevResults, ...searchResults]);
-      setHasMore(searchResults.length === ITEMS_PER_PAGE);
-      setPage(currentPage + 1);
-      AnalyticsService.logEvent('search_performed', { query, searchType, resultsCount: searchResults.length });
+      const searchResults = await searchBible(query);
+      setResults(searchResults);
+      AnalyticsService.logEvent('search_performed', { query, resultsCount: searchResults.length });
     } catch (error) {
       console.error('Error searching the Bible:', error);
       setResults([]);
-      AnalyticsService.logEvent('search_error', { query, searchType, error: error.message });
     } finally {
       setIsLoading(false);
     }
-  }, [query, searchType, page]);
-
-  const debouncedSearch = useMemo(
-    () => debounce((searchQuery) => {
-      if (searchQuery.length >= 3) {
-        handleSearch(true);
-      }
-    }, 300),
-    [handleSearch]
-  );
+  }, [query]);
 
   useEffect(() => {
-    debouncedSearch(query);
-    return () => debouncedSearch.cancel();
-  }, [query, debouncedSearch]);
+    const delayDebounceFn = setTimeout(() => {
+      if (query.length >= 3) {
+        handleSearch();
+      }
+    }, 300);
 
-  const getItem = useCallback((data, index) => data[index], []);
-  const getItemCount = useCallback((data) => data.length, []);
-  const keyExtractor = useCallback((item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`, []);
+    return () => clearTimeout(delayDebounceFn);
+  }, [query, handleSearch]);
 
-  const renderSearchResult = useCallback(({ item, index }) => (
-    <SearchResultItem
-      item={item}
-      index={index}
+  const renderItem = useCallback(({ item }) => (
+    <TouchableOpacity
+      style={styles.resultItem}
       onPress={() => {
         navigation.navigate('Biblia', {
           screen: 'Verse',
@@ -103,76 +52,39 @@ const SearchScreen = ({ theme }) => {
         });
         AnalyticsService.logEvent('search_result_selected', { book: item.book, chapter: item.chapter, verse: item.verse });
       }}
-      styles={styles}
-      colors={colors}
-    />
-  ), [navigation, styles, colors]);
-
-  const loadMoreResults = useCallback(() => {
-    if (!isLoading && hasMore) {
-      handleSearch();
-    }
-  }, [isLoading, hasMore, handleSearch]);
+    >
+      <Text style={styles.resultReference}>{item.book} {item.chapter}:{item.verse}</Text>
+      <Text style={styles.resultText} numberOfLines={2}>{item.text}</Text>
+    </TouchableOpacity>
+  ), [navigation, styles]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.searchInputContainer}>
-        <Icon name="search" size={24} color={colors.secondary} style={styles.searchIcon} />
+        <CustomIconButton name="search" color={colors.primary} onPress={handleSearch} />
         <TextInput
-          style={[styles.searchInput, { color: colors.text, borderColor: colors.secondary }]}
+          style={[styles.searchInput, { color: colors.text }]}
           value={query}
           onChangeText={setQuery}
           placeholder={t('Buscar en la Biblia')}
           placeholderTextColor={colors.secondary}
         />
         {query.length > 0 && (
-          <TouchableOpacity onPress={() => setQuery('')}>
-            <Icon name="close" size={24} color={colors.secondary} />
-          </TouchableOpacity>
+          <CustomIconButton name="close" color={colors.secondary} onPress={() => setQuery('')} />
         )}
       </View>
-      <View style={styles.searchTypeContainer}>
-        {['all', 'ot', 'nt'].map((type) => (
-          <TouchableOpacity
-            key={type}
-            style={[
-              styles.searchTypeButton,
-              searchType === type && styles.activeSearchType,
-              { backgroundColor: searchType === type ? colors.primary : colors.card }
-            ]}
-            onPress={() => {
-              setSearchType(type);
-              AnalyticsService.logEvent('search_type_changed', { newType: type });
-            }}
-          >
-            <Text style={[styles.searchTypeText, searchType === type && styles.activeSearchTypeText, { color: searchType === type ? colors.card : colors.text }]}>
-              {t(`searchType${type.toUpperCase()}Short`)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      {isLoading && page === 1 ? (
+      {isLoading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
-        <VirtualizedList
+        <FlatList
           data={results}
-          renderItem={renderSearchResult}
-          keyExtractor={keyExtractor}
-          getItemCount={getItemCount}
-          getItem={getItem}
-          onEndReached={loadMoreResults}
-          onEndReachedThreshold={0.5}
-          initialNumToRender={10}
-          maxToRenderPerBatch={10}
-          updateCellsBatchingPeriod={50}
-          windowSize={21}
-          removeClippedSubviews={true}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => `${item.book}-${item.chapter}-${item.verse}-${index}`}
           ListEmptyComponent={
             <Text style={[styles.emptyResult, { color: colors.text }]}>
-              {query.length < 3 ? t('Escribe al menos 3 letras') : t('No hay resultados. Intenta con otras palabras.')}
+              {query.length < 3 ? t('Escribe al menos 3 letras') : t('No se encontraron resultados')}
             </Text>
           }
-          ListFooterComponent={() => isLoading && page > 1 ? <ActivityIndicator size="small" color={colors.primary} /> : null}
         />
       )}
     </View>
@@ -187,52 +99,33 @@ const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
     backgroundColor: colors.card,
     borderRadius: 25,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  searchIcon: {
-    marginRight: 8,
+    paddingHorizontal: 12,
   },
   searchInput: {
     flex: 1,
     height: 50,
     fontSize: fontSize,
     fontFamily,
-  },
-  searchTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  searchTypeButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 20,
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  searchTypeText: {
-    fontSize: fontSize - 2,
-    fontFamily,
-  },
-  activeSearchTypeText: {
-    fontWeight: 'bold',
+    marginLeft: 8,
   },
   resultItem: {
-    marginBottom: 16,
+    backgroundColor: colors.card,
     padding: 16,
+    marginBottom: 8,
     borderRadius: 8,
-    elevation: 2,
   },
   resultReference: {
     fontWeight: 'bold',
-    marginBottom: 8,
+    color: colors.primary,
+    marginBottom: 4,
     fontFamily,
     fontSize: fontSize,
   },
   resultText: {
+    color: colors.text,
     fontFamily,
     fontSize: fontSize - 2,
   },
