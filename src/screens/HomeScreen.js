@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback, useState } from 'react';
-import { View, ScrollView, Text, StyleSheet, Animated, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
+import { View, ScrollView, Text, StyleSheet, Animated, TouchableOpacity, StatusBar, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import CustomIconButton from '../components/CustomIconButton';
@@ -9,6 +9,8 @@ import { AnalyticsService } from '../services/AnalyticsService';
 import { useReadingProgress } from '../context/ReadingProgressContext';
 import LinearGradient from 'react-native-linear-gradient';
 
+const { width } = Dimensions.get('window');
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { colors, isDarkMode } = useTheme();
@@ -16,8 +18,8 @@ const HomeScreen = () => {
   const readingProgressContext = useReadingProgress();
   const [lastRead, setLastRead] = useState(null);
 
-  const fadeAnim = new Animated.Value(0);
-  const translateY = new Animated.Value(50);
+  const fadeAnim = useMemo(() => new Animated.Value(0), []);
+  const translateY = useMemo(() => new Animated.Value(50), []);
 
   useEffect(() => {
     Animated.parallel([
@@ -47,7 +49,7 @@ const HomeScreen = () => {
       }
     };
     loadLastRead();
-  }, [readingProgressContext]);
+  }, [readingProgressContext, fadeAnim, translateY]);
 
   const styles = StyleSheet.create({
     container: {
@@ -62,7 +64,7 @@ const HomeScreen = () => {
       paddingTop: StatusBar.currentHeight + 10,
     },
     headerTitle: {
-      fontSize: 24,
+      fontSize: 28,
       fontWeight: 'bold',
       color: isDarkMode ? '#FFFFFF' : '#000000',
       marginBottom: 4,
@@ -73,21 +75,41 @@ const HomeScreen = () => {
       opacity: 0.8,
     },
     section: {
-      margin: 15,
+      margin: 20,
     },
     sectionTitle: {
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: 'bold',
       color: colors.text,
-      marginBottom: 10,
+      marginBottom: 15,
+    },
+    startReadingButton: {
+      backgroundColor: colors.primary,
+      padding: 15,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginVertical: 20,
+    },
+    startReadingText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    menuGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      marginTop: 20,
     },
     menuItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      width: (width - 60) / 2, // 2 columnas con margen
+      aspectRatio: 1,
       backgroundColor: isDarkMode ? '#1E1E1E' : '#FFFFFF',
-      padding: 12,
-      marginBottom: 8,
-      borderRadius: 8,
+      borderRadius: 12,
+      padding: 15,
+      marginBottom: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
       elevation: 2,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
@@ -95,32 +117,19 @@ const HomeScreen = () => {
       shadowRadius: 4,
     },
     menuItemText: {
-      marginLeft: 12,
-      fontSize: 16,
+      marginTop: 10,
+      fontSize: 14,
       color: colors.text,
-      flex: 1,
-    },
-    startReadingButton: {
-      backgroundColor: colors.primary,
-      padding: 12,
-      borderRadius: 8,
-      alignItems: 'center',
-      marginVertical: 15,
-    },
-    startReadingText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: 'bold',
+      textAlign: 'center',
     },
   });
 
-  const menuItems = [
-    { title: t('Explorar la Biblia'), icon: 'book', screen: 'Bible' },
-    { title: t('Mis Versículos Favoritos'), icon: 'bookmark', screen: 'Favoritos' },
-    { title: t('Plan de Estudio Bíblico'), icon: 'event-note', screen: 'ReadingPlan' },
-    { title: t('Buscar en las Escrituras'), icon: 'search', screen: 'Buscar' },
-    { title: t('Ajustes de la App'), icon: 'settings', screen: 'Ajustes' },
-  ];
+  const menuItems = useMemo(() => [
+    { title: t('Explorar\nla Biblia'), icon: 'book', screen: 'Biblia' },
+    { title: t('Mis Versículos\nFavoritos'), icon: 'bookmark', screen: 'Favoritos' },
+    { title: t('Plan de\nEstudio Bíblico'), icon: 'event-note', screen: 'ReadingPlan' },
+    { title: t('Buscar en\nlas Escrituras'), icon: 'search', screen: 'Buscar' },
+  ], [t]);
 
   const handleNavigation = useCallback((screen) => {
     navigation.navigate(screen);
@@ -129,12 +138,12 @@ const HomeScreen = () => {
 
   const handleStartReading = useCallback(() => {
     if (lastRead) {
-      navigation.navigate('Bible', {
+      navigation.navigate('Biblia', {
         screen: 'Verse',
         params: { book: lastRead.book, chapter: lastRead.chapter, verse: lastRead.verse }
       });
     } else {
-      navigation.navigate('Bible', { screen: 'BibleList' });
+      navigation.navigate('Biblia', { screen: 'BibleList' });
     }
     AnalyticsService.logEvent('start_reading');
   }, [navigation, lastRead]);
@@ -164,28 +173,20 @@ const HomeScreen = () => {
         </TouchableOpacity>
 
         <Text style={styles.sectionTitle}>{t('Acceso Rápido a la Biblia')}</Text>
-        {menuItems.map((item, index) => (
-          <Animated.View key={index} style={{ 
-            opacity: fadeAnim, 
-            transform: [{ 
-              translateY: fadeAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [50 + index * 10, 0]
-              }) 
-            }] 
-          }}>
+        <View style={styles.menuGrid}>
+          {menuItems.map((item, index) => (
             <TouchableOpacity
+              key={index}
               style={styles.menuItem}
               onPress={() => handleNavigation(item.screen)}
               accessibilityLabel={item.title}
               accessibilityRole="button"
             >
-              <CustomIconButton name={item.icon} color={colors.primary} />
+              <CustomIconButton name={item.icon} color={colors.primary} size={32} />
               <Text style={styles.menuItemText}>{item.title}</Text>
-              <CustomIconButton name="chevron-right" color={colors.secondary} />
             </TouchableOpacity>
-          </Animated.View>
-        ))}
+          ))}
+        </View>
       </View>
     </ScrollView>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -23,7 +23,7 @@ const AppContent = () => {
       <BookmarksProvider>
         <ReadingPlanProvider>
           <NotesProvider>
-            <NavigationContainer>
+            <NavigationContainer theme={theme}>
               <React.Suspense fallback={<LoadingScreen message="Cargando..." />}>
                 <AppNavigator />
               </React.Suspense>
@@ -39,31 +39,31 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [initError, setInitError] = useState(null);
 
-  useEffect(() => {
-    const initApp = async () => {
-      try {
-        await analytics().setAnalyticsCollectionEnabled(true);
-        await analytics().logAppOpen();
-        
-        await resetDatabase();
-        await initializeBibleData();
-        await preloadFrequentlyAccessedData();
-        
-        console.log('App initialized');
-      } catch (error) {
-        console.error('Error initializing app:', error);
-        setInitError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const initApp = useCallback(async () => {
+    try {
+      await analytics().setAnalyticsCollectionEnabled(true);
+      await analytics().logAppOpen();
+      
+      await resetDatabase();
+      await initializeBibleData();
+      await preloadFrequentlyAccessedData();
+      
+      console.log('App initialized');
+    } catch (error) {
+      console.error('Error initializing app:', error);
+      setInitError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
     initApp();
 
     return () => {
       closeBibleDatabase().catch(console.error);
     };
-  }, []);
+  }, [initApp]);
 
   if (isLoading) {
     return <LoadingScreen message="Cargando Eternal Stone Bible App..." />;

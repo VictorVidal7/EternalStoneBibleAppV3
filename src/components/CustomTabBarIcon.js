@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import CustomIconButton from './CustomIconButton';
+import CustomIconButton from '../components/CustomIconButton';
 
 const CustomTabBarIcon = ({ name, color, size }) => (
   <View style={{ alignItems: 'center', justifyContent: 'center' }}>
