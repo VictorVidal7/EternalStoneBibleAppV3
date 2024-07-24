@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import {
   View,
   Text,
+  TouchableOpacity,
   ActivityIndicator,
   ToastAndroid,
   Platform,
@@ -77,7 +78,7 @@ const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNote
         <Text style={styles.verseNumber}>{item.number}</Text>
         <View style={styles.verseActions}>
           <CustomIconButton 
-            name={isBookmarked(item.number) ? "bookmark-filled" : "bookmark"}
+            name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"}
             onPress={() => {
               animatePress();
               onToggleBookmark(item.number);
@@ -374,12 +375,9 @@ const VerseScreen = ({ route, theme }) => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <CustomIconButton
-          name="refresh"
-          onPress={() => loadVerses(book, chapter)}
-          color={colors.primary}
-          style={styles.retryButton}
-        />
+        <TouchableOpacity style={styles.retryButton} onPress={() => loadVerses(book, chapter)}>
+          <Text style={styles.retryButtonText}>{t('retry')}</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -517,6 +515,10 @@ const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
     backgroundColor: colors.primary,
     padding: 10,
     borderRadius: 5,
+  },
+  retryButtonText: {
+    color: colors.background,
+    fontSize: 16,
   },
   header: {
     flexDirection: 'row',
