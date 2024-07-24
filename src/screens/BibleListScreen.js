@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SectionList, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from '../context/ThemeContext';
+import CustomIconButton from '../components/CustomIconButton';
 import { getAllBooks } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import { withTheme } from '../hoc/withTheme';
@@ -40,10 +41,10 @@ const BibleListScreen = ({ theme }) => {
           onPress={() => navigateToChapter(book)}
           testID={`book-item-${book}`}
         >
-          <Icon name="book" size={24} color={colors.primary} style={styles.bookIcon} />
+          <CustomIconButton name="book" size={24} color={colors.primary} style={styles.bookIcon} />
           <Text style={[styles.bookName, { color: colors.text }]}>{book}</Text>
           <Text style={styles.bookNumber}>{section.data.indexOf(book) + 1}</Text>
-          <Icon name="chevron-right" size={24} color={colors.secondary} />
+          <CustomIconButton name="chevron-right" size={24} color={colors.secondary} />
         </TouchableOpacity>
       </Animated.View>
     );
