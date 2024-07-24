@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from '../context/ThemeContext';
+import CustomIconButton from '../components/CustomIconButton';
 import { useStyles } from '../hooks/useStyles';
 import { bibleBooks } from '../data/bibleVerses';
 import { useReadingProgress } from '../context/ReadingProgressContext';
@@ -41,7 +42,7 @@ const ChapterScreen = ({ route, theme }) => {
       >
         <View style={[styles.chapterContent, { backgroundColor: colors.surface }]}>
           <Text style={[styles.chapterText, { color: colors.text }]}>{chapter}</Text>
-          <Icon 
+          <CustomIconButton 
             name={iconName} 
             size={24} 
             color={progress === 1 ? colors.success : progress > 0 ? colors.warning : colors.disabled} 
@@ -57,7 +58,7 @@ const ChapterScreen = ({ route, theme }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Icon name="book" size={24} color={colors.primary} />
+        <CustomIconButton name="book" size={24} color={colors.primary} />
         <Text style={[styles.bookTitle, { color: colors.text }]}>{book}</Text>
       </View>
       <FlatList
@@ -75,53 +76,49 @@ const ChapterScreen = ({ route, theme }) => {
   );
 };
 
-const createStyles = (nightMode, fontSize, fontFamily) => {
-  const dynamicFontSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 18 : 16;
-
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: nightMode ? '#333' : '#e0e0e0',
-    },
-    bookTitle: {
-      fontSize: dynamicFontSize + 4,
-      fontWeight: 'bold',
-      marginLeft: 10,
-      fontFamily,
-    },
-    listContent: {
-      padding: 5,
-    },
-    chapterItem: {
-      margin: 5,
-      aspectRatio: 1,
-    },
-    chapterContent: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: 10,
-      overflow: 'hidden',
-    },
-    chapterText: {
-      fontSize: dynamicFontSize,
-      fontWeight: 'bold',
-      marginBottom: 5,
-      fontFamily,
-    },
-    progressBar: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      height: 3,
-    },
-  });
-};
+const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  bookTitle: {
+    fontSize: fontSize + 4,
+    fontWeight: 'bold',
+    marginLeft: 10,
+    fontFamily,
+  },
+  listContent: {
+    padding: 5,
+  },
+  chapterItem: {
+    margin: 5,
+    aspectRatio: 1,
+  },
+  chapterContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  chapterText: {
+    fontSize: fontSize,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    fontFamily,
+  },
+  progressBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    height: 3,
+  },
+});
 
 export default withTheme(React.memo(ChapterScreen));
