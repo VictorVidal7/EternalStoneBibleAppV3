@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Animated, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import CustomIconButton from './CustomIconButton';
 
 const DistractionFreeMode = ({ verses, currentVerseIndex, onNextVerse, onPreviousVerse, onClose }) => {
   const { colors } = useTheme();
   const [controlsOpacity] = useState(new Animated.Value(1));
+  const [textOpacity] = useState(new Animated.Value(1));
+
+  const currentVerse = verses[currentVerseIndex];
+
+  useEffect(() => {
+    Animated.timing(textOpacity, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [currentVerseIndex, textOpacity]);
 
   const showControls = () => {
     Animated.timing(controlsOpacity, {
@@ -24,36 +35,46 @@ const DistractionFreeMode = ({ verses, currentVerseIndex, onNextVerse, onPreviou
     }).start();
   };
 
-  const currentVerse = verses[currentVerseIndex];
-
   if (!currentVerse) {
     return null;
   }
 
   return (
-    <TouchableOpacity 
-      style={[styles.container, { backgroundColor: colors.background }]} 
-      activeOpacity={1}
-      onPress={showControls}
-    >
-      <Text style={[styles.verseText, { color: colors.text }]}>
-        {currentVerse.text}
-      </Text>
-      <Text style={[styles.verseReference, { color: colors.secondary }]}>
-        {`${currentVerse.book} ${currentVerse.chapter}:${currentVerse.number}`}
-      </Text>
-      <Animated.View style={[styles.controls, { opacity: controlsOpacity }]}>
-        <TouchableOpacity onPress={onPreviousVerse} style={styles.navButton}>
-          <Icon name="chevron-left" size={40} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-          <Icon name="close" size={30} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onNextVerse} style={styles.navButton}>
-          <Icon name="chevron-right" size={40} color={colors.primary} />
-        </TouchableOpacity>
-      </Animated.View>
-    </TouchableOpacity>
+    <TouchableWithoutFeedback onPress={showControls}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Animated.View style={[styles.verseContainer, { opacity: textOpacity }]}>
+          <Text style={[styles.verseText, { color: colors.text }]}>
+            {currentVerse.text}
+          </Text>
+          <Text style={[styles.verseReference, { color: colors.secondary }]}>
+            {`${currentVerse.book} ${currentVerse.chapter}:${currentVerse.number}`}
+          </Text>
+        </Animated.View>
+        <Animated.View style={[styles.controls, { opacity: controlsOpacity }]}>
+          <CustomIconButton
+            name="chevron-left"
+            onPress={onPreviousVerse}
+            color={colors.primary}
+            size={40}
+            style={styles.navButton}
+          />
+          <CustomIconButton
+            name="close"
+            onPress={onClose}
+            color={colors.primary}
+            size={30}
+            style={styles.closeButton}
+          />
+          <CustomIconButton
+            name="chevron-right"
+            onPress={onNextVerse}
+            color={colors.primary}
+            size={40}
+            style={styles.navButton}
+          />
+        </Animated.View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -62,7 +83,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  verseContainer: {
     padding: 20,
+    alignItems: 'center',
   },
   verseText: {
     fontSize: 24,
