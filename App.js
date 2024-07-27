@@ -2,21 +2,46 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@react-native-firebase/analytics';
 import { UserPreferencesProvider } from './src/context/UserPreferencesContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { ReadingProgressProvider } from './src/context/ReadingProgressContext';
 import { BookmarksProvider } from './src/context/BookmarksContext';
 import { ReadingPlanProvider } from './src/context/ReadingPlanContext';
-import { NotesProvider } from './src/context/NotesContext';
+import { NotesProvider } from './src/context/NotesContext'; // Corregido aquí
 import { resetDatabase, initializeBibleData, closeBibleDatabase, preloadFrequentlyAccessedData } from './src/services/bibleDataManager';
+import InteractiveTutorial from './src/components/InteractiveTutorial';
 import './src/i18n';
 
 const AppNavigator = React.lazy(() => import('./src/navigation/AppNavigator'));
 
 const AppContent = () => {
+  const [showTutorial, setShowTutorial] = useState(false);
   const theme = useTheme();
-  console.log('Theme in AppContent:', theme); // Depuración
+
+  useEffect(() => {
+    checkTutorialStatus();
+  }, []);
+
+  const checkTutorialStatus = async () => {
+    try {
+      const tutorialCompleted = await AsyncStorage.getItem('tutorialCompleted');
+      if (tutorialCompleted !== 'true') {
+        setShowTutorial(true);
+      }
+    } catch (error) {
+      console.error('Error checking tutorial status:', error);
+    }
+  };
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+  };
+
+  if (showTutorial) {
+    return <InteractiveTutorial onComplete={handleTutorialComplete} />;
+  }
 
   return (
     <ReadingProgressProvider>
