@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserPreferencesContext = createContext();
 
-const COLOR_THEMES = {
+export const COLOR_THEMES = {
   default: {
     primary: '#007AFF',
     secondary: '#5856D6',
@@ -13,24 +13,16 @@ const COLOR_THEMES = {
     border: '#C7C7CC',
     highlight: '#FFFF00',
   },
-  nature: {
-    primary: '#4CAF50',
-    secondary: '#8BC34A',
-    background: '#F1F8E9',
-    text: '#33691E',
-    card: '#DCEDC8',
-    border: '#AED581',
-    highlight: '#FFEB3B',
+  dark: {
+    primary: '#0A84FF',
+    secondary: '#5E5CE6',
+    background: '#000000',
+    text: '#FFFFFF',
+    card: '#1C1C1E',
+    border: '#38383A',
+    highlight: '#FFFF00',
   },
-  ocean: {
-    primary: '#0288D1',
-    secondary: '#03A9F4',
-    background: '#E1F5FE',
-    text: '#01579B',
-    card: '#B3E5FC',
-    border: '#4FC3F7',
-    highlight: '#FFEB3B',
-  },
+  // Puedes añadir más temas aquí
 };
 
 export const UserPreferencesProvider = ({ children }) => {
@@ -62,9 +54,8 @@ export const UserPreferencesProvider = ({ children }) => {
     }
   };
 
-  const savePreferences = async () => {
+  const savePreferences = async (preferences) => {
     try {
-      const preferences = { nightMode, fontSize, fontFamily, lineSpacing, textZoom, colorTheme };
       await AsyncStorage.setItem('userPreferences', JSON.stringify(preferences));
     } catch (error) {
       console.error('Error saving preferences:', error);
@@ -72,15 +63,18 @@ export const UserPreferencesProvider = ({ children }) => {
   };
 
   const toggleNightMode = useCallback(() => {
-    setNightMode(prev => !prev);
-    savePreferences();
+    setNightMode(prev => {
+      const newValue = !prev;
+      savePreferences({ ...getCurrentPreferences(), nightMode: newValue });
+      return newValue;
+    });
   }, []);
 
   const changeFontSize = useCallback((size) => {
     const newSize = Number(size);
     if (!isNaN(newSize)) {
       setFontSize(newSize);
-      savePreferences();
+      savePreferences({ ...getCurrentPreferences(), fontSize: newSize });
     } else {
       console.error('Invalid font size:', size);
     }
@@ -88,14 +82,14 @@ export const UserPreferencesProvider = ({ children }) => {
 
   const changeFontFamily = useCallback((family) => {
     setFontFamily(family);
-    savePreferences();
+    savePreferences({ ...getCurrentPreferences(), fontFamily: family });
   }, []);
 
   const changeLineSpacing = useCallback((spacing) => {
     const newSpacing = Number(spacing);
     if (!isNaN(newSpacing)) {
       setLineSpacing(newSpacing);
-      savePreferences();
+      savePreferences({ ...getCurrentPreferences(), lineSpacing: newSpacing });
     } else {
       console.error('Invalid line spacing:', spacing);
     }
@@ -103,13 +97,22 @@ export const UserPreferencesProvider = ({ children }) => {
 
   const changeTextZoom = useCallback((zoom) => {
     setTextZoom(zoom);
-    savePreferences();
+    savePreferences({ ...getCurrentPreferences(), textZoom: zoom });
   }, []);
 
   const changeColorTheme = useCallback((theme) => {
     setColorTheme(theme);
-    savePreferences();
+    savePreferences({ ...getCurrentPreferences(), colorTheme: theme });
   }, []);
+
+  const getCurrentPreferences = () => ({
+    nightMode,
+    fontSize,
+    fontFamily,
+    lineSpacing,
+    textZoom,
+    colorTheme,
+  });
 
   return (
     <UserPreferencesContext.Provider

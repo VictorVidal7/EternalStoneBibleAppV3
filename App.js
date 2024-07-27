@@ -5,11 +5,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@react-native-firebase/analytics';
 import { UserPreferencesProvider } from './src/context/UserPreferencesContext';
-import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { ThemeProvider } from './src/context/ThemeContext';
 import { ReadingProgressProvider } from './src/context/ReadingProgressContext';
 import { BookmarksProvider } from './src/context/BookmarksContext';
 import { ReadingPlanProvider } from './src/context/ReadingPlanContext';
-import { NotesProvider } from './src/context/NotesContext'; // Corregido aquí
+import { NotesProvider } from './src/context/NotesContext';
 import { resetDatabase, initializeBibleData, closeBibleDatabase, preloadFrequentlyAccessedData } from './src/services/bibleDataManager';
 import InteractiveTutorial from './src/components/InteractiveTutorial';
 import './src/i18n';
@@ -18,7 +18,6 @@ const AppNavigator = React.lazy(() => import('./src/navigation/AppNavigator'));
 
 const AppContent = () => {
   const [showTutorial, setShowTutorial] = useState(false);
-  const theme = useTheme();
 
   useEffect(() => {
     checkTutorialStatus();
@@ -48,7 +47,7 @@ const AppContent = () => {
       <BookmarksProvider>
         <ReadingPlanProvider>
           <NotesProvider>
-            <NavigationContainer theme={theme}>
+            <NavigationContainer>
               <React.Suspense fallback={<LoadingScreen message="Cargando..." />}>
                 <AppNavigator />
               </React.Suspense>
@@ -66,6 +65,7 @@ const App = () => {
 
   const initApp = useCallback(async () => {
     try {
+      console.log('Initializing app...');
       await analytics().setAnalyticsCollectionEnabled(true);
       await analytics().logAppOpen();
       
@@ -73,7 +73,7 @@ const App = () => {
       await initializeBibleData();
       await preloadFrequentlyAccessedData();
       
-      console.log('App initialized');
+      console.log('App initialized successfully');
     } catch (error) {
       console.error('Error initializing app:', error);
       setInitError(error.message);
