@@ -46,6 +46,15 @@ export const initializeBibleData = async () => {
     } else {
       console.log('Database already populated.');
     }
+
+    // Verificación adicional para Mateo
+    const mateoVerse = await BibleDatabaseService.getVerse('Mateo', 1, 1);
+    if (mateoVerse) {
+      console.log('Verificación: Mateo 1:1 está presente en la base de datos');
+    } else {
+      console.error('Verificación fallida: Mateo 1:1 no está en la base de datos');
+    }
+
   } catch (error) {
     console.error('Error initializing Bible data:', error);
     throw error;
@@ -146,6 +155,8 @@ export const getRandomVerse = async () => {
     const chapterVerses = await getChapter(randomBook, randomChapter);
     const randomVerse = chapterVerses[Math.floor(Math.random() * chapterVerses.length)];
     
+    console.log(`Random verse selected: ${randomBook} ${randomChapter}:${randomVerse.number}`);
+    
     return {
       book: randomBook,
       chapter: randomChapter,
@@ -192,6 +203,7 @@ export const preloadFrequentlyAccessedData = async () => {
     { key: 'book_list', fetcher: getAllBooks },
     { key: 'chapter_Genesis_1', fetcher: () => getChapter('Génesis', 1) },
     { key: 'chapter_Exodus_1', fetcher: () => getChapter('Éxodo', 1) },
+    { key: 'chapter_Matthew_1', fetcher: () => getChapter('Mateo', 1) }, // Añadido para verificar Mateo
   ];
 
   const results = await Promise.allSettled(frequentlyAccessedItems.map(async item => {
