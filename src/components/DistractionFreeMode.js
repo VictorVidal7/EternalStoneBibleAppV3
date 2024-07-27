@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableWithoutFeedback, AccessibilityInfo } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import CustomIconButton from './CustomIconButton';
+import { useTranslation } from 'react-i18next';
+import HapticFeedback from '../services/HapticFeedback';
 
 const DistractionFreeMode = ({ verses, currentVerseIndex, onNextVerse, onPreviousVerse, onClose }) => {
   const { colors } = useTheme();
   const [controlsOpacity] = useState(new Animated.Value(1));
   const [textOpacity] = useState(new Animated.Value(1));
+  const [screenReaderEnabled, setScreenReaderEnabled] = useState(false);
+  const { t } = useTranslation();
 
   const currentVerse = verses[currentVerseIndex];
 
@@ -16,6 +20,23 @@ const DistractionFreeMode = ({ verses, currentVerseIndex, onNextVerse, onPreviou
       duration: 300,
       useNativeDriver: true,
     }).start();
+
+    AccessibilityInfo.isScreenReaderEnabled().then(
+      screenReaderEnabled => {
+        setScreenReaderEnabled(screenReaderEnabled);
+      }
+    );
+
+    const listener = AccessibilityInfo.addEventListener(
+      'screenReaderChanged',
+      screenReaderEnabled => {
+        setScreenReaderEnabled(screenReaderEnabled);
+      }
+    );
+
+    return () => {
+      listener.remove();
+    };
   }, [currentVerseIndex, textOpacity]);
 
   const showControls = () => {
@@ -35,14 +56,39 @@ const DistractionFreeMode = ({ verses, currentVerseIndex, onNextVerse, onPreviou
     }).start();
   };
 
+  const handleNextVerse = () => {
+    HapticFeedback.light();
+    onNextVerse();
+  };
+
+  const handlePreviousVerse = () => {
+    HapticFeedback.light();
+    onPreviousVerse();
+  };
+
+  const handleClose = () => {
+    HapticFeedback.medium();
+    onClose();
+  };
+
   if (!currentVerse) {
     return null;
   }
 
   return (
     <TouchableWithoutFeedback onPress={showControls}>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Animated.View style={[styles.verseContainer, { opacity: textOpacity }]}>
+      <View 
+        style={[styles.container, { backgroundColor: colors.background }]}
+        accessible={true}
+        accessibilityLabel={t('Modo de lectura sin distracciones')}
+        accessibilityHint={t('Toca la pantalla para mostrar los controles de navegación')}
+      >
+        <Animated.View 
+          style={[styles.verseContainer, { opacity: textOpacity }]}
+          accessible={true}
+          accessibilityLabel={t('Versículo actual')}
+          accessibilityRole="text"
+        >
           <Text style={[styles.verseText, { color: colors.text }]}>
             {currentVerse.text}
           </Text>
@@ -53,24 +99,30 @@ const DistractionFreeMode = ({ verses, currentVerseIndex, onNextVerse, onPreviou
         <Animated.View style={[styles.controls, { opacity: controlsOpacity }]}>
           <CustomIconButton
             name="chevron-left"
-            onPress={onPreviousVerse}
+            onPress={handlePreviousVerse}
             color={colors.primary}
             size={40}
             style={styles.navButton}
+            accessibilityLabel={t('Versículo anterior')}
+            accessibilityHint={t('Navegar al versículo anterior')}
           />
           <CustomIconButton
             name="close"
-            onPress={onClose}
+            onPress={handleClose}
             color={colors.primary}
             size={30}
             style={styles.closeButton}
+            accessibilityLabel={t('Cerrar modo sin distracciones')}
+            accessibilityHint={t('Volver a la vista normal de lectura')}
           />
           <CustomIconButton
             name="chevron-right"
-            onPress={onNextVerse}
+            onPress={handleNextVerse}
             color={colors.primary}
             size={40}
             style={styles.navButton}
+            accessibilityLabel={t('Siguiente versículo')}
+            accessibilityHint={t('Navegar al siguiente versículo')}
           />
         </Animated.View>
       </View>
