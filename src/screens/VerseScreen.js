@@ -11,7 +11,8 @@ import {
   TextInput,
   FlatList,
   Animated,
-  StyleSheet
+  StyleSheet,
+  AccessibilityInfo
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { useNavigation } from '@react-navigation/native';
@@ -28,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
 import CustomIconButton from '../components/CustomIconButton';
+import HapticFeedback from '../services/HapticFeedback';
 
 const INITIAL_VERSES_TO_LOAD = 20;
 const VERSES_PER_BATCH = 10;
@@ -35,6 +37,7 @@ const VERSES_PER_BATCH = 10;
 const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNoteModal, onCopyVerse, styles, colors, isBookmarked, isHighlighted }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const { t } = useTranslation();
 
   useEffect(() => {
     Animated.parallel([
@@ -71,8 +74,9 @@ const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNote
         isHighlighted && styles.highlightedVerse
       ]}
       accessible={true}
-      accessibilityLabel={`Versículo ${item.number}: ${item.text}`}
+      accessibilityLabel={t('Versículo') + ' ' + item.number}
       accessibilityRole="text"
+      accessibilityHint={t('Desliza hacia arriba o abajo para navegar entre versículos')}
     >
       <View style={styles.verseHeader}>
         <Text style={styles.verseNumber}>{item.number}</Text>
@@ -81,33 +85,45 @@ const VerseItem = React.memo(({ item, onToggleBookmark, onShareVerse, onOpenNote
             name={isBookmarked(item.number) ? "bookmark" : "bookmark-border"}
             onPress={() => {
               animatePress();
+              HapticFeedback.light();
               onToggleBookmark(item.number);
             }}
             color={colors.primary}
+            accessibilityLabel={isBookmarked(item.number) ? t('Quitar marcador') : t('Añadir marcador')}
+            accessibilityHint={t('Toca para añadir o quitar este versículo de tus marcadores')}
           />
           <CustomIconButton 
             name="share"
             onPress={() => {
               animatePress();
+              HapticFeedback.light();
               onShareVerse(item);
             }}
             color={colors.primary}
+            accessibilityLabel={t('Compartir versículo')}
+            accessibilityHint={t('Toca para compartir este versículo')}
           />
           <CustomIconButton 
             name="note-add"
             onPress={() => {
               animatePress();
+              HapticFeedback.light();
               onOpenNoteModal(item);
             }}
             color={colors.primary}
+            accessibilityLabel={t('Añadir nota')}
+            accessibilityHint={t('Toca para añadir una nota a este versículo')}
           />
           <CustomIconButton 
             name="content-copy"
             onPress={() => {
               animatePress();
+              HapticFeedback.light();
               onCopyVerse(item);
             }}
             color={colors.primary}
+            accessibilityLabel={t('Copiar versículo')}
+            accessibilityHint={t('Toca para copiar este versículo al portapapeles')}
           />
         </View>
       </View>
@@ -139,6 +155,7 @@ const VerseScreen = ({ route, theme }) => {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [hasMoreVerses, setHasMoreVerses] = useState(true);
+  const [screenReaderEnabled, setScreenReaderEnabled] = useState(false);
 
   const listRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -168,6 +185,23 @@ const VerseScreen = ({ route, theme }) => {
 
   useEffect(() => {
     loadVerses(book, chapter);
+
+    AccessibilityInfo.isScreenReaderEnabled().then(
+      screenReaderEnabled => {
+        setScreenReaderEnabled(screenReaderEnabled);
+      }
+    );
+
+    const listener = AccessibilityInfo.addEventListener(
+      'screenReaderChanged',
+      screenReaderEnabled => {
+        setScreenReaderEnabled(screenReaderEnabled);
+      }
+    );
+
+    return () => {
+      listener.remove();
+    };
   }, [book, chapter, loadVerses]);
 
   useEffect(() => {
@@ -365,7 +399,7 @@ const VerseScreen = ({ route, theme }) => {
 
   if (loading && verses.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.loadingContainer} accessibilityLabel={t('Cargando versículos')}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -374,8 +408,13 @@ const VerseScreen = ({ route, theme }) => {
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => loadVerses(book, chapter)}>
+        <Text style={styles.errorText} accessibilityLabel={t('Error al cargar versículos')}>{error}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton} 
+          onPress={() => loadVerses(book, chapter)}
+          accessibilityLabel={t('Reintentar')}
+          accessibilityHint={t('Toca para intentar cargar los versículos nuevamente')}
+        >
           <Text style={styles.retryButtonText}>{t('retry')}</Text>
         </TouchableOpacity>
       </View>
@@ -410,6 +449,8 @@ const VerseScreen = ({ route, theme }) => {
               onPress={() => navigateToChapter(chapter - 1)} 
               disabled={chapter === 1}
               color={chapter === 1 ? colors.secondary : colors.primary}
+              accessibilityLabel={t('Capítulo anterior')}
+              accessibilityHint={t('Navegar al capítulo anterior')}
             />
             <Text style={styles.chapterTitle} accessibilityRole="header">{`${book} ${chapter}`}</Text>
             <CustomIconButton 
@@ -417,6 +458,8 @@ const VerseScreen = ({ route, theme }) => {
               onPress={() => navigateToChapter(chapter + 1)} 
               disabled={chapter === totalChapters}
               color={chapter === totalChapters ? colors.secondary : colors.primary}
+              accessibilityLabel={t('Siguiente capítulo')}
+              accessibilityHint={t('Navegar al siguiente capítulo')}
             />
           </View>
           <View style={styles.searchContainer}>
@@ -426,13 +469,15 @@ const VerseScreen = ({ route, theme }) => {
               onChangeText={setSearchQuery}
               placeholder={t('searchInChapter')}
               placeholderTextColor={colors.secondary}
-              accessibilityLabel="Buscar en el capítulo actual"
-              accessibilityHint="Ingresa texto para buscar en el capítulo actual"
+              accessibilityLabel={t('Buscar en el capítulo actual')}
+              accessibilityHint={t('Ingresa texto para buscar en el capítulo actual')}
             />
             <CustomIconButton 
               name="search"
               onPress={handleSearch}
               color={colors.primary}
+              accessibilityLabel={t('Buscar')}
+              accessibilityHint={t('Realizar búsqueda en el capítulo actual')}
             />
           </View>
           <View style={styles.settingsContainer}>
@@ -447,6 +492,8 @@ const VerseScreen = ({ route, theme }) => {
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.secondary}
               thumbTintColor={colors.primary}
+              accessibilityLabel={t('Control deslizante de tamaño de fuente')}
+              accessibilityHint={t('Desliza para ajustar el tamaño de la fuente')}
             />
           </View>
           <FlatList
@@ -465,6 +512,8 @@ const VerseScreen = ({ route, theme }) => {
             ListFooterComponent={loading && verses.length > 0 ? (
               <ActivityIndicator size="small" color={colors.primary} style={styles.loadingMore} />
             ) : null}
+            accessibilityLabel={t('Lista de versículos')}
+            accessibilityHint={t('Desplázate para leer los versículos del capítulo')}
           />
         </Animated.View>
         <CustomIconButton 
@@ -472,6 +521,8 @@ const VerseScreen = ({ route, theme }) => {
           onPress={toggleDistractionFreeMode}
           style={styles.distractionFreeModeButton}
           color={colors.background}
+          accessibilityLabel={t('Modo sin distracciones')}
+          accessibilityHint={t('Activa el modo de lectura sin distracciones')}
         />
         <NoteModal 
           visible={noteModalVisible}
