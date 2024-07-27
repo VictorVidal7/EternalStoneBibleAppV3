@@ -3336,6 +3336,7 @@ __metadata:
     react-native: 0.74.3
     react-native-fast-image: ^8.6.3
     react-native-gesture-handler: ^2.17.1
+    react-native-haptic-feedback: ^2.2.0
     react-native-linear-gradient: ^2.8.3
     react-native-push-notification: ^8.1.1
     react-native-reanimated: ^3.7.2
@@ -8788,6 +8789,15 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 70da4fc51d92899591aadf03396a8e0b78223fbe71da5b10e76232058c1ef5943d54c1dd8da815d5b6a8b41f259ea9d50457680e2ef7878c88d7396771170ae3
+  languageName: node
+  linkType: hard
+
+"react-native-haptic-feedback@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "react-native-haptic-feedback@npm:2.2.0"
+  peerDependencies:
+    react-native: ">=0.60.0"
+  checksum: e7ce6b303a799dc7fd1c5851379b555b65052c3ef7fefe836c7881f125e4057134462554a996762e67ecc7f01e82e45dc3bcad17cc232b53511006160d5f98ed
   languageName: node
   linkType: hard
 

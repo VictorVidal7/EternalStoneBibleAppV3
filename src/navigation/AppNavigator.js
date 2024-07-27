@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { CardStyleInterpolators } from '@react-navigation/stack';
 import CustomIconButton from '../components/CustomIconButton';
 import { useTheme } from '@react-navigation/native';
 
@@ -18,7 +19,13 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const BibleStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    screenOptions={{
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+      gestureEnabled: true,
+      gestureDirection: 'horizontal',
+    }}
+  >
     <Stack.Screen name="BibleList" component={BibleListScreen} options={{ title: 'Libros' }} />
     <Stack.Screen name="Chapter" component={ChapterScreen} options={({ route }) => ({ title: route.params.book })} />
     <Stack.Screen name="Verse" component={VerseScreen} options={({ route }) => ({ title: `${route.params.book} ${route.params.chapter}` })} />
