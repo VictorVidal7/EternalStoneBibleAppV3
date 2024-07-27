@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
 import { useReadingProgress } from '../context/ReadingProgressContext';
 import LinearGradient from 'react-native-linear-gradient';
+import HapticFeedback from '../services/HapticFeedback';
 
 const { width } = Dimensions.get('window');
 
@@ -102,7 +103,7 @@ const HomeScreen = () => {
       marginTop: 20,
     },
     menuItem: {
-      width: (width - 60) / 2, // 2 columnas con margen
+      width: (width - 60) / 2,
       aspectRatio: 1,
       backgroundColor: isDarkMode ? '#1E1E1E' : '#FFFFFF',
       borderRadius: 12,
@@ -132,11 +133,13 @@ const HomeScreen = () => {
   ], [t]);
 
   const handleNavigation = useCallback((screen) => {
+    HapticFeedback.light();
     navigation.navigate(screen);
     AnalyticsService.logEvent(`navigate_to_${screen.toLowerCase()}`);
   }, [navigation]);
 
   const handleStartReading = useCallback(() => {
+    HapticFeedback.medium();
     if (lastRead) {
       navigation.navigate('Biblia', {
         screen: 'Verse',

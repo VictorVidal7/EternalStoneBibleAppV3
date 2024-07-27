@@ -7,6 +7,7 @@ import { getAllBooks } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
+import HapticFeedback from '../services/HapticFeedback';
 
 const BibleListScreen = ({ theme }) => {
   const navigation = useNavigation();
@@ -21,6 +22,7 @@ const BibleListScreen = ({ theme }) => {
 
   const navigateToChapter = useCallback((book) => {
     console.log(`Navigating to Chapter screen for book: ${book}`);
+    HapticFeedback.light();
     navigation.navigate('Chapter', { book });
     AnalyticsService.logEvent('select_book', { book });
   }, [navigation]);
