@@ -8,6 +8,8 @@ import { bibleBooks } from '../data/bibleVerses';
 import { useReadingProgress } from '../context/ReadingProgressContext';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
+import { useTranslation } from 'react-i18next';
+import HapticFeedback from '../services/HapticFeedback';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -19,6 +21,7 @@ const ChapterScreen = ({ route, theme }) => {
   const { colors } = theme;
   const styles = useStyles(createStyles);
   const { getChapterProgress } = useReadingProgress();
+  const { t } = useTranslation();
 
   const chapters = useMemo(() => 
     Array.from({ length: bibleBooks[book] }, (_, i) => i + 1),
@@ -27,6 +30,7 @@ const ChapterScreen = ({ route, theme }) => {
 
   const navigateToVerse = useCallback((chapter) => {
     console.log(`Navigating to Verse screen for ${book}, chapter ${chapter}`);
+    HapticFeedback.light();
     navigation.navigate('Verse', { book, chapter });
     AnalyticsService.logEvent('select_chapter', { book, chapter });
   }, [navigation, book]);
@@ -39,6 +43,10 @@ const ChapterScreen = ({ route, theme }) => {
       <TouchableOpacity
         style={[styles.chapterItem, { width: ITEM_WIDTH - 10 }]}
         onPress={() => navigateToVerse(chapter)}
+        accessibilityRole="button"
+        accessibilityLabel={t('Capítulo') + ' ' + chapter}
+        accessibilityHint={t('Toca para leer el capítulo') + ' ' + chapter + ' ' + t('de') + ' ' + book}
+        accessibilityState={{ selected: false, busy: false }}
       >
         <View style={[styles.chapterContent, { backgroundColor: colors.surface }]}>
           <Text style={[styles.chapterText, { color: colors.text }]}>{chapter}</Text>
@@ -46,19 +54,36 @@ const ChapterScreen = ({ route, theme }) => {
             name={iconName} 
             size={24} 
             color={progress === 1 ? colors.success : progress > 0 ? colors.warning : colors.disabled} 
+            accessibilityLabel={
+              progress === 1 ? t('Capítulo completado') :
+              progress > 0 ? t('Capítulo parcialmente leído') :
+              t('Capítulo no leído')
+            }
           />
         </View>
-        <View style={[styles.progressBar, { width: `${progress * 100}%`, backgroundColor: colors.primary }]} />
+        <View 
+          style={[styles.progressBar, { width: `${progress * 100}%`, backgroundColor: colors.primary }]}
+          accessibilityLabel={t('Progreso de lectura') + ': ' + Math.round(progress * 100) + '%'}
+        />
       </TouchableOpacity>
     );
-  }, [book, colors, getChapterProgress, navigateToVerse, styles]);
+  }, [book, colors, getChapterProgress, navigateToVerse, styles, t]);
 
   const keyExtractor = useCallback((item) => item.toString(), []);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <CustomIconButton name="book" size={24} color={colors.primary} />
+    <View 
+      style={[styles.container, { backgroundColor: colors.background }]}
+      accessibilityLabel={t('Lista de capítulos de') + ' ' + book}
+      accessibilityHint={t('Desplázate para explorar los capítulos del libro')}
+    >
+      <View style={styles.header} accessibilityRole="header">
+        <CustomIconButton 
+          name="book" 
+          size={24} 
+          color={colors.primary}
+          accessibilityLabel={t('Icono de libro')}
+        />
         <Text style={[styles.bookTitle, { color: colors.text }]}>{book}</Text>
       </View>
       <FlatList
@@ -71,6 +96,7 @@ const ChapterScreen = ({ route, theme }) => {
         windowSize={5}
         removeClippedSubviews={true}
         contentContainerStyle={styles.listContent}
+        accessibilityRole="list"
       />
     </View>
   );
