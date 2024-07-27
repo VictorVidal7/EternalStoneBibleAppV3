@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState, useMemo } from 'react';
-import { View, ScrollView, Text, StyleSheet, Animated, TouchableOpacity, StatusBar, Dimensions } from 'react-native';
+import { View, ScrollView, Text, StyleSheet, Animated, TouchableOpacity, StatusBar, Dimensions, AccessibilityInfo } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import CustomIconButton from '../components/CustomIconButton';
@@ -18,6 +18,7 @@ const HomeScreen = () => {
   const { t } = useTranslation();
   const readingProgressContext = useReadingProgress();
   const [lastRead, setLastRead] = useState(null);
+  const [screenReaderEnabled, setScreenReaderEnabled] = useState(false);
 
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
   const translateY = useMemo(() => new Animated.Value(50), []);
@@ -50,12 +51,34 @@ const HomeScreen = () => {
       }
     };
     loadLastRead();
+
+    // Check if screen reader is enabled
+    AccessibilityInfo.isScreenReaderEnabled().then(
+      screenReaderEnabled => {
+        setScreenReaderEnabled(screenReaderEnabled);
+      }
+    );
+
+    // Listen for screen reader changes
+    const listener = AccessibilityInfo.addEventListener(
+      'screenReaderChanged',
+      screenReaderEnabled => {
+        setScreenReaderEnabled(screenReaderEnabled);
+      }
+    );
+
+    return () => {
+      listener.remove();
+    };
   }, [readingProgressContext, fadeAnim, translateY]);
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: isDarkMode ? '#121212' : '#F5F5F5',
+    },
+    contentContainer: {
+      flexGrow: 1,
     },
     gradientHeader: {
       height: 120,
@@ -152,15 +175,21 @@ const HomeScreen = () => {
   }, [navigation, lastRead]);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      accessible={true}
+      accessibilityLabel={t('Pantalla de inicio de Eternal Stone Bible App')}
+      accessibilityHint={t('Desplázate para explorar las opciones de la aplicación')}
+    >
       <StatusBar backgroundColor={colors.primary} barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <LinearGradient
         colors={[colors.primary, isDarkMode ? '#121212' : '#F5F5F5']}
         style={styles.gradientHeader}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Biblia Eterna</Text>
-          <Text style={styles.headerSubtitle}>Inspiración Bíblica Diaria</Text>
+          <Text style={styles.headerTitle} accessibilityRole="header">Biblia Eterna</Text>
+          <Text style={styles.headerSubtitle} accessibilityRole="text">{t('Inspiración Bíblica Diaria')}</Text>
         </View>
       </LinearGradient>
       
@@ -169,23 +198,35 @@ const HomeScreen = () => {
       </Animated.View>
 
       <View style={styles.section}>
-        <TouchableOpacity style={styles.startReadingButton} onPress={handleStartReading}>
+        <TouchableOpacity 
+          style={styles.startReadingButton} 
+          onPress={handleStartReading}
+          accessibilityRole="button"
+          accessibilityLabel={lastRead ? t('Continuar tu Lectura Bíblica') : t('Comenzar tu Viaje Bíblico')}
+          accessibilityHint={t('Toca para empezar o continuar tu lectura')}
+        >
           <Text style={styles.startReadingText}>
             {lastRead ? t('Continuar tu Lectura Bíblica') : t('Comenzar tu Viaje Bíblico')}
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>{t('Acceso Rápido a la Biblia')}</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">{t('Acceso Rápido a la Biblia')}</Text>
         <View style={styles.menuGrid}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
               style={styles.menuItem}
               onPress={() => handleNavigation(item.screen)}
-              accessibilityLabel={item.title}
               accessibilityRole="button"
+              accessibilityLabel={item.title.replace('\n', ' ')}
+              accessibilityHint={t('Toca para ir a') + ' ' + item.title.replace('\n', ' ')}
             >
-              <CustomIconButton name={item.icon} color={colors.primary} size={32} />
+              <CustomIconButton 
+                name={item.icon} 
+                color={colors.primary} 
+                size={32} 
+                accessibilityLabel={t(item.title)}
+              />
               <Text style={styles.menuItemText}>{item.title}</Text>
             </TouchableOpacity>
           ))}
