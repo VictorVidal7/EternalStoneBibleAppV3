@@ -14,6 +14,7 @@ import VerseScreen from '../screens/VerseScreen';
 import BookmarksScreen from '../screens/BookmarksScreen';
 import SearchScreen from '../screens/SearchScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import ReadingPlanScreen from '../screens/ReadingPlanScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -45,6 +46,7 @@ const AppNavigator = () => {
           else if (route.name === 'Favoritos') iconName = 'bookmark';
           else if (route.name === 'Buscar') iconName = 'search';
           else if (route.name === 'Ajustes') iconName = 'settings';
+          else if (route.name === 'Plan') iconName = 'event-note';
           
           return (
             <View pointerEvents="none">
@@ -74,6 +76,7 @@ const AppNavigator = () => {
       <Tab.Screen name="Biblia" component={BibleStack} options={{ headerShown: false }} />
       <Tab.Screen name="Favoritos" component={BookmarksScreen} />
       <Tab.Screen name="Buscar" component={SearchScreen} />
+      <Tab.Screen name="Plan" component={ReadingPlanScreen} options={{ title: 'Plan de Lectura' }} />
       <Tab.Screen name="Ajustes" component={SettingsScreen} />
     </Tab.Navigator>
   );

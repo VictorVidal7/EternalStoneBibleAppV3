@@ -5,11 +5,14 @@ import { useReadingPlan } from '../context/ReadingPlanContext';
 import { readingPlans } from '../data/readingPlans';
 import { useTheme } from '../context/ThemeContext';
 import { withTheme } from '../hoc/withTheme';
+import { useTranslation } from 'react-i18next';
+import { AnalyticsService } from '../services/AnalyticsService';
 
 const ReadingPlanScreen = ({ theme }) => {
   const navigation = useNavigation();
   const { currentPlan, savePlan, progress, startPlan, continuePlan, updateProgress } = useReadingPlan();
   const { colors } = theme;
+  const { t } = useTranslation();
 
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -20,17 +23,24 @@ const ReadingPlanScreen = ({ theme }) => {
   const handlePlanSelection = useCallback((plan) => {
     if (currentPlan && currentPlan.id !== plan.id) {
       Alert.alert(
-        "Cambiar Plan de Lectura",
-        "¿Estás seguro de que quieres cambiar tu plan de lectura actual? Tu progreso en el plan actual se guardará.",
+        t("Cambiar Plan de Lectura"),
+        t("¿Estás seguro de que quieres cambiar tu plan de lectura actual? Tu progreso en el plan actual se guardará."),
         [
-          { text: "Cancelar", style: "cancel" },
-          { text: "Cambiar", onPress: () => savePlan(plan) }
+          { text: t("Cancelar"), style: "cancel" },
+          { 
+            text: t("Cambiar"), 
+            onPress: () => {
+              savePlan(plan);
+              AnalyticsService.logEvent('reading_plan_changed', { planId: plan.id });
+            } 
+          }
         ]
       );
     } else if (!currentPlan) {
       savePlan(plan);
+      AnalyticsService.logEvent('reading_plan_selected', { planId: plan.id });
     }
-  }, [currentPlan, savePlan]);
+  }, [currentPlan, savePlan, t]);
 
   const handleStartContinuePlan = useCallback(() => {
     console.log('handleStartContinuePlan called');
@@ -38,15 +48,21 @@ const ReadingPlanScreen = ({ theme }) => {
       if (progress && progress[currentPlan.id]) {
         console.log('Continuing plan');
         continuePlan && continuePlan();
+        AnalyticsService.logEvent('reading_plan_continued', { planId: currentPlan.id });
       } else {
         console.log('Starting plan');
         startPlan && startPlan();
+        AnalyticsService.logEvent('reading_plan_started', { planId: currentPlan.id });
       }
-      navigation.navigate('Home');
+      navigation.navigate('Biblia', {
+        screen: 'BibleList',
+        params: { fromReadingPlan: true }
+      });
     } else {
       console.log('No current plan selected');
+      Alert.alert(t("No hay plan seleccionado"), t("Por favor, selecciona un plan de lectura primero."));
     }
-  }, [currentPlan, progress, continuePlan, startPlan, navigation]);
+  }, [currentPlan, progress, continuePlan, startPlan, navigation, t]);
 
   const renderPlanItem = useCallback(({ item }) => {
     const isCurrentPlan = currentPlan && currentPlan.id === item.id;
@@ -65,16 +81,16 @@ const ReadingPlanScreen = ({ theme }) => {
           {isCurrentPlan && <Text style={styles.checkIcon}>✓</Text>}
         </View>
         <Text style={styles.planDescription}>{item.description}</Text>
-        <Text style={styles.planDuration}>Duración: {item.duration} días</Text>
+        <Text style={styles.planDuration}>{t('Duración: {{duration}} días', { duration: item.duration })}</Text>
         {isCurrentPlan && (
           <View style={styles.progressContainer}>
             <View style={[styles.progressBar, { width: `${progressPercentage}%` }]} />
-            <Text style={styles.progressText}>{`${completedDays}/${item.duration} días completados`}</Text>
+            <Text style={styles.progressText}>{t('{{completed}}/{{total}} días completados', { completed: completedDays, total: item.duration })}</Text>
           </View>
         )}
       </TouchableOpacity>
     );
-  }, [styles, currentPlan, progress, handlePlanSelection]);
+  }, [styles, currentPlan, progress, handlePlanSelection, t]);
 
   const memoizedPlans = useMemo(() => readingPlans, []);
 
@@ -83,7 +99,7 @@ const ReadingPlanScreen = ({ theme }) => {
       {currentPlan && (
         <TouchableOpacity style={styles.startContinueButton} onPress={handleStartContinuePlan}>
           <Text style={styles.startContinueButtonText}>
-            {progress && progress[currentPlan.id] ? "Continuar Lectura" : "Comenzar Plan"}
+          {progress && progress[currentPlan.id] ? t("Continuar Lectura") : t("Comenzar Plan")}
           </Text>
         </TouchableOpacity>
       )}
@@ -92,7 +108,7 @@ const ReadingPlanScreen = ({ theme }) => {
         renderItem={renderPlanItem}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
-          <Text style={styles.header}>Planes de Lectura Disponibles</Text>
+          <Text style={styles.header}>{t('Planes de Lectura Disponibles')}</Text>
         }
       />
     </View>
@@ -112,7 +128,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginBottom: 15,
   },
   planItem: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.card,
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,

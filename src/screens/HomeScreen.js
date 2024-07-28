@@ -52,14 +52,12 @@ const HomeScreen = () => {
     };
     loadLastRead();
 
-    // Check if screen reader is enabled
     AccessibilityInfo.isScreenReaderEnabled().then(
       screenReaderEnabled => {
         setScreenReaderEnabled(screenReaderEnabled);
       }
     );
 
-    // Listen for screen reader changes
     const listener = AccessibilityInfo.addEventListener(
       'screenReaderChanged',
       screenReaderEnabled => {
@@ -151,7 +149,7 @@ const HomeScreen = () => {
   const menuItems = useMemo(() => [
     { title: t('Explorar\nla Biblia'), icon: 'book', screen: 'Biblia' },
     { title: t('Mis Versículos\nFavoritos'), icon: 'bookmark', screen: 'Favoritos' },
-    { title: t('Plan de\nEstudio Bíblico'), icon: 'event-note', screen: 'ReadingPlan' },
+    { title: t('Plan de\nEstudio Bíblico'), icon: 'event-note', screen: 'Plan' },
     { title: t('Buscar en\nlas Escrituras'), icon: 'search', screen: 'Buscar' },
   ], [t]);
 
