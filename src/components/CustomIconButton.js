@@ -3,7 +3,16 @@ import { TouchableOpacity, StyleSheet, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import CustomIcon from './CustomIcon';
 
-const CustomIconButton = ({ name, size = 24, color, onPress, style, disabled = false }) => {
+const CustomIconButton = ({ 
+  name, 
+  size = 24, 
+  color, 
+  onPress, 
+  style, 
+  disabled = false,
+  accessibilityLabel,
+  accessibilityHint
+}) => {
   const { colors } = useTheme();
 
   const styles = StyleSheet.create({
@@ -40,6 +49,9 @@ const CustomIconButton = ({ name, size = 24, color, onPress, style, disabled = f
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
     >
       <View style={styles.ripple} />
       <CustomIcon 

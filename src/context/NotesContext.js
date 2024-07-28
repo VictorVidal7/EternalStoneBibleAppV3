@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NotesContext = createContext();
@@ -10,39 +10,58 @@ export const NotesProvider = ({ children }) => {
     loadNotes();
   }, []);
 
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async () => {
     try {
       const savedNotes = await AsyncStorage.getItem('notes');
       if (savedNotes !== null) {
-        setNotes(JSON.parse(savedNotes));
+        const parsedNotes = JSON.parse(savedNotes);
+        console.log('Notas cargadas:', parsedNotes);
+        setNotes(parsedNotes);
       }
     } catch (error) {
       console.error('Error loading notes:', error);
     }
-  };
+  }, []);
 
-  const saveNotes = async (newNotes) => {
+  const saveNotes = useCallback(async (newNotes) => {
     try {
       await AsyncStorage.setItem('notes', JSON.stringify(newNotes));
       setNotes(newNotes);
+      console.log('Notas guardadas:', newNotes);
     } catch (error) {
       console.error('Error saving notes:', error);
     }
-  };
+  }, []);
 
-  const addNote = (book, chapter, verse, content) => {
+  const addNote = useCallback((book, chapter, verse, content) => {
     const key = `${book}-${chapter}-${verse}`;
-    const newNotes = { ...notes, [key]: content };
-    saveNotes(newNotes);
-  };
+    setNotes(prevNotes => {
+      const newNotes = { 
+        ...prevNotes, 
+        [key]: { book, chapter, verse, text: content } 
+      };
+      saveNotes(newNotes);
+      return newNotes;
+    });
+  }, [saveNotes]);
 
-  const getNote = (book, chapter, verse) => {
+  const deleteNote = useCallback((book, chapter, verse) => {
     const key = `${book}-${chapter}-${verse}`;
-    return notes[key] || '';
-  };
+    setNotes(prevNotes => {
+      const newNotes = { ...prevNotes };
+      delete newNotes[key];
+      saveNotes(newNotes);
+      return newNotes;
+    });
+  }, [saveNotes]);
+
+  const getNote = useCallback((book, chapter, verse) => {
+    const key = `${book}-${chapter}-${verse}`;
+    return notes[key] || null;
+  }, [notes]);
 
   return (
-    <NotesContext.Provider value={{ notes, addNote, getNote }}>
+    <NotesContext.Provider value={{ notes, addNote, deleteNote, getNote }}>
       {children}
     </NotesContext.Provider>
   );

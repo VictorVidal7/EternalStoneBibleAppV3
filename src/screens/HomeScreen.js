@@ -150,6 +150,7 @@ const HomeScreen = () => {
     { title: t('Explorar\nla Biblia'), icon: 'book', screen: 'Biblia' },
     { title: t('Mis Versículos\nFavoritos'), icon: 'bookmark', screen: 'Favoritos' },
     { title: t('Plan de\nEstudio Bíblico'), icon: 'event-note', screen: 'Plan' },
+    { title: t('Mis\nNotas'), icon: 'note', screen: 'Notas' },
     { title: t('Buscar en\nlas Escrituras'), icon: 'search', screen: 'Buscar' },
   ], [t]);
 
