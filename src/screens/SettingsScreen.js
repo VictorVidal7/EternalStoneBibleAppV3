@@ -183,6 +183,26 @@ const SettingsScreen = () => {
     </View>
   );
 
+  const renderColorThemeOptions = () => (
+    <View style={styles.colorThemeContainer}>
+      {Object.keys(COLOR_THEMES).map((theme) => (
+        <TouchableOpacity
+          key={theme}
+          style={[
+            styles.colorThemeButton,
+            { backgroundColor: COLOR_THEMES[theme].light.primary },
+            colorTheme === theme && styles.selectedColorTheme,
+          ]}
+          onPress={() => handleSettingChange('colorTheme', theme)}
+          accessibilityRole="button"
+          accessibilityLabel={t("Esquema de color {{theme}}", { theme })}
+          accessibilityState={{ selected: colorTheme === theme }}
+          accessibilityHint={colorTheme === theme ? t('Seleccionado') : t('Toca para seleccionar este esquema de color')}
+        />
+      ))}
+    </View>
+  );
+
   return (
     <ScrollView 
       style={styles.container}
@@ -215,23 +235,7 @@ const SettingsScreen = () => {
 
       <View style={styles.settingRow}>
         <Text style={styles.settingLabel}>{t("Esquema de colores")}</Text>
-        <View style={styles.colorThemeContainer}>
-          {Object.keys(COLOR_THEMES).map((theme) => (
-            <TouchableOpacity
-              key={theme}
-              style={[
-                styles.colorThemeButton,
-                { backgroundColor: COLOR_THEMES[theme].primary },
-                colorTheme === theme && styles.selectedColorTheme,
-              ]}
-              onPress={() => handleSettingChange('colorTheme', theme)}
-              accessibilityRole="button"
-              accessibilityLabel={t("Esquema de color {{theme}}", { theme })}
-              accessibilityState={{ selected: colorTheme === theme }}
-              accessibilityHint={colorTheme === theme ? t('Seleccionado') : t('Toca para seleccionar este esquema de color')}
-            />
-          ))}
-        </View>
+        {renderColorThemeOptions()}
       </View>
 
       {renderSectionTitle(t("Recordatorios de lectura"))}
@@ -326,14 +330,16 @@ const createStyles = (colors, fontSize, fontFamily) => {
     colorThemeContainer: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
+      flexWrap: 'wrap',
     },
     colorThemeButton: {
-      width: 30,
-      height: 30,
-      borderRadius: 15,
-      marginLeft: 10,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      margin: 5,
     },
     selectedColorTheme: {
+      borderWidth: 2,
       borderColor: colors.text,
     },
   });
