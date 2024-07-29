@@ -37,7 +37,14 @@ const ChapterScreen = ({ route, theme }) => {
 
   const renderItem = useCallback(({ item: chapter }) => {
     const progress = getChapterProgress ? getChapterProgress(book, chapter) : 0;
-    const iconName = progress === 1 ? 'check-circle' : progress > 0 ? 'adjust' : 'panorama-fish-eye';
+    let iconName;
+    if (progress === 1) {
+      iconName = 'check-circle';
+    } else if (progress > 0) {
+      iconName = 'adjust';
+    } else {
+      iconName = 'panorama-fish-eye';
+    }
 
     return (
       <TouchableOpacity
