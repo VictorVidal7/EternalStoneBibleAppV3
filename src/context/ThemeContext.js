@@ -17,14 +17,7 @@ export const ThemeProvider = ({ children }) => {
     const baseTheme = COLOR_THEMES[colorTheme];
     return {
       isDarkMode,
-      colors: {
-        ...baseTheme,
-        background: isDarkMode ? '#121212' : baseTheme.background,
-        text: isDarkMode ? '#FFFFFF' : baseTheme.text,
-        card: isDarkMode ? '#1E1E1E' : baseTheme.card,
-        primary: isDarkMode ? baseTheme.primary : baseTheme.primary,
-        secondary: isDarkMode ? baseTheme.secondary : baseTheme.secondary,
-      },
+      colors: isDarkMode ? baseTheme.dark : baseTheme.light,
       roundness: 8, // Puedes ajustar este valor según tus preferencias
     };
   }, [isDarkMode, colorTheme, COLOR_THEMES]);

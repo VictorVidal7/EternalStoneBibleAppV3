@@ -5,22 +5,24 @@ const UserPreferencesContext = createContext();
 
 export const COLOR_THEMES = {
   default: {
-    primary: '#007AFF',
-    secondary: '#5856D6',
-    background: '#FFFFFF',
-    text: '#000000',
-    card: '#F2F2F7',
-    border: '#C7C7CC',
-    highlight: '#FFFF00',
-  },
-  dark: {
-    primary: '#0A84FF',
-    secondary: '#5E5CE6',
-    background: '#000000',
-    text: '#FFFFFF',
-    card: '#1C1C1E',
-    border: '#38383A',
-    highlight: '#FFFF00',
+    light: {
+      primary: '#007AFF',
+      secondary: '#5856D6',
+      background: '#FFFFFF',
+      text: '#000000',
+      card: '#F2F2F7',
+      border: '#C7C7CC',
+      highlight: '#FFFF00',
+    },
+    dark: {
+      primary: '#0A84FF',
+      secondary: '#5E5CE6',
+      background: '#000000',
+      text: '#FFFFFF',
+      card: '#1C1C1E',
+      border: '#38383A',
+      highlight: '#FFFF00',
+    },
   },
   // Puedes añadir más temas aquí
 };
