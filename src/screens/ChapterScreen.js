@@ -1,15 +1,15 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Dimensions, AccessibilityInfo } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import CustomIconButton from '../components/CustomIconButton';
 import { useStyles } from '../hooks/useStyles';
-import { bibleBooks } from '../data/bibleVerses';
 import { useReadingProgress } from '../context/ReadingProgressContext';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
 import { useTranslation } from 'react-i18next';
 import HapticFeedback from '../services/HapticFeedback';
+import bibleChapters from '../data/bibleChapters.json';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -24,7 +24,7 @@ const ChapterScreen = ({ route, theme }) => {
   const { t } = useTranslation();
 
   const chapters = useMemo(() => 
-    Array.from({ length: bibleBooks[book] }, (_, i) => i + 1),
+    Array.from({ length: bibleChapters[book] }, (_, i) => i + 1),
     [book]
   );
 

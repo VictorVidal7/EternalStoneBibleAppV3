@@ -21,7 +21,6 @@ import Slider from '@react-native-community/slider';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import { useNotes } from '../context/NotesContext';
-import { getChapter, getBookChapters, getNextChapter, getPreviousChapter } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import NoteModal from '../components/NoteModal';
 import DistractionFreeMode from '../components/DistractionFreeMode';
@@ -30,6 +29,7 @@ import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
 import CustomIconButton from '../components/CustomIconButton';
 import HapticFeedback from '../services/HapticFeedback';
+import bibleVerses from '../data/bibleVerses.json';
 
 const INITIAL_VERSES_TO_LOAD = 20;
 const VERSES_PER_BATCH = 10;
@@ -165,14 +165,13 @@ const VerseScreen = ({ route, theme }) => {
     try {
       setLoading(true);
       setError(null);
-      const chapterVerses = await getChapter(bookToLoad, chapterToLoad, start, limit);
+      const chapterVerses = bibleVerses[bookToLoad][chapterToLoad.toString()].slice(start, start + limit);
       if (!chapterVerses || chapterVerses.length === 0) {
         throw new Error('No se encontraron versículos para este capítulo');
       }
       setVerses(prevVerses => start === 0 ? chapterVerses : [...prevVerses, ...chapterVerses]);
       setHasMoreVerses(chapterVerses.length === limit);
-      const bookChapters = await getBookChapters(bookToLoad);
-      setTotalChapters(bookChapters);
+      setTotalChapters(Object.keys(bibleVerses[bookToLoad]).length);
       AnalyticsService.logScreenView(`Verse_${bookToLoad}_${chapterToLoad}`);
     } catch (error) {
       console.error('Error al cargar versículos:', error);
@@ -337,14 +336,14 @@ const VerseScreen = ({ route, theme }) => {
   const handleGesture = ({ nativeEvent }) => {
     if (nativeEvent.state === State.END) {
       if (nativeEvent.translationX > 50) {
-        const prevChapter = getPreviousChapter(book, chapter);
-        if (prevChapter) {
-          navigateToChapter(prevChapter.chapter);
+        const prevChapter = chapter > 1 ? chapter - 1 : 1;
+        if (prevChapter !== chapter) {
+          navigateToChapter(prevChapter);
         }
       } else if (nativeEvent.translationX < -50) {
-        const nextChapter = getNextChapter(book, chapter);
-        if (nextChapter) {
-          navigateToChapter(nextChapter.chapter);
+        const nextChapter = chapter < totalChapters ? chapter + 1 : totalChapters;
+        if (nextChapter !== chapter) {
+          navigateToChapter(nextChapter);
         }
       }
     }

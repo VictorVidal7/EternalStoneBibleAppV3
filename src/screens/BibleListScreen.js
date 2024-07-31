@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity, StyleSheet, SectionList, Animated } from 
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import CustomIconButton from '../components/CustomIconButton';
-import { getAllBooks } from '../services/bibleDataManager';
 import { useStyles } from '../hooks/useStyles';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
 import HapticFeedback from '../services/HapticFeedback';
 import { useTranslation } from 'react-i18next';
+import bibleBooks from '../data/bibleBooks.json';
 
 const BibleListScreen = ({ theme }) => {
   const navigation = useNavigation();
@@ -16,11 +16,10 @@ const BibleListScreen = ({ theme }) => {
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
 
-  const books = useMemo(() => getAllBooks(), []);
   const sections = useMemo(() => [
-    { title: t('Antiguo Testamento'), data: books.slice(0, 39) },
-    { title: t('Nuevo Testamento'), data: books.slice(39) }
-  ], [books, t]);
+    { title: t('Antiguo Testamento'), data: bibleBooks.oldTestament },
+    { title: t('Nuevo Testamento'), data: bibleBooks.newTestament }
+  ], [t]);
 
   const navigateToChapter = useCallback((book) => {
     console.log(`Navigating to Chapter screen for book: ${book}`);
