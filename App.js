@@ -3,7 +3,6 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import analytics from '@react-native-firebase/analytics';
 import { UserPreferencesProvider } from './src/context/UserPreferencesContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { ReadingProgressProvider } from './src/context/ReadingProgressContext';
@@ -12,53 +11,8 @@ import { ReadingPlanProvider } from './src/context/ReadingPlanContext';
 import { NotesProvider } from './src/context/NotesContext';
 import { ErrorProvider } from './src/context/ErrorContext';
 import { resetDatabase, initializeBibleData, closeBibleDatabase, preloadFrequentlyAccessedData } from './src/services/bibleDataManager';
-import InteractiveTutorial from './src/components/InteractiveTutorial';
+import AppNavigator from './src/navigation/AppNavigator';
 import './src/i18n';
-
-const AppNavigator = React.lazy(() => import('./src/navigation/AppNavigator'));
-
-const AppContent = () => {
-  const [showTutorial, setShowTutorial] = useState(false);
-
-  useEffect(() => {
-    checkTutorialStatus();
-  }, []);
-
-  const checkTutorialStatus = async () => {
-    try {
-      const tutorialCompleted = await AsyncStorage.getItem('tutorialCompleted');
-      if (tutorialCompleted !== 'true') {
-        setShowTutorial(true);
-      }
-    } catch (error) {
-      console.error('Error checking tutorial status:', error);
-    }
-  };
-
-  const handleTutorialComplete = () => {
-    setShowTutorial(false);
-  };
-
-  if (showTutorial) {
-    return <InteractiveTutorial onComplete={handleTutorialComplete} />;
-  }
-
-  return (
-    <ReadingProgressProvider>
-      <BookmarksProvider>
-        <ReadingPlanProvider>
-          <NotesProvider>
-            <NavigationContainer>
-              <React.Suspense fallback={<LoadingScreen message="Cargando..." />}>
-                <AppNavigator />
-              </React.Suspense>
-            </NavigationContainer>
-          </NotesProvider>
-        </ReadingPlanProvider>
-      </BookmarksProvider>
-    </ReadingProgressProvider>
-  );
-};
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -67,13 +21,9 @@ const App = () => {
   const initApp = useCallback(async () => {
     try {
       console.log('Initializing app...');
-      await analytics().setAnalyticsCollectionEnabled(true);
-      await analytics().logAppOpen();
-      
       await resetDatabase();
       await initializeBibleData();
       await preloadFrequentlyAccessedData();
-      
       console.log('App initialized successfully');
     } catch (error) {
       console.error('Error initializing app:', error);
@@ -92,7 +42,7 @@ const App = () => {
   }, [initApp]);
 
   if (isLoading) {
-    return <LoadingScreen message="Cargando Eternal Stone Bible App..." />;
+    return <LoadingScreen />;
   }
 
   if (initError) {
@@ -104,7 +54,17 @@ const App = () => {
       <SafeAreaProvider>
         <UserPreferencesProvider>
           <ThemeProvider>
-            <AppContent />
+            <ReadingProgressProvider>
+              <BookmarksProvider>
+                <ReadingPlanProvider>
+                  <NotesProvider>
+                    <NavigationContainer>
+                      <AppNavigator />
+                    </NavigationContainer>
+                  </NotesProvider>
+                </ReadingPlanProvider>
+              </BookmarksProvider>
+            </ReadingProgressProvider>
           </ThemeProvider>
         </UserPreferencesProvider>
       </SafeAreaProvider>
@@ -112,20 +72,16 @@ const App = () => {
   );
 };
 
-const LoadingScreen = ({ message }) => (
+const LoadingScreen = () => (
   <View style={styles.centerContainer}>
     <ActivityIndicator size="large" color="#0000ff" />
-    <Text style={styles.loadingText}>{message}</Text>
+    <Text style={styles.loadingText}>Cargando Eternal Stone Bible App...</Text>
   </View>
 );
 
 const ErrorScreen = ({ message }) => (
   <View style={styles.centerContainer}>
-    <Text style={styles.errorTitle}>Se produjo un error al inicializar la aplicación:</Text>
-    <Text style={styles.errorMessage}>{message}</Text>
-    <Text style={styles.errorInstructions}>
-      Por favor, reinicie la aplicación. Si el problema persiste, contacte con soporte.
-    </Text>
+    <Text style={styles.errorText}>Error: {message}</Text>
   </View>
 );
 
@@ -140,18 +96,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
   },
-  errorTitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  errorMessage: {
+  errorText: {
     color: 'red',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  errorInstructions: {
-    marginTop: 20,
+    fontSize: 16,
     textAlign: 'center',
   },
 });

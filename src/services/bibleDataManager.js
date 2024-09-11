@@ -1,23 +1,93 @@
-import { RV1909 } from '../data/completeBibleData';
-import BibleDatabaseService from './BibleDatabaseService';
-import CacheService from './CacheService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import bibleBooks from '../data/bibleBooks.json';
 
-let currentVersion = RV1909;
-
-export const setCurrentVersion = (version) => {
-  if (version === 'RV1909') {
-    currentVersion = RV1909;
-  } else {
-    console.warn('Versión no disponible, usando RV1909 por defecto');
-    currentVersion = RV1909;
+// Pre-carga todos los libros de la Biblia
+const bibleData = {
+  "Antiguo Testamento": {
+    "genesis": require('../data/bible_books/genesis.json'),
+    "exodo": require('../data/bible_books/exodo.json'),
+    "levitico": require('../data/bible_books/levitico.json'),
+    "numeros": require('../data/bible_books/numeros.json'),
+    "deuteronomio": require('../data/bible_books/deuteronomio.json'),
+    "josue": require('../data/bible_books/josue.json'),
+    "jueces": require('../data/bible_books/jueces.json'),
+    "rut": require('../data/bible_books/rut.json'),
+    "1samuel": require('../data/bible_books/1-samuel.json'),
+    "2samuel": require('../data/bible_books/2-samuel.json'),
+    "1reyes": require('../data/bible_books/1-reyes.json'),
+    "2reyes": require('../data/bible_books/2-reyes.json'),
+    "1cronicas": require('../data/bible_books/1-cronicas.json'),
+    "2cronicas": require('../data/bible_books/2-cronicas.json'),
+    "esdras": require('../data/bible_books/esdras.json'),
+    "nehemias": require('../data/bible_books/nehemias.json'),
+    "ester": require('../data/bible_books/ester.json'),
+    "job": require('../data/bible_books/job.json'),
+    "salmos": require('../data/bible_books/salmos.json'),
+    "proverbios": require('../data/bible_books/proverbios.json'),
+    "eclesiastes": require('../data/bible_books/eclesiastes.json'),
+    "cantares": require('../data/bible_books/cantares.json'),
+    "isaias": require('../data/bible_books/isaias.json'),
+    "jeremias": require('../data/bible_books/jeremias.json'),
+    "lamentaciones": require('../data/bible_books/lamentaciones.json'),
+    "ezequiel": require('../data/bible_books/ezequiel.json'),
+    "daniel": require('../data/bible_books/daniel.json'),
+    "oseas": require('../data/bible_books/oseas.json'),
+    "joel": require('../data/bible_books/joel.json'),
+    "amos": require('../data/bible_books/amos.json'),
+    "abdias": require('../data/bible_books/abdias.json'),
+    "jonas": require('../data/bible_books/jonas.json'),
+    "miqueas": require('../data/bible_books/miqueas.json'),
+    "nahum": require('../data/bible_books/nahum.json'),
+    "habacuc": require('../data/bible_books/habacuc.json'),
+    "sofonias": require('../data/bible_books/sofonias.json'),
+    "hageo": require('../data/bible_books/hageo.json'),
+    "zacarias": require('../data/bible_books/zacarias.json'),
+    "malaquias": require('../data/bible_books/malaquias.json')
+  },
+  "Nuevo Testamento": {
+    "mateo": require('../data/bible_books/mateo.json'),
+    "marcos": require('../data/bible_books/marcos.json'),
+    "lucas": require('../data/bible_books/lucas.json'),
+    "juan": require('../data/bible_books/juan.json'),
+    "hechos": require('../data/bible_books/hechos.json'),
+    "romanos": require('../data/bible_books/romanos.json'),
+    "1corintios": require('../data/bible_books/1-corintios.json'),
+    "2corintios": require('../data/bible_books/2-corintios.json'),
+    "galatas": require('../data/bible_books/galatas.json'),
+    "efesios": require('../data/bible_books/efesios.json'),
+    "filipenses": require('../data/bible_books/filipenses.json'),
+    "colosenses": require('../data/bible_books/colosenses.json'),
+    "1tesalonicenses": require('../data/bible_books/1-tesalonicenses.json'),
+    "2tesalonicenses": require('../data/bible_books/2-tesalonicenses.json'),
+    "1timoteo": require('../data/bible_books/1-timoteo.json'),
+    "2timoteo": require('../data/bible_books/2-timoteo.json'),
+    "tito": require('../data/bible_books/tito.json'),
+    "filemon": require('../data/bible_books/filemon.json'),
+    "hebreos": require('../data/bible_books/hebreos.json'),
+    "santiago": require('../data/bible_books/santiago.json'),
+    "1pedro": require('../data/bible_books/1-pedro.json'),
+    "2pedro": require('../data/bible_books/2-pedro.json'),
+    "1juan": require('../data/bible_books/1-juan.json'),
+    "2juan": require('../data/bible_books/2-juan.json'),
+    "3juan": require('../data/bible_books/3-juan.json'),
+    "judas": require('../data/bible_books/judas.json'),
+    "apocalipsis": require('../data/bible_books/apocalipsis.json')
   }
+};
+
+const getBookData = (bookName) => {
+  const lowercaseBookName = bookName.toLowerCase().replace(/\s+/g, '').replace(/-/g, '');
+  for (const testament in bibleData) {
+    if (bibleData[testament][lowercaseBookName]) {
+      return bibleData[testament][lowercaseBookName];
+    }
+  }
+  throw new Error(`Book not found: ${bookName}`);
 };
 
 export const resetDatabase = async () => {
   try {
-    await BibleDatabaseService.openDatabase();
-    await BibleDatabaseService.dropTable();
-    await BibleDatabaseService.createTables();
+    await AsyncStorage.clear();
     console.log('Database reset complete');
   } catch (error) {
     console.error('Error resetting database:', error);
@@ -26,202 +96,71 @@ export const resetDatabase = async () => {
 };
 
 export const initializeBibleData = async () => {
-  try {
-    await BibleDatabaseService.openDatabase();
-    
-    const sampleVerse = await BibleDatabaseService.getVerse('Génesis', 1, 1);
-    if (!sampleVerse) {
-      console.log('Populating database with initial data...');
-      for (const [book, chapters] of Object.entries(currentVersion)) {
-        console.log(`Inserting book: ${book} with ${Object.keys(chapters).length} chapters`);
-        for (const [chapter, verses] of Object.entries(chapters)) {
-          console.log(`Inserting chapter ${chapter} of ${book} with ${verses.length} verses`);
-          for (const verse of verses) {
-            await BibleDatabaseService.insertVerse(book, parseInt(chapter), verse.number, verse.text);
-          }
-        }
-        console.log(`Finished inserting book: ${book}`);
-      }
-      console.log('Database population complete.');
-    } else {
-      console.log('Database already populated.');
-    }
-
-    // Verificación adicional para Mateo
-    const mateoVerse = await BibleDatabaseService.getVerse('Mateo', 1, 1);
-    if (mateoVerse) {
-      console.log('Verificación: Mateo 1:1 está presente en la base de datos');
-    } else {
-      console.error('Verificación fallida: Mateo 1:1 no está en la base de datos');
-    }
-
-  } catch (error) {
-    console.error('Error initializing Bible data:', error);
-    throw error;
-  }
+  console.log('Bible data initialized');
 };
 
-export const getVerse = async (book, chapter, verse) => {
-  const cacheKey = `verse_${book}_${chapter}_${verse}`;
-  try {
-    const cachedVerse = await CacheService.getItem(cacheKey);
-    if (cachedVerse) return cachedVerse;
-
-    const verseData = await BibleDatabaseService.getVerse(book, parseInt(chapter), parseInt(verse));
-    if (!verseData) {
-      throw new Error(`Verse ${verse} not found in chapter ${chapter} of book ${book}`);
-    }
-    await CacheService.setItem(cacheKey, verseData);
-    return verseData;
-  } catch (error) {
-    console.error(`Error getting verse ${book} ${chapter}:${verse}:`, error);
-    throw error;
-  }
+export const getVerse = (book, chapter, verse) => {
+  const bookData = getBookData(book);
+  return bookData[chapter][verse];
 };
 
-export const getChapter = async (book, chapter) => {
-  const cacheKey = `chapter_${book}_${chapter}`;
-  try {
-    const chapterData = await CacheService.getOfflineData(cacheKey, async () => {
-      const data = await BibleDatabaseService.getChapter(book, parseInt(chapter));
-      if (data.length === 0) {
-        throw new Error(`Chapter ${chapter} not found in book ${book}`);
-      }
-      return data.map(verse => ({
-        number: verse.verse,
-        text: verse.text
-      }));
-    });
-
-    if (!chapterData) {
-      throw new Error('No se pudo obtener el capítulo. Verifica tu conexión a internet.');
-    }
-
-    return chapterData;
-  } catch (error) {
-    console.error(`Error getting chapter ${book} ${chapter}:`, error);
-    throw error;
-  }
-};
-
-export const getBookChapters = (book) => {
-  if (!currentVersion[book]) {
-    console.error(`Book ${book} not found`);
-    return 0;
-  }
-  return Object.keys(currentVersion[book]).length;
+export const getChapter = (book, chapter) => {
+  const bookData = getBookData(book);
+  return bookData[chapter];
 };
 
 export const getAllBooks = () => {
-  if (!currentVersion) {
-    console.warn('Current version is not set');
-    return [];
-  }
-  return Object.keys(currentVersion);
+  return [...bibleBooks["Antiguo Testamento"], ...bibleBooks["Nuevo Testamento"]];
 };
 
-export const searchBible = async (query, searchType = 'all', page = 1, pageSize = 20) => {
-  try {
-    const results = await BibleDatabaseService.searchVerses(query, page, pageSize);
-    if (searchType !== 'all') {
-      const books = getAllBooks();
-      return results.filter(verse => {
-        const isOT = books.indexOf(verse.book) < 39;
-        return searchType === 'ot' ? isOT : !isOT;
-      });
+export const searchBible = (query, searchType = 'all') => {
+  const results = [];
+  const booksToSearch = searchType === 'ot' ? bibleBooks["Antiguo Testamento"] :
+                        searchType === 'nt' ? bibleBooks["Nuevo Testamento"] :
+                        getAllBooks();
+
+  for (const book of booksToSearch) {
+    const bookData = getBookData(book);
+    for (const [chapterNum, chapter] of Object.entries(bookData)) {
+      for (const [verseNum, verseText] of Object.entries(chapter)) {
+        if (verseText.toLowerCase().includes(query.toLowerCase())) {
+          results.push({
+            book,
+            chapter: parseInt(chapterNum),
+            verse: parseInt(verseNum),
+            text: verseText
+          });
+        }
+      }
     }
-    return results;
-  } catch (error) {
-    console.error('Error searching Bible:', error);
-    throw error;
   }
+  return results;
+};
+
+export const getBookChapters = (book) => {
+  const bookData = getBookData(book);
+  return Object.keys(bookData).length;
+};
+
+export const getRandomVerse = () => {
+  const allBooks = getAllBooks();
+  const randomBook = allBooks[Math.floor(Math.random() * allBooks.length)];
+  const bookData = getBookData(randomBook);
+  const randomChapter = Object.keys(bookData)[Math.floor(Math.random() * Object.keys(bookData).length)];
+  const randomVerse = Object.keys(bookData[randomChapter])[Math.floor(Math.random() * Object.keys(bookData[randomChapter]).length)];
+  
+  return {
+    book: randomBook,
+    chapter: parseInt(randomChapter),
+    number: parseInt(randomVerse),
+    text: bookData[randomChapter][randomVerse]
+  };
 };
 
 export const closeBibleDatabase = async () => {
-  try {
-    await BibleDatabaseService.close();
-  } catch (error) {
-    console.error('Error closing Bible database:', error);
-    throw error;
-  }
-};
-
-export const getRandomVerse = async () => {
-  try {
-    const books = getAllBooks();
-    const randomBook = books[Math.floor(Math.random() * books.length)];
-    const chapterCount = getBookChapters(randomBook);
-    const randomChapter = Math.floor(Math.random() * chapterCount) + 1;
-    const chapterVerses = await getChapter(randomBook, randomChapter);
-    const randomVerse = chapterVerses[Math.floor(Math.random() * chapterVerses.length)];
-    
-    console.log(`Random verse selected: ${randomBook} ${randomChapter}:${randomVerse.number}`);
-    
-    return {
-      book: randomBook,
-      chapter: randomChapter,
-      number: randomVerse.number,
-      text: randomVerse.text
-    };
-  } catch (error) {
-    console.error('Error getting random verse:', error);
-    throw error;
-  }
-};
-
-export const getNextChapter = (book, chapter) => {
-  const books = getAllBooks();
-  const currentBookIndex = books.indexOf(book);
-  const chapterCount = getBookChapters(book);
-
-  if (chapter < chapterCount) {
-    return { book, chapter: chapter + 1 };
-  } else if (currentBookIndex < books.length - 1) {
-    return { book: books[currentBookIndex + 1], chapter: 1 };
-  } else {
-    return null; // End of the Bible
-  }
-};
-
-export const getPreviousChapter = (book, chapter) => {
-  const books = getAllBooks();
-  const currentBookIndex = books.indexOf(book);
-
-  if (chapter > 1) {
-    return { book, chapter: chapter - 1 };
-  } else if (currentBookIndex > 0) {
-    const previousBook = books[currentBookIndex - 1];
-    const previousBookChapterCount = getBookChapters(previousBook);
-    return { book: previousBook, chapter: previousBookChapterCount };
-  } else {
-    return null; // Beginning of the Bible
-  }
+  console.log('Bible database closed');
 };
 
 export const preloadFrequentlyAccessedData = async () => {
-  const frequentlyAccessedItems = [
-    { key: 'book_list', fetcher: getAllBooks },
-    { key: 'chapter_Genesis_1', fetcher: () => getChapter('Génesis', 1) },
-    { key: 'chapter_Exodus_1', fetcher: () => getChapter('Éxodo', 1) },
-    { key: 'chapter_Matthew_1', fetcher: () => getChapter('Mateo', 1) }, // Añadido para verificar Mateo
-  ];
-
-  const results = await Promise.allSettled(frequentlyAccessedItems.map(async item => {
-    try {
-      const data = await item.fetcher();
-      await CacheService.setItem(item.key, data);
-      console.log(`Successfully preloaded ${item.key}`);
-      return { key: item.key, status: 'success' };
-    } catch (error) {
-      console.warn(`Error preloading ${item.key}:`, error.message);
-      return { key: item.key, status: 'error', error: error.message };
-    }
-  }));
-
-  const errors = results.filter(result => result.status === 'rejected' || (result.value && result.value.status === 'error'));
-  if (errors.length > 0) {
-    console.warn('Some items failed to preload:', errors.map(e => e.value ? e.value.key : e.reason).join(', '));
-  } else {
-    console.log('All frequently accessed data preloaded successfully');
-  }
+  console.log('Frequently accessed data preloaded');
 };
