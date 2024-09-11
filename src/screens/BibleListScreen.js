@@ -1,12 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SectionList, Animated } from 'react-native';
+import { View, Text, SectionList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import CustomIconButton from '../components/CustomIconButton';
 import { useStyles } from '../hooks/useStyles';
 import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
-import HapticFeedback from '../services/HapticFeedback';
 import { useTranslation } from 'react-i18next';
 import bibleBooks from '../data/bibleBooks.json';
 
@@ -17,107 +16,80 @@ const BibleListScreen = ({ theme }) => {
   const { t } = useTranslation();
 
   const sections = useMemo(() => [
-    { title: t('Antiguo Testamento'), data: bibleBooks.oldTestament },
-    { title: t('Nuevo Testamento'), data: bibleBooks.newTestament }
+    { title: t('Antiguo Testamento'), data: bibleBooks["Antiguo Testamento"] },
+    { title: t('Nuevo Testamento'), data: bibleBooks["Nuevo Testamento"] }
   ], [t]);
 
-  const navigateToChapter = useCallback((book) => {
-    console.log(`Navigating to Chapter screen for book: ${book}`);
-    HapticFeedback.light();
-    navigation.navigate('Chapter', { book });
-    AnalyticsService.logEvent('select_book', { book });
-  }, [navigation]);
+  const getBookNameFromFileName = useCallback((fileName) => {
+    return fileName.replace('.json', '').replace(/-/g, ' ').replace(/(\d+)\s/, '$1 ');
+  }, []);
 
-  const renderItem = useCallback(({ item: book, index, section }) => {
-    const opacity = new Animated.Value(0);
-    Animated.timing(opacity, {
-      toValue: 1,
-      duration: 500,
-      delay: index * 50,
-      useNativeDriver: true,
-    }).start();
+  const navigateToChapter = useCallback((bookFileName) => {
+    const bookName = getBookNameFromFileName(bookFileName);
+    navigation.navigate('Chapter', { book: bookName });
+    AnalyticsService.logEvent('select_book', { book: bookName });
+  }, [navigation, getBookNameFromFileName]);
 
-    return (
-      <Animated.View style={{ opacity }}>
-        <TouchableOpacity
-          style={styles.bookItem}
-          onPress={() => navigateToChapter(book)}
-          accessibilityRole="button"
-          accessibilityLabel={t('Libro de') + ' ' + book}
-          accessibilityHint={t('Toca para ver los capítulos de') + ' ' + book}
-          accessibilityState={{ selected: false }}
-        >
-          <CustomIconButton 
-            name="book" 
-            size={24} 
-            color={colors.primary} 
-            style={styles.bookIcon}
-            accessibilityLabel={t('Icono de libro')}
-          />
-          <Text style={[styles.bookName, { color: colors.text }]}>{book}</Text>
-          <Text style={styles.bookNumber} accessibilityLabel={t('Número') + ' ' + (section.data.indexOf(book) + 1)}>
-            {section.data.indexOf(book) + 1}
-          </Text>
-          <CustomIconButton 
-            name="chevron-right" 
-            size={24} 
-            color={colors.secondary}
-            accessibilityLabel={t('Ir a los capítulos')}
-          />
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  }, [colors, navigateToChapter, styles, t]);
+  const renderItem = useCallback(({ item, index, section }) => (
+    <TouchableOpacity
+      style={styles.bookItem}
+      onPress={() => navigateToChapter(item)}
+      accessibilityRole="button"
+      accessibilityLabel={t('Libro de') + ' ' + getBookNameFromFileName(item)}
+      accessibilityHint={t('Toca para ver los capítulos de') + ' ' + getBookNameFromFileName(item)}
+    >
+      <CustomIconButton 
+        name="book" 
+        size={24} 
+        color={colors.primary} 
+        style={styles.bookIcon}
+      />
+      <Text style={styles.bookName}>{getBookNameFromFileName(item)}</Text>
+      <CustomIconButton 
+        name="chevron-right" 
+        size={24} 
+        color={colors.secondary}
+      />
+    </TouchableOpacity>
+  ), [styles, navigateToChapter, getBookNameFromFileName, colors, t]);
 
   const renderSectionHeader = useCallback(({ section: { title } }) => (
-    <View 
-      style={[styles.sectionHeader, { backgroundColor: colors.card }]}
-      accessibilityRole="header"
-    >
-      <Text style={[styles.sectionHeaderText, { color: colors.primary }]}>{title}</Text>
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>{title}</Text>
     </View>
-  ), [colors, styles]);
+  ), [styles]);
 
   return (
-    <View 
-      style={[styles.container, { backgroundColor: colors.background }]}
-      accessibilityLabel={t('Lista de libros de la Biblia')}
-      accessibilityHint={t('Desplázate para explorar los libros del Antiguo y Nuevo Testamento')}
-    >
+    <View style={styles.container}>
       <SectionList
         sections={sections}
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
         keyExtractor={(item) => item}
-        stickySectionHeadersEnabled={true}
-        initialNumToRender={20}
-        maxToRenderPerBatch={20}
-        windowSize={21}
-        removeClippedSubviews={true}
         contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        accessibilityRole="list"
       />
     </View>
   );
 };
 
-const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   listContent: {
     paddingBottom: 16,
   },
   sectionHeader: {
+    backgroundColor: colors.card,
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   sectionHeaderText: {
-    fontFamily,
-    fontSize: fontSize + 4,
+    fontSize: 18,
     fontWeight: 'bold',
+    color: colors.primary,
   },
   bookItem: {
     flexDirection: 'row',
@@ -131,15 +103,9 @@ const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
   },
   bookName: {
     flex: 1,
-    fontFamily,
-    fontSize: fontSize,
-  },
-  bookNumber: {
-    fontFamily,
-    fontSize: fontSize - 2,
-    color: colors.secondary,
-    marginRight: 8,
+    fontSize: 16,
+    color: colors.text,
   },
 });
 
-export default React.memo(withTheme(BibleListScreen));
+export default withTheme(React.memo(BibleListScreen));
