@@ -1,117 +1,71 @@
-import React, { useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Dimensions, AccessibilityInfo } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getBookChapters } from '../services/bibleDataManager';
 import { useTheme } from '../context/ThemeContext';
-import CustomIconButton from '../components/CustomIconButton';
 import { useStyles } from '../hooks/useStyles';
-import { useReadingProgress } from '../context/ReadingProgressContext';
-import { withTheme } from '../hoc/withTheme';
 import { AnalyticsService } from '../services/AnalyticsService';
 import { useTranslation } from 'react-i18next';
-import HapticFeedback from '../services/HapticFeedback';
-import bibleChapters from '../data/bibleChapters.json';
+import CustomIconButton from '../components/CustomIconButton';
 
-const { width } = Dimensions.get('window');
-const COLUMN_COUNT = 3;
-const ITEM_WIDTH = width / COLUMN_COUNT;
-
-const ChapterScreen = ({ route, theme }) => {
-  const navigation = useNavigation();
+const ChapterScreen = ({ route }) => {
   const { book } = route.params;
-  const { colors } = theme;
+  const [chapters, setChapters] = useState([]);
+  const navigation = useNavigation();
+  const { colors } = useTheme();
   const styles = useStyles(createStyles);
-  const { getChapterProgress } = useReadingProgress();
   const { t } = useTranslation();
 
-  const chapters = useMemo(() => 
-    Array.from({ length: bibleChapters[book] }, (_, i) => i + 1),
-    [book]
-  );
+  useEffect(() => {
+    const loadChapters = async () => {
+      const chapterCount = await getBookChapters(book);
+      setChapters(Array.from({ length: chapterCount }, (_, i) => i + 1));
+    };
+    loadChapters();
+  }, [book]);
 
   const navigateToVerse = useCallback((chapter) => {
-    console.log(`Navigating to Verse screen for ${book}, chapter ${chapter}`);
-    HapticFeedback.light();
     navigation.navigate('Verse', { book, chapter });
     AnalyticsService.logEvent('select_chapter', { book, chapter });
   }, [navigation, book]);
 
-  const renderItem = useCallback(({ item: chapter }) => {
-    const progress = getChapterProgress ? getChapterProgress(book, chapter) : 0;
-    let iconName;
-    if (progress === 1) {
-      iconName = 'check-circle';
-    } else if (progress > 0) {
-      iconName = 'adjust';
-    } else {
-      iconName = 'panorama-fish-eye';
-    }
-
-    return (
-      <TouchableOpacity
-        style={[styles.chapterItem, { width: ITEM_WIDTH - 10 }]}
-        onPress={() => navigateToVerse(chapter)}
-        accessibilityRole="button"
-        accessibilityLabel={t('Capítulo') + ' ' + chapter}
-        accessibilityHint={t('Toca para leer el capítulo') + ' ' + chapter + ' ' + t('de') + ' ' + book}
-        accessibilityState={{ selected: false, busy: false }}
-      >
-        <View style={[styles.chapterContent, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.chapterText, { color: colors.text }]}>{chapter}</Text>
-          <CustomIconButton 
-            name={iconName} 
-            size={24} 
-            color={progress === 1 ? colors.success : progress > 0 ? colors.warning : colors.disabled} 
-            accessibilityLabel={
-              progress === 1 ? t('Capítulo completado') :
-              progress > 0 ? t('Capítulo parcialmente leído') :
-              t('Capítulo no leído')
-            }
-          />
-        </View>
-        <View 
-          style={[styles.progressBar, { width: `${progress * 100}%`, backgroundColor: colors.primary }]}
-          accessibilityLabel={t('Progreso de lectura') + ': ' + Math.round(progress * 100) + '%'}
-        />
-      </TouchableOpacity>
-    );
-  }, [book, colors, getChapterProgress, navigateToVerse, styles, t]);
-
-  const keyExtractor = useCallback((item) => item.toString(), []);
+  const renderItem = useCallback(({ item }) => (
+    <TouchableOpacity
+      style={styles.chapterItem}
+      onPress={() => navigateToVerse(item)}
+      accessibilityRole="button"
+      accessibilityLabel={t('Capítulo') + ' ' + item}
+      accessibilityHint={t('Toca para leer el capítulo') + ' ' + item + ' ' + t('de') + ' ' + book}
+    >
+      <Text style={styles.chapterText}>{item}</Text>
+    </TouchableOpacity>
+  ), [styles, navigateToVerse, book, t]);
 
   return (
-    <View 
-      style={[styles.container, { backgroundColor: colors.background }]}
-      accessibilityLabel={t('Lista de capítulos de') + ' ' + book}
-      accessibilityHint={t('Desplázate para explorar los capítulos del libro')}
-    >
-      <View style={styles.header} accessibilityRole="header">
+    <View style={styles.container}>
+      <View style={styles.header}>
         <CustomIconButton 
           name="book" 
           size={24} 
           color={colors.primary}
-          accessibilityLabel={t('Icono de libro')}
         />
-        <Text style={[styles.bookTitle, { color: colors.text }]}>{book}</Text>
+        <Text style={styles.bookTitle}>{book}</Text>
       </View>
       <FlatList
         data={chapters}
         renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        numColumns={COLUMN_COUNT}
-        initialNumToRender={15}
-        maxToRenderPerBatch={15}
-        windowSize={5}
-        removeClippedSubviews={true}
+        keyExtractor={(item) => item.toString()}
+        numColumns={3}
         contentContainerStyle={styles.listContent}
-        accessibilityRole="list"
       />
     </View>
   );
 };
 
-const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -121,37 +75,27 @@ const createStyles = (colors, fontSize, fontFamily) => StyleSheet.create({
     borderBottomColor: colors.border,
   },
   bookTitle: {
-    fontSize: fontSize + 4,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginLeft: 10,
-    fontFamily,
+    color: colors.text,
+    marginLeft: 16,
   },
   listContent: {
-    padding: 5,
+    padding: 16,
   },
   chapterItem: {
-    margin: 5,
-    aspectRatio: 1,
-  },
-  chapterContent: {
     flex: 1,
+    aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
-    overflow: 'hidden',
+    margin: 8,
+    borderRadius: 8,
+    backgroundColor: colors.card,
   },
   chapterText: {
-    fontSize: fontSize,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    fontFamily,
-  },
-  progressBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    height: 3,
+    fontSize: 18,
+    color: colors.text,
   },
 });
 
-export default withTheme(React.memo(ChapterScreen));
+export default React.memo(ChapterScreen);
