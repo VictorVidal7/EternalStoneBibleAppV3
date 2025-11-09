@@ -11,13 +11,13 @@ const BIBLE_VERSIONS = [
     dataFile: './bible-data-rvr1960',
     exportName: 'RVR1960_DATA',
   },
+  {
+    id: 'NLT',
+    name: 'New Living Translation',
+    dataFile: './bible-data-nlt',
+    exportName: 'NLT_DATA',
+  },
   // Add more versions here as data files become available
-  // {
-  //   id: 'NLT',
-  //   name: 'New Living Translation',
-  //   dataFile: './bible-data-nlt',
-  //   exportName: 'NLT_DATA',
-  // },
   // {
   //   id: 'KJV',
   //   name: 'King James Version',
