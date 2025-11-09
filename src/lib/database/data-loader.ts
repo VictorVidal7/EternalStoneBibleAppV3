@@ -4,7 +4,7 @@ import bibleDB from './index';
 const DATA_LOADED_KEY = '@bible_data_loaded_rvr1960';
 
 export async function initializeBibleData(
-  onProgress?: (loaded: total: number) => void
+    onProgress?: (loaded: number, total: number) => void
 ): Promise<void> {
   try {
     console.log('🔵 Starting initialization...');

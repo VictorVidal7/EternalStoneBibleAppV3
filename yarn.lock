@@ -2656,7 +2656,7 @@ expo-clipboard@^8.0.7:
   resolved "https://registry.npmjs.org/expo-clipboard/-/expo-clipboard-8.0.7.tgz"
   integrity sha512-zvlfFV+wB2QQrQnHWlo0EKHAkdi2tycLtE+EXFUWTPZYkgu1XcH+aiKfd4ul7Z0SDF+1IuwoiW9AA9eO35aj3Q==
 
-expo-constants@^18.0.10, expo-constants@~18.0.10, expo-constants@~18.0.9:
+expo-constants@^18.0.10, expo-constants@~18.0.10, expo-constants@~18.0.8, expo-constants@~18.0.9:
   version "18.0.10"
   resolved "https://registry.npmjs.org/expo-constants/-/expo-constants-18.0.10.tgz"
   integrity sha512-Rhtv+X974k0Cahmvx6p7ER5+pNhBC0XbP1lRviL2J1Xl4sT2FBaIuIxF/0I0CbhOsySf0ksqc5caFweAy9Ewiw==
@@ -2685,6 +2685,14 @@ expo-keep-awake@~15.0.7:
   version "15.0.7"
   resolved "https://registry.npmjs.org/expo-keep-awake/-/expo-keep-awake-15.0.7.tgz"
   integrity sha512-CgBNcWVPnrIVII5G54QDqoE125l+zmqR4HR8q+MQaCfHet+dYpS5vX5zii/RMayzGN4jPgA4XYIQ28ePKFjHoA==
+
+expo-linking@^8.0.8:
+  version "8.0.8"
+  resolved "https://registry.npmjs.org/expo-linking/-/expo-linking-8.0.8.tgz"
+  integrity sha512-MyeMcbFDKhXh4sDD1EHwd0uxFQNAc6VCrwBkNvvvufUsTYFq3glTA9Y8a+x78CPpjNqwNAamu74yIaIz7IEJyg==
+  dependencies:
+    expo-constants "~18.0.8"
+    invariant "^2.2.4"
 
 expo-modules-autolinking@3.0.21:
   version "3.0.21"
@@ -4845,6 +4853,11 @@ use-callback-ref@^1.3.3:
   integrity sha512-jQL3lRnocaFtu3V00JToYz/4QkNWswxijDaCVNZRiRTO3HQDLsdu1ZtmIUvV4yPp+rvWm5j0y0TG/S61cuijTg==
   dependencies:
     tslib "^2.0.0"
+
+use-debounce@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.npmjs.org/use-debounce/-/use-debounce-10.0.0.tgz"
+  integrity sha512-XRjvlvCB46bah9IBXVnq/ACP2lxqXyZj0D9hj4K5OzNroMDpTEBg8Anuh1/UfRTRs7pLhQ+RiNxxwZu9+MVl1A==
 
 use-latest-callback@^0.2.1, use-latest-callback@^0.2.4:
   version "0.2.6"
