@@ -15,7 +15,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
-import bibleDB from '../../../src/lib/database';
+import { bibleDB } from '../../../src/lib/database';
 import { BibleVerse } from '../../../src/types/bible';
 import { getBookByName } from '../../../src/constants/bible';
 import { useTheme } from '../../../src/hooks/useTheme';

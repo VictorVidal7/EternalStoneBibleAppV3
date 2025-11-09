@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react
 import { useState, useEffect } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import bibleDB from '../../src/lib/database';
+import { bibleDB } from '../../src/lib/database';
 import { Bookmark } from '../../src/types/bible';
 import { useCallback } from 'react';
 import { useTheme } from '../../src/hooks/useTheme';

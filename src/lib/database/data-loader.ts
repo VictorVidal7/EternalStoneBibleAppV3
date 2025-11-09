@@ -1,5 +1,5 @@
 ﻿import AsyncStorage from '@react-native-async-storage/async-storage';
-import bibleDB from './index';
+import { bibleDB } from './index';
 
 const DATA_LOADED_KEY = '@bible_data_loaded_rvr1960';
 

@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useDebouncedCallback } from 'use-debounce';
-import bibleDB from '../../src/lib/database';
+import { bibleDB } from '../../src/lib/database';
 import { BibleVerse } from '../../src/types/bible';
 import { useTheme } from '../../src/hooks/useTheme';
 

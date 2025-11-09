@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import bibleDB from '../../src/lib/database';
+import { bibleDB } from '../../src/lib/database';
 import { BibleVerse, ReadingProgress } from '../../src/types/bible';
 import { READING_PLANS } from '../../src/constants/reading-plans';
 import { useTheme } from '../../src/hooks/useTheme';
