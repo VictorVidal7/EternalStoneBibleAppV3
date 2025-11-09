@@ -28,6 +28,14 @@ class BibleDatabase {
     return this.db;
   }
 
+  // Public method to get database instance for external use
+  async getDatabase(): Promise<SQLite.SQLiteDatabase> {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+    return this.getDb();
+  }
+
   // ========== VERSE OPERATIONS ==========
 
   async insertVerses(verses: Omit<BibleVerse, 'id'>[]): Promise<void> {
