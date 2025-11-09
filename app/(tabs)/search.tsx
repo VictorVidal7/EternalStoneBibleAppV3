@@ -158,9 +158,15 @@ export default function SearchScreen() {
           )}
         </View>
 
-        <Text style={themedStyles.hint}>
-          Escribe al menos 3 caracteres para buscar
-        </Text>
+        <View style={styles.hintRow}>
+          <Text style={themedStyles.hint}>
+            Escribe al menos 3 caracteres para buscar
+          </Text>
+          <View style={themedStyles.versionBadge}>
+            <Ionicons name="book-outline" size={12} color={colors.primary} />
+            <Text style={themedStyles.versionBadgeText}>{selectedVersion.abbreviation}</Text>
+          </View>
+        </View>
 
         {/* Testament Filters */}
         {hasSearched && (
@@ -296,7 +302,21 @@ function createThemedStyles(colors: any, isDark: boolean) {
     hint: {
       fontSize: 13,
       color: colors.textSecondary,
-      marginTop: 8,
+      flex: 1,
+    },
+    versionBadge: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      gap: 4,
+    },
+    versionBadgeText: {
+      fontSize: 11,
+      fontWeight: '600' as const,
+      color: colors.primary,
     },
     filterButton: {
       flex: 1,
@@ -422,6 +442,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     marginLeft: 12,
+  },
+  hintRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
   },
   filtersContainer: {
     flexDirection: 'row',
