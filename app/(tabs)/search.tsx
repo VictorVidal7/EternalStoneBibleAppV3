@@ -7,6 +7,7 @@ import bibleDB from '../../src/lib/database';
 import { BibleVerse } from '../../src/types/bible';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useBibleVersion } from '../../src/hooks/useBibleVersion';
+import { useLanguage } from '../../src/hooks/useLanguage';
 
 type TestamentFilter = 'all' | 'old' | 'new';
 
@@ -24,6 +25,7 @@ export default function SearchScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { selectedVersion } = useBibleVersion();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<BibleVerse[]>([]);
   const [allResults, setAllResults] = useState<BibleVerse[]>([]);
@@ -143,7 +145,7 @@ export default function SearchScreen() {
           <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Buscar en toda la Biblia..."
+            placeholder={t.search.placeholder}
             placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={handleSearchChange}
@@ -160,7 +162,7 @@ export default function SearchScreen() {
 
         <View style={styles.hintRow}>
           <Text style={themedStyles.hint}>
-            Escribe al menos 3 caracteres para buscar
+            {t.search.minChars}
           </Text>
           <View style={themedStyles.versionBadge}>
             <Ionicons name="book-outline" size={12} color={colors.primary} />
@@ -176,7 +178,7 @@ export default function SearchScreen() {
               onPress={() => handleFilterChange('all')}
             >
               <Text style={[themedStyles.filterText, testamentFilter === 'all' && themedStyles.filterTextActive]}>
-                Toda la Biblia
+                {t.search.testament.all}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -184,7 +186,7 @@ export default function SearchScreen() {
               onPress={() => handleFilterChange('old')}
             >
               <Text style={[themedStyles.filterText, testamentFilter === 'old' && themedStyles.filterTextActive]}>
-                Antiguo T.
+                {t.search.testament.old}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -192,7 +194,7 @@ export default function SearchScreen() {
               onPress={() => handleFilterChange('new')}
             >
               <Text style={[themedStyles.filterText, testamentFilter === 'new' && themedStyles.filterTextActive]}>
-                Nuevo T.
+                {t.search.testament.new}
               </Text>
             </TouchableOpacity>
           </View>
@@ -203,7 +205,7 @@ export default function SearchScreen() {
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={themedStyles.loadingText}>Buscando...</Text>
+          <Text style={themedStyles.loadingText}>{t.loading}</Text>
         </View>
       )}
 
@@ -213,8 +215,8 @@ export default function SearchScreen() {
           <View style={themedStyles.resultsHeader}>
             <Text style={themedStyles.resultsCount}>
               {results.length > 0
-                ? `${results.length} ${results.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}`
-                : 'No se encontraron resultados'}
+                ? `${results.length} ${t.search.results}`
+                : t.search.noResults}
             </Text>
           </View>
 
@@ -252,10 +254,10 @@ export default function SearchScreen() {
                 <View style={styles.emptyContainer}>
                   <Ionicons name="search-outline" size={64} color={colors.textTertiary} />
                   <Text style={themedStyles.emptyText}>
-                    No se encontraron resultados para "{searchQuery}"
+                    {t.search.noResults} "{searchQuery}"
                   </Text>
                   <Text style={themedStyles.emptyHint}>
-                    Intenta con otras palabras clave
+                    {t.search.tryDifferent}
                   </Text>
                 </View>
               ) : null
@@ -268,14 +270,14 @@ export default function SearchScreen() {
       {!loading && !hasSearched && (
         <View style={styles.initialContainer}>
           <Ionicons name="search" size={80} color={colors.border} />
-          <Text style={themedStyles.initialTitle}>Busca en toda la Biblia</Text>
+          <Text style={themedStyles.initialTitle}>{t.search.initialTitle}</Text>
           <Text style={themedStyles.initialSubtitle}>
-            Encuentra versículos por palabras clave
+            {t.search.initialSubtitle}
           </Text>
 
           <View style={styles.suggestionsContainer}>
-            <Text style={themedStyles.suggestionsTitle}>Búsquedas populares:</Text>
-            {['amor', 'fe', 'esperanza', 'paz', 'salvación'].map((suggestion) => (
+            <Text style={themedStyles.suggestionsTitle}>{t.search.popularSearches}</Text>
+            {t.search.suggestions.map((suggestion) => (
               <TouchableOpacity
                 key={suggestion}
                 style={themedStyles.suggestionChip}

@@ -39,6 +39,10 @@ export const translations = {
       noResults: 'No se encontraron resultados',
       tryDifferent: 'Intenta con otras palabras clave',
       results: 'resultados encontrados',
+      initialTitle: 'Busca en toda la Biblia',
+      initialSubtitle: 'Encuentra versículos por palabras clave',
+      popularSearches: 'Búsquedas populares:',
+      suggestions: ['amor', 'fe', 'esperanza', 'paz', 'salvación'],
       testament: {
         all: 'Todos',
         old: 'A. Testamento',
@@ -181,6 +185,10 @@ export const translations = {
       noResults: 'No results found',
       tryDifferent: 'Try different keywords',
       results: 'results found',
+      initialTitle: 'Search the entire Bible',
+      initialSubtitle: 'Find verses by keywords',
+      popularSearches: 'Popular searches:',
+      suggestions: ['love', 'faith', 'hope', 'peace', 'salvation'],
       testament: {
         all: 'All',
         old: 'O. Testament',
