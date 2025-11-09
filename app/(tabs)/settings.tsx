@@ -11,6 +11,7 @@ import {
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/hooks/useTheme';
+import { useBibleVersion } from '../../src/hooks/useBibleVersion';
 import { resetBibleData } from '../../src/lib/database/data-loader';
 import * as Haptics from 'expo-haptics';
 
@@ -18,6 +19,7 @@ type ThemeOption = 'light' | 'dark' | 'auto';
 
 export default function SettingsScreen() {
   const { mode, setThemeMode, isDark, colors } = useTheme();
+  const { selectedVersion, setVersion, availableVersions } = useBibleVersion();
   const [isResetting, setIsResetting] = useState(false);
 
   async function handleThemeChange(newMode: ThemeOption) {
@@ -153,21 +155,82 @@ export default function SettingsScreen() {
         </View>
 
         <View style={themedStyles.card}>
-          <View style={themedStyles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={themedStyles.settingLabel}>Versión Actual</Text>
-              <Text style={themedStyles.settingValue}>RVR1960</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
-          </View>
+          <Text style={themedStyles.settingLabel}>Selecciona tu versión</Text>
           <Text style={themedStyles.settingDescription}>
-            Reina-Valera 1960
+            Elige la traducción de la Biblia que prefieres
           </Text>
-          <View style={themedStyles.comingSoon}>
-            <Ionicons name="time-outline" size={16} color={colors.warning} />
-            <Text style={themedStyles.comingSoonText}>
-              Próximamente: NTV (Nueva Traducción Viviente) y NLT (New Living Translation)
-            </Text>
+
+          <View style={themedStyles.versionOptions}>
+            {availableVersions.map((version) => (
+              <TouchableOpacity
+                key={version.id}
+                style={[
+                  themedStyles.versionOption,
+                  selectedVersion.id === version.id && themedStyles.versionOptionActive,
+                ]}
+                onPress={async () => {
+                  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  await setVersion(version.id);
+                }}
+              >
+                <View style={styles.versionOptionContent}>
+                  <View style={styles.versionHeader}>
+                    <Text
+                      style={[
+                        themedStyles.versionAbbr,
+                        selectedVersion.id === version.id && themedStyles.versionAbbrActive,
+                      ]}
+                    >
+                      {version.abbreviation}
+                    </Text>
+                    {selectedVersion.id === version.id && (
+                      <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      themedStyles.versionName,
+                      selectedVersion.id === version.id && themedStyles.versionNameActive,
+                    ]}
+                  >
+                    {version.name}
+                  </Text>
+                  <View style={styles.versionMeta}>
+                    <Ionicons
+                      name="language-outline"
+                      size={12}
+                      color={selectedVersion.id === version.id ? colors.primary : colors.textTertiary}
+                    />
+                    <Text
+                      style={[
+                        themedStyles.versionMetaText,
+                        selectedVersion.id === version.id && themedStyles.versionMetaActive,
+                      ]}
+                    >
+                      {version.language === 'es' ? 'Español' : 'English'}
+                    </Text>
+                    {version.year && (
+                      <>
+                        <Text style={themedStyles.versionMetaText}> • </Text>
+                        <Text
+                          style={[
+                            themedStyles.versionMetaText,
+                            selectedVersion.id === version.id && themedStyles.versionMetaActive,
+                          ]}
+                        >
+                          {version.year}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                  {version.id !== 'RVR1960' && (
+                    <View style={themedStyles.comingSoonBadge}>
+                      <Text style={themedStyles.comingSoonBadgeText}>Próximamente</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       </View>
@@ -244,6 +307,20 @@ const styles = StyleSheet.create({
   },
   settingInfo: {
     flex: 1,
+  },
+  versionOptionContent: {
+    flex: 1,
+  },
+  versionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  versionMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
   },
 });
 
@@ -338,6 +415,59 @@ function createThemedStyles(colors: any, isDark: boolean) {
       marginLeft: 8,
       flex: 1,
       lineHeight: 18,
+    },
+    versionOptions: {
+      marginTop: 16,
+      gap: 12,
+    },
+    versionOption: {
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: colors.surfaceVariant,
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    versionOptionActive: {
+      backgroundColor: colors.primaryLight,
+      borderColor: colors.primary,
+    },
+    versionAbbr: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    versionAbbrActive: {
+      color: colors.primary,
+    },
+    versionName: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    versionNameActive: {
+      color: colors.text,
+      fontWeight: '500',
+    },
+    versionMetaText: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      marginLeft: 4,
+    },
+    versionMetaActive: {
+      color: colors.primary,
+    },
+    comingSoonBadge: {
+      marginTop: 10,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      backgroundColor: colors.warning + '20',
+      borderRadius: 6,
+      alignSelf: 'flex-start',
+    },
+    comingSoonBadgeText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.warning,
     },
     aboutRow: {
       marginBottom: 12,

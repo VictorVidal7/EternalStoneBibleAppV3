@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { initializeBibleData, checkDataStatus } from '../src/lib/database/data-loader';
 import { ThemeProvider } from '../src/hooks/useTheme';
+import { BibleVersionProvider } from '../src/hooks/useBibleVersion';
 
 function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
@@ -188,7 +189,9 @@ const styles = StyleSheet.create({
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <BibleVersionProvider>
+        <AppContent />
+      </BibleVersionProvider>
     </ThemeProvider>
   );
 }

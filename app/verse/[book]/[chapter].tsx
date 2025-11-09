@@ -19,10 +19,12 @@ import bibleDB from '../../../src/lib/database';
 import { BibleVerse } from '../../../src/types/bible';
 import { getBookByName } from '../../../src/constants/bible';
 import { useTheme } from '../../../src/hooks/useTheme';
+import { useBibleVersion } from '../../../src/hooks/useBibleVersion';
 
 export default function VerseReadingScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { selectedVersion } = useBibleVersion();
   const { book, chapter, verse: highlightVerse } = useLocalSearchParams<{
     book: string;
     chapter: string;
@@ -45,14 +47,14 @@ export default function VerseReadingScreen() {
   useEffect(() => {
     loadChapter();
     loadBookmarks();
-  }, [book, chapter]);
+  }, [book, chapter, selectedVersion.id]);
 
   async function loadChapter() {
     try {
       setLoading(true);
       await bibleDB.initialize();
 
-      const chapterVerses = await bibleDB.getChapter(book, chapterNum);
+      const chapterVerses = await bibleDB.getChapter(book, chapterNum, selectedVersion.id);
       setVerses(chapterVerses);
 
       // Update reading progress
@@ -131,7 +133,7 @@ export default function VerseReadingScreen() {
 
   async function handleShareVerse(verse: BibleVerse) {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const text = `"${verse.text}"\n\n${verse.book} ${verse.chapter}:${verse.verse} (RVR1960)`;
+    const text = `"${verse.text}"\n\n${verse.book} ${verse.chapter}:${verse.verse} (${selectedVersion.abbreviation})`;
 
     try {
       await Share.share({

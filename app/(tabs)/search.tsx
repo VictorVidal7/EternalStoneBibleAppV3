@@ -6,6 +6,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import bibleDB from '../../src/lib/database';
 import { BibleVerse } from '../../src/types/bible';
 import { useTheme } from '../../src/hooks/useTheme';
+import { useBibleVersion } from '../../src/hooks/useBibleVersion';
 
 type TestamentFilter = 'all' | 'old' | 'new';
 
@@ -22,6 +23,7 @@ const OLD_TESTAMENT_BOOKS = [
 export default function SearchScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { selectedVersion } = useBibleVersion();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<BibleVerse[]>([]);
   const [allResults, setAllResults] = useState<BibleVerse[]>([]);
@@ -53,7 +55,7 @@ export default function SearchScreen() {
 
     try {
       await bibleDB.initialize();
-      const searchResults = await bibleDB.searchVerses(query, 'RVR1960', 200);
+      const searchResults = await bibleDB.searchVerses(query, selectedVersion.id, 200);
       setAllResults(searchResults);
       setResults(applyTestamentFilter(searchResults, testamentFilter));
     } catch (error) {
@@ -63,7 +65,7 @@ export default function SearchScreen() {
     } finally {
       setLoading(false);
     }
-  }, [testamentFilter, applyTestamentFilter]);
+  }, [testamentFilter, applyTestamentFilter, selectedVersion.id]);
 
   const debouncedSearch = useDebouncedCallback(performSearch, 500);
 
