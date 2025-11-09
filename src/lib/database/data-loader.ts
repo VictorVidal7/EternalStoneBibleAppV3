@@ -1,7 +1,30 @@
 ﻿import AsyncStorage from '@react-native-async-storage/async-storage';
 import bibleDB from './index';
 
-const DATA_LOADED_KEY = '@bible_data_loaded_rvr1960';
+const DATA_LOADED_KEY = '@bible_data_loaded_v2'; // v2 to support multiple versions
+
+// Available Bible versions with their data files
+const BIBLE_VERSIONS = [
+  {
+    id: 'RVR1960',
+    name: 'Reina Valera 1960',
+    dataFile: './bible-data-rvr1960',
+    exportName: 'RVR1960_DATA',
+  },
+  // Add more versions here as data files become available
+  // {
+  //   id: 'NLT',
+  //   name: 'New Living Translation',
+  //   dataFile: './bible-data-nlt',
+  //   exportName: 'NLT_DATA',
+  // },
+  // {
+  //   id: 'KJV',
+  //   name: 'King James Version',
+  //   dataFile: './bible-data-kjv',
+  //   exportName: 'KJV_DATA',
+  // },
+];
 
 export async function initializeBibleData(
     onProgress?: (loaded: number, total: number) => void
@@ -19,36 +42,55 @@ export async function initializeBibleData(
     console.log('🟡 Initializing database schema...');
     await bibleDB.initialize();
 
-    console.log('📖 Loading RVR1960 Bible data...');
-    // Importación dinámica para evitar cargar 7.7MB innecesariamente
-    const { RVR1960_DATA } = await import('./bible-data-rvr1960');
+    let totalLoadedVerses = 0;
+    let grandTotal = 0;
 
-    const totalVerses = RVR1960_DATA.length;
-    console.log(`📊 Total verses to load: ${totalVerses}`);
+    // Load all available versions
+    for (const version of BIBLE_VERSIONS) {
+      try {
+        console.log(`📖 Loading ${version.name} (${version.id})...`);
 
-    // Insertar en chunks de 1000 versículos para mejor rendimiento
-    const CHUNK_SIZE = 1000;
-    let loadedCount = 0;
+        // Importación dinámica para evitar cargar MB innecesariamente
+        const module = await import(version.dataFile);
+        const versionData = module[version.exportName];
 
-    for (let i = 0; i < totalVerses; i += CHUNK_SIZE) {
-      const chunk = RVR1960_DATA.slice(i, i + CHUNK_SIZE);
-      await bibleDB.insertVerses(chunk);
+        if (!versionData || !Array.isArray(versionData)) {
+          console.warn(`⚠️  Skipping ${version.id}: Invalid data format`);
+          continue;
+        }
 
-      loadedCount += chunk.length;
+        grandTotal += versionData.length;
+        console.log(`📊 ${version.id}: ${versionData.length} verses`);
 
-      // Reportar progreso
-      if (onProgress) {
-        onProgress(loadedCount, totalVerses);
+        // Insertar en chunks de 1000 versículos para mejor rendimiento
+        const CHUNK_SIZE = 1000;
+
+        for (let i = 0; i < versionData.length; i += CHUNK_SIZE) {
+          const chunk = versionData.slice(i, i + CHUNK_SIZE);
+          await bibleDB.insertVerses(chunk);
+
+          totalLoadedVerses += chunk.length;
+
+          // Reportar progreso global
+          if (onProgress) {
+            onProgress(totalLoadedVerses, grandTotal);
+          }
+
+          console.log(`⏳ Progress: ${totalLoadedVerses}/${grandTotal} verses (${Math.round(totalLoadedVerses/grandTotal*100)}%)`);
+        }
+
+        console.log(`✅ ${version.id} loaded successfully`);
+      } catch (error) {
+        // Si falla una versión, continuar con las demás
+        console.warn(`⚠️  Failed to load ${version.id}:`, error);
       }
-
-      console.log(`⏳ Progress: ${loadedCount}/${totalVerses} verses (${Math.round(loadedCount/totalVerses*100)}%)`);
     }
 
     // Marcar como cargado
     await AsyncStorage.setItem(DATA_LOADED_KEY, 'true');
 
     console.log('✅ Bible data initialization complete!');
-    console.log(`📚 Successfully loaded ${totalVerses} verses from RVR1960`);
+    console.log(`📚 Successfully loaded ${totalLoadedVerses} verses from ${BIBLE_VERSIONS.length} version(s)`);
   } catch (error) {
     console.error('❌ Bible data initialization error:', error);
     // En caso de error, limpiar el flag para permitir reintento
@@ -94,8 +136,9 @@ export async function resetBibleData(options?: {
 }): Promise<void> {
   console.log('🔄 Resetting Bible data...');
 
-  // Limpiar flag de AsyncStorage
+  // Limpiar flags de AsyncStorage (both old and new keys)
   await AsyncStorage.removeItem(DATA_LOADED_KEY);
+  await AsyncStorage.removeItem('@bible_data_loaded_rvr1960'); // Old key for backward compatibility
 
   // Limpiar la base de datos
   try {
