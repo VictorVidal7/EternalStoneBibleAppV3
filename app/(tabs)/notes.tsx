@@ -4,9 +4,11 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import bibleDB from '../../src/lib/database';
 import { Note } from '../../src/types/bible';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function NotesScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,30 +53,30 @@ export default function NotesScreen() {
   }
 
   if (loading) {
-    return <View style={styles.container} />;
+    return <View style={[styles.container, { backgroundColor: colors.background }]} />;
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={notes}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.noteItem}
+            style={[styles.noteItem, { backgroundColor: colors.surface }]}
             onPress={() => goToVerse(item)}
             activeOpacity={0.7}
           >
             <View style={styles.noteHeader}>
-              <View style={styles.noteIcon}>
-                <Ionicons name="document-text" size={20} color="#27AE60" />
+              <View style={[styles.noteIcon, { backgroundColor: colors.success + '20' }]}>
+                <Ionicons name="document-text" size={20} color={colors.success} />
               </View>
 
               <View style={styles.noteHeaderText}>
-                <Text style={styles.noteReference}>
+                <Text style={[styles.noteReference, { color: colors.success }]}>
                   {item.book} {item.chapter}:{item.verse}
                 </Text>
-                <Text style={styles.noteDate}>
+                <Text style={[styles.noteDate, { color: colors.textSecondary }]}>
                   {new Date(item.updatedAt).toLocaleDateString('es-ES', {
                     year: 'numeric',
                     month: 'short',
@@ -87,17 +89,17 @@ export default function NotesScreen() {
                 style={styles.deleteButton}
                 onPress={() => handleDelete(item.id)}
               >
-                <Ionicons name="trash-outline" size={20} color="#E74C3C" />
+                <Ionicons name="trash-outline" size={20} color={colors.error} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.verseText} numberOfLines={2}>
+            <Text style={[styles.verseText, { color: colors.textSecondary }]} numberOfLines={2}>
               "{item.text}"
             </Text>
 
-            <View style={styles.noteDivider} />
+            <View style={[styles.noteDivider, { backgroundColor: colors.border }]} />
 
-            <Text style={styles.noteText} numberOfLines={3}>
+            <Text style={[styles.noteText, { color: colors.text }]} numberOfLines={3}>
               {item.note}
             </Text>
           </TouchableOpacity>
@@ -105,9 +107,9 @@ export default function NotesScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="create-outline" size={80} color="#ECF0F1" />
-            <Text style={styles.emptyTitle}>No tienes notas</Text>
-            <Text style={styles.emptySubtitle}>
+            <Ionicons name="create-outline" size={80} color={colors.border} />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No tienes notas</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               Agrega notas personales mientras lees la Biblia
             </Text>
           </View>

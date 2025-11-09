@@ -2,16 +2,18 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getBookByName } from '../../src/constants/bible';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function ChapterSelectionScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const { book } = useLocalSearchParams<{ book: string }>();
   const bookInfo = getBookByName(book);
 
   if (!bookInfo) {
     return (
-      <View style={styles.container}>
-        <Text>Libro no encontrado</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={{ color: colors.text }}>Libro no encontrado</Text>
       </View>
     );
   }
@@ -27,19 +29,19 @@ export default function ChapterSelectionScreen() {
       <Stack.Screen
         options={{
           title: bookInfo.name,
-          headerStyle: { backgroundColor: '#4A90E2' },
+          headerStyle: { backgroundColor: colors.primary },
           headerTintColor: '#FFFFFF',
           headerTitleStyle: { fontWeight: 'bold' },
         }}
       />
 
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{bookInfo.name}</Text>
-          <Text style={styles.headerSubtitle}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{bookInfo.name}</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
             {bookInfo.testament === 'old' ? 'Antiguo Testamento' : 'Nuevo Testamento'}
           </Text>
-          <Text style={styles.chapterCount}>
+          <Text style={[styles.chapterCount, { color: colors.primary }]}>
             {bookInfo.chapters} {bookInfo.chapters === 1 ? 'capítulo' : 'capítulos'}
           </Text>
         </View>
@@ -50,11 +52,11 @@ export default function ChapterSelectionScreen() {
           keyExtractor={(item) => item.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.chapterButton}
+              style={[styles.chapterButton, { backgroundColor: colors.surface, borderColor: colors.primaryLight }]}
               onPress={() => goToChapter(item)}
               activeOpacity={0.7}
             >
-              <Text style={styles.chapterNumber}>{item}</Text>
+              <Text style={[styles.chapterNumber, { color: colors.primary }]}>{item}</Text>
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.gridContent}

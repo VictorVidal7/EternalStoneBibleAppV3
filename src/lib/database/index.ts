@@ -35,10 +35,15 @@ class BibleDatabase {
 
     await db.withTransactionAsync(async () => {
       for (const verse of verses) {
+        // Los datos del archivo usan book_id y book_name, pero nuestra interfaz usa bookNumber y book
+        // Soportamos ambos formatos para flexibilidad
+        const bookId = (verse as any).book_id || verse.bookNumber;
+        const bookName = (verse as any).book_name || verse.book;
+
         await db.runAsync(
           `INSERT OR REPLACE INTO verses (book_id, book_name, chapter, verse, text, version)
            VALUES (?, ?, ?, ?, ?, ?)`,
-          [verse.bookNumber, verse.book, verse.chapter, verse.verse, verse.text, verse.version]
+          [bookId, bookName, verse.chapter, verse.verse, verse.text, verse.version]
         );
       }
     });

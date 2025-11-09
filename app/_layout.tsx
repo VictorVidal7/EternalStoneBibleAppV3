@@ -2,8 +2,9 @@ import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { initializeBibleData, checkDataStatus } from '../src/lib/database/data-loader';
+import { ThemeProvider } from '../src/hooks/useTheme';
 
-export default function RootLayout() {
+function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
@@ -183,3 +184,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}

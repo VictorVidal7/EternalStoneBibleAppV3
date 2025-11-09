@@ -18,9 +18,11 @@ import * as Haptics from 'expo-haptics';
 import bibleDB from '../../../src/lib/database';
 import { BibleVerse } from '../../../src/types/bible';
 import { getBookByName } from '../../../src/constants/bible';
+import { useTheme } from '../../../src/hooks/useTheme';
 
 export default function VerseReadingScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const { book, chapter, verse: highlightVerse } = useLocalSearchParams<{
     book: string;
     chapter: string;
@@ -206,8 +208,8 @@ export default function VerseReadingScreen() {
 
   if (!bookInfo || loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4A90E2" />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -217,7 +219,7 @@ export default function VerseReadingScreen() {
       <Stack.Screen
         options={{
           title: `${bookInfo.name} ${chapterNum}`,
-          headerStyle: { backgroundColor: '#4A90E2' },
+          headerStyle: { backgroundColor: colors.primary },
           headerTintColor: '#FFFFFF',
           headerRight: () => (
             <View style={styles.headerButtons}>
@@ -238,9 +240,9 @@ export default function VerseReadingScreen() {
         }}
       />
 
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Navigation Bar */}
-        <View style={styles.navBar}>
+        <View style={[styles.navBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <TouchableOpacity
             style={styles.navButton}
             onPress={() => navigateChapter('prev')}
@@ -249,16 +251,16 @@ export default function VerseReadingScreen() {
             <Ionicons
               name="chevron-back"
               size={24}
-              color={chapterNum === 1 ? '#BDC3C7' : '#4A90E2'}
+              color={chapterNum === 1 ? colors.textTertiary : colors.primary}
             />
             <Text
-              style={[styles.navButtonText, chapterNum === 1 && styles.navButtonTextDisabled]}
+              style={[styles.navButtonText, { color: chapterNum === 1 ? colors.textTertiary : colors.primary }]}
             >
               Anterior
             </Text>
           </TouchableOpacity>
 
-          <Text style={styles.navTitle}>
+          <Text style={[styles.navTitle, { color: colors.text }]}>
             {bookInfo.name} {chapterNum}
           </Text>
 
@@ -268,17 +270,14 @@ export default function VerseReadingScreen() {
             disabled={chapterNum === bookInfo.chapters}
           >
             <Text
-              style={[
-                styles.navButtonText,
-                chapterNum === bookInfo.chapters && styles.navButtonTextDisabled,
-              ]}
+              style={[styles.navButtonText, { color: chapterNum === bookInfo.chapters ? colors.textTertiary : colors.primary }]}
             >
               Siguiente
             </Text>
             <Ionicons
               name="chevron-forward"
               size={24}
-              color={chapterNum === bookInfo.chapters ? '#BDC3C7' : '#4A90E2'}
+              color={chapterNum === bookInfo.chapters ? colors.textTertiary : colors.primary}
             />
           </TouchableOpacity>
         </View>
@@ -296,45 +295,45 @@ export default function VerseReadingScreen() {
             return (
               <View
                 key={verse.verse}
-                style={[styles.verseItem, isHighlighted && styles.verseItemHighlighted]}
+                style={[styles.verseItem, { backgroundColor: colors.surface }, isHighlighted && { backgroundColor: colors.verseHighlight, borderColor: colors.warning, borderWidth: 2 }]}
               >
                 <View style={styles.verseHeader}>
-                  <Text style={styles.verseNumber}>{verse.verse}</Text>
+                  <Text style={[styles.verseNumber, { color: colors.primary }]}>{verse.verse}</Text>
 
                   <TouchableOpacity onPress={() => toggleBookmark(verse)}>
                     <Ionicons
                       name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
                       size={20}
-                      color={isBookmarked ? '#F39C12' : '#BDC3C7'}
+                      color={isBookmarked ? colors.bookmark : colors.textTertiary}
                     />
                   </TouchableOpacity>
                 </View>
 
-                <Text style={[styles.verseText, { fontSize }]}>{verse.text}</Text>
+                <Text style={[styles.verseText, { fontSize, color: colors.text }]}>{verse.text}</Text>
 
-                <View style={styles.verseActions}>
+                <View style={[styles.verseActions, { borderTopColor: colors.border }]}>
                   <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() => handleCopyVerse(verse)}
                   >
-                    <Ionicons name="copy-outline" size={18} color="#7F8C8D" />
-                    <Text style={styles.actionButtonText}>Copiar</Text>
+                    <Ionicons name="copy-outline" size={18} color={colors.textSecondary} />
+                    <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>Copiar</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() => handleShareVerse(verse)}
                   >
-                    <Ionicons name="share-outline" size={18} color="#7F8C8D" />
-                    <Text style={styles.actionButtonText}>Compartir</Text>
+                    <Ionicons name="share-outline" size={18} color={colors.textSecondary} />
+                    <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>Compartir</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() => handleAddNote(verse)}
                   >
-                    <Ionicons name="create-outline" size={18} color="#7F8C8D" />
-                    <Text style={styles.actionButtonText}>Nota</Text>
+                    <Ionicons name="create-outline" size={18} color={colors.textSecondary} />
+                    <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>Nota</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -349,26 +348,27 @@ export default function VerseReadingScreen() {
           animationType="slide"
           onRequestClose={() => setNoteModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+            <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
                   {selectedVerse
                     ? `${selectedVerse.book} ${selectedVerse.chapter}:${selectedVerse.verse}`
                     : 'Nota'}
                 </Text>
                 <TouchableOpacity onPress={() => setNoteModalVisible(false)}>
-                  <Ionicons name="close" size={24} color="#7F8C8D" />
+                  <Ionicons name="close" size={24} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
               {selectedVerse && (
-                <Text style={styles.modalVerse}>"{selectedVerse.text}"</Text>
+                <Text style={[styles.modalVerse, { color: colors.textSecondary, backgroundColor: colors.surfaceVariant }]}>"{selectedVerse.text}"</Text>
               )}
 
               <TextInput
-                style={styles.noteInput}
+                style={[styles.noteInput, { color: colors.text, borderColor: colors.border }]}
                 placeholder="Escribe tu nota aquí..."
+                placeholderTextColor={colors.textTertiary}
                 value={noteText}
                 onChangeText={setNoteText}
                 multiline
@@ -377,7 +377,7 @@ export default function VerseReadingScreen() {
               />
 
               <TouchableOpacity
-                style={[styles.saveButton, !noteText.trim() && styles.saveButtonDisabled]}
+                style={[styles.saveButton, { backgroundColor: noteText.trim() ? colors.success : colors.textTertiary }]}
                 onPress={saveNote}
                 disabled={!noteText.trim()}
               >

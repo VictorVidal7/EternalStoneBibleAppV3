@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDebouncedCallback } from 'use-debounce';
 import bibleDB from '../../src/lib/database';
 import { BibleVerse } from '../../src/types/bible';
+import { useTheme } from '../../src/hooks/useTheme';
 
 type TestamentFilter = 'all' | 'old' | 'new';
 
@@ -20,6 +21,7 @@ const OLD_TESTAMENT_BOOKS = [
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<BibleVerse[]>([]);
   const [allResults, setAllResults] = useState<BibleVerse[]>([]);
@@ -129,15 +131,18 @@ export default function SearchScreen() {
     return parts.length > 0 ? parts : [{ text, highlight: false }];
   }
 
+  const themedStyles = createThemedStyles(colors, isDark);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Search Input */}
-      <View style={styles.searchContainer}>
+      <View style={themedStyles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color="#7F8C8D" />
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Buscar en toda la Biblia..."
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={handleSearchChange}
             autoCapitalize="none"
@@ -146,12 +151,12 @@ export default function SearchScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => handleSearchChange('')}>
-              <Ionicons name="close-circle" size={20} color="#7F8C8D" />
+              <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
 
-        <Text style={styles.hint}>
+        <Text style={themedStyles.hint}>
           Escribe al menos 3 caracteres para buscar
         </Text>
 
@@ -159,26 +164,26 @@ export default function SearchScreen() {
         {hasSearched && (
           <View style={styles.filtersContainer}>
             <TouchableOpacity
-              style={[styles.filterButton, testamentFilter === 'all' && styles.filterButtonActive]}
+              style={[themedStyles.filterButton, testamentFilter === 'all' && themedStyles.filterButtonActive]}
               onPress={() => handleFilterChange('all')}
             >
-              <Text style={[styles.filterText, testamentFilter === 'all' && styles.filterTextActive]}>
+              <Text style={[themedStyles.filterText, testamentFilter === 'all' && themedStyles.filterTextActive]}>
                 Toda la Biblia
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.filterButton, testamentFilter === 'old' && styles.filterButtonActive]}
+              style={[themedStyles.filterButton, testamentFilter === 'old' && themedStyles.filterButtonActive]}
               onPress={() => handleFilterChange('old')}
             >
-              <Text style={[styles.filterText, testamentFilter === 'old' && styles.filterTextActive]}>
+              <Text style={[themedStyles.filterText, testamentFilter === 'old' && themedStyles.filterTextActive]}>
                 Antiguo T.
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.filterButton, testamentFilter === 'new' && styles.filterButtonActive]}
+              style={[themedStyles.filterButton, testamentFilter === 'new' && themedStyles.filterButtonActive]}
               onPress={() => handleFilterChange('new')}
             >
-              <Text style={[styles.filterText, testamentFilter === 'new' && styles.filterTextActive]}>
+              <Text style={[themedStyles.filterText, testamentFilter === 'new' && themedStyles.filterTextActive]}>
                 Nuevo T.
               </Text>
             </TouchableOpacity>
@@ -189,16 +194,16 @@ export default function SearchScreen() {
       {/* Loading State */}
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4A90E2" />
-          <Text style={styles.loadingText}>Buscando...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={themedStyles.loadingText}>Buscando...</Text>
         </View>
       )}
 
       {/* Results */}
       {!loading && hasSearched && (
         <>
-          <View style={styles.resultsHeader}>
-            <Text style={styles.resultsCount}>
+          <View style={themedStyles.resultsHeader}>
+            <Text style={themedStyles.resultsCount}>
               {results.length > 0
                 ? `${results.length} ${results.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}`
                 : 'No se encontraron resultados'}
@@ -210,22 +215,22 @@ export default function SearchScreen() {
             keyExtractor={(item) => `${item.id}-${item.book}-${item.chapter}-${item.verse}`}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={styles.resultItem}
+                style={themedStyles.resultItem}
                 onPress={() => goToVerse(item)}
                 activeOpacity={0.7}
               >
                 <View style={styles.resultHeader}>
-                  <Text style={styles.resultReference}>
+                  <Text style={themedStyles.resultReference}>
                     {item.book} {item.chapter}:{item.verse}
                   </Text>
-                  <Ionicons name="chevron-forward" size={18} color="#BDC3C7" />
+                  <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
                 </View>
 
-                <Text style={styles.resultText} numberOfLines={3}>
+                <Text style={themedStyles.resultText} numberOfLines={3}>
                   {getHighlightedText(item.text, searchQuery).map((part, index) => (
                     <Text
                       key={index}
-                      style={part.highlight ? styles.highlightedText : undefined}
+                      style={part.highlight ? themedStyles.highlightedText : undefined}
                     >
                       {part.text}
                     </Text>
@@ -237,11 +242,11 @@ export default function SearchScreen() {
             ListEmptyComponent={
               !loading && hasSearched ? (
                 <View style={styles.emptyContainer}>
-                  <Ionicons name="search-outline" size={64} color="#BDC3C7" />
-                  <Text style={styles.emptyText}>
+                  <Ionicons name="search-outline" size={64} color={colors.textTertiary} />
+                  <Text style={themedStyles.emptyText}>
                     No se encontraron resultados para "{searchQuery}"
                   </Text>
-                  <Text style={styles.emptyHint}>
+                  <Text style={themedStyles.emptyHint}>
                     Intenta con otras palabras clave
                   </Text>
                 </View>
@@ -254,21 +259,21 @@ export default function SearchScreen() {
       {/* Initial State */}
       {!loading && !hasSearched && (
         <View style={styles.initialContainer}>
-          <Ionicons name="search" size={80} color="#ECF0F1" />
-          <Text style={styles.initialTitle}>Busca en toda la Biblia</Text>
-          <Text style={styles.initialSubtitle}>
+          <Ionicons name="search" size={80} color={colors.border} />
+          <Text style={themedStyles.initialTitle}>Busca en toda la Biblia</Text>
+          <Text style={themedStyles.initialSubtitle}>
             Encuentra versículos por palabras clave
           </Text>
 
           <View style={styles.suggestionsContainer}>
-            <Text style={styles.suggestionsTitle}>Búsquedas populares:</Text>
+            <Text style={themedStyles.suggestionsTitle}>Búsquedas populares:</Text>
             {['amor', 'fe', 'esperanza', 'paz', 'salvación'].map((suggestion) => (
               <TouchableOpacity
                 key={suggestion}
-                style={styles.suggestionChip}
+                style={themedStyles.suggestionChip}
                 onPress={() => handleSearchChange(suggestion)}
               >
-                <Text style={styles.suggestionText}>{suggestion}</Text>
+                <Text style={themedStyles.suggestionText}>{suggestion}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -278,21 +283,135 @@ export default function SearchScreen() {
   );
 }
 
+function createThemedStyles(colors: any, isDark: boolean) {
+  return StyleSheet.create({
+    searchContainer: {
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    hint: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 8,
+    },
+    filterButton: {
+      flex: 1,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+      backgroundColor: colors.surfaceVariant,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center' as const,
+    },
+    filterButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    filterText: {
+      fontSize: 13,
+      fontWeight: '600' as const,
+      color: colors.textSecondary,
+    },
+    filterTextActive: {
+      color: '#FFFFFF',
+    },
+    loadingText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      marginTop: 16,
+    },
+    resultsHeader: {
+      padding: 16,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    resultsCount: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: colors.primary,
+    },
+    resultItem: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDark ? 0.3 : 0.08,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    resultReference: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: colors.primary,
+    },
+    resultText: {
+      fontSize: 15,
+      lineHeight: 22,
+      color: colors.text,
+    },
+    highlightedText: {
+      backgroundColor: colors.highlight,
+      fontWeight: '600' as const,
+      color: colors.text,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      marginTop: 16,
+      textAlign: 'center' as const,
+    },
+    emptyHint: {
+      fontSize: 14,
+      color: colors.textTertiary,
+      marginTop: 8,
+    },
+    initialTitle: {
+      fontSize: 24,
+      fontWeight: 'bold' as const,
+      color: colors.text,
+      marginTop: 20,
+    },
+    initialSubtitle: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      marginTop: 8,
+      textAlign: 'center' as const,
+    },
+    suggestionsTitle: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: colors.textSecondary,
+      marginBottom: 12,
+    },
+    suggestionChip: {
+      backgroundColor: colors.primaryLight,
+      borderRadius: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      marginBottom: 10,
+    },
+    suggestionText: {
+      fontSize: 15,
+      color: colors.primary,
+      fontWeight: '500' as const,
+    },
+  });
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  searchContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ECF0F1',
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: 'rgba(127, 140, 141, 0.1)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -300,75 +419,20 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#2C3E50',
     marginLeft: 12,
-  },
-  hint: {
-    fontSize: 13,
-    color: '#7F8C8D',
-    marginTop: 8,
   },
   filtersContainer: {
     flexDirection: 'row',
     marginTop: 12,
     gap: 8,
   },
-  filterButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#F8F9FA',
-    borderWidth: 1,
-    borderColor: '#ECF0F1',
-    alignItems: 'center',
-  },
-  filterButtonActive: {
-    backgroundColor: '#4A90E2',
-    borderColor: '#4A90E2',
-  },
-  filterText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#7F8C8D',
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    fontSize: 16,
-    color: '#7F8C8D',
-    marginTop: 16,
-  },
-  resultsHeader: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ECF0F1',
-  },
-  resultsCount: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4A90E2',
-  },
   resultsList: {
     padding: 16,
-  },
-  resultItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
   },
   resultHeader: {
     flexDirection: 'row',
@@ -376,35 +440,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  resultReference: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4A90E2',
-  },
-  resultText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#34495E',
-  },
-  highlightedText: {
-    backgroundColor: '#FFF9C4',
-    fontWeight: '600',
-    color: '#2C3E50',
-  },
   emptyContainer: {
     alignItems: 'center',
     paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#7F8C8D',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  emptyHint: {
-    fontSize: 14,
-    color: '#BDC3C7',
-    marginTop: 8,
   },
   initialContainer: {
     flex: 1,
@@ -412,38 +450,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  initialTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2C3E50',
-    marginTop: 20,
-  },
-  initialSubtitle: {
-    fontSize: 16,
-    color: '#7F8C8D',
-    marginTop: 8,
-    textAlign: 'center',
-  },
   suggestionsContainer: {
     marginTop: 40,
     alignItems: 'center',
-  },
-  suggestionsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#7F8C8D',
-    marginBottom: 12,
-  },
-  suggestionChip: {
-    backgroundColor: '#E8F4FD',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginBottom: 10,
-  },
-  suggestionText: {
-    fontSize: 15,
-    color: '#4A90E2',
-    fontWeight: '500',
   },
 });

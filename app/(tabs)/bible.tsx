@@ -2,9 +2,11 @@ import { View, Text, StyleSheet, SectionList, TouchableOpacity } from 'react-nat
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BIBLE_BOOKS } from '../../src/constants/bible';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function BibleScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
 
   const oldTestament = BIBLE_BOOKS.filter((book) => book.testament === 'old');
   const newTestament = BIBLE_BOOKS.filter((book) => book.testament === 'new');
@@ -19,12 +21,12 @@ export default function BibleScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id.toString()}
         renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
+          <View style={[styles.sectionHeader, { backgroundColor: colors.primary }]}>
             <Ionicons
               name={section.title.includes('Antiguo') ? 'book' : 'heart'}
               size={20}
@@ -38,22 +40,22 @@ export default function BibleScreen() {
         )}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.bookItem}
+            style={[styles.bookItem, { backgroundColor: colors.surface }]}
             onPress={() => goToChapterSelection(item.name)}
             activeOpacity={0.7}
           >
-            <View style={styles.bookIconContainer}>
-              <Text style={styles.bookIcon}>{item.abbr}</Text>
+            <View style={[styles.bookIconContainer, { backgroundColor: colors.primaryLight }]}>
+              <Text style={[styles.bookIcon, { color: colors.primary }]}>{item.abbr}</Text>
             </View>
 
             <View style={styles.bookInfo}>
-              <Text style={styles.bookName}>{item.name}</Text>
-              <Text style={styles.bookChapters}>
+              <Text style={[styles.bookName, { color: colors.text }]}>{item.name}</Text>
+              <Text style={[styles.bookChapters, { color: colors.textSecondary }]}>
                 {item.chapters} {item.chapters === 1 ? 'capítulo' : 'capítulos'}
               </Text>
             </View>
 
-            <Ionicons name="chevron-forward" size={20} color="#BDC3C7" />
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         )}
         stickySectionHeadersEnabled
@@ -66,7 +68,6 @@ export default function BibleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   listContent: {
     padding: 16,
@@ -74,7 +75,6 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4A90E2',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -94,7 +94,6 @@ const styles = StyleSheet.create({
   bookItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
@@ -108,7 +107,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#E8F4FD',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -116,7 +114,6 @@ const styles = StyleSheet.create({
   bookIcon: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#4A90E2',
   },
   bookInfo: {
     flex: 1,
@@ -124,11 +121,9 @@ const styles = StyleSheet.create({
   bookName: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#2C3E50',
     marginBottom: 4,
   },
   bookChapters: {
     fontSize: 14,
-    color: '#7F8C8D',
   },
 });

@@ -5,9 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import bibleDB from '../../src/lib/database';
 import { Bookmark } from '../../src/types/bible';
 import { useCallback } from 'react';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function BookmarksScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,32 +54,32 @@ export default function BookmarksScreen() {
   }
 
   if (loading) {
-    return <View style={styles.container} />;
+    return <View style={[styles.container, { backgroundColor: colors.background }]} />;
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={bookmarks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.bookmarkItem}
+            style={[styles.bookmarkItem, { backgroundColor: colors.surface }]}
             onPress={() => goToVerse(item)}
             activeOpacity={0.7}
           >
-            <View style={styles.bookmarkIcon}>
-              <Ionicons name="bookmark" size={20} color="#4A90E2" />
+            <View style={[styles.bookmarkIcon, { backgroundColor: colors.primaryLight }]}>
+              <Ionicons name="bookmark" size={20} color={colors.primary} />
             </View>
 
             <View style={styles.bookmarkContent}>
-              <Text style={styles.bookmarkReference}>
+              <Text style={[styles.bookmarkReference, { color: colors.primary }]}>
                 {item.book} {item.chapter}:{item.verse}
               </Text>
-              <Text style={styles.bookmarkText} numberOfLines={2}>
+              <Text style={[styles.bookmarkText, { color: colors.text }]} numberOfLines={2}>
                 {item.text}
               </Text>
-              <Text style={styles.bookmarkDate}>
+              <Text style={[styles.bookmarkDate, { color: colors.textSecondary }]}>
                 {new Date(item.createdAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
@@ -90,16 +92,16 @@ export default function BookmarksScreen() {
               style={styles.deleteButton}
               onPress={() => handleDelete(item.id)}
             >
-              <Ionicons name="trash-outline" size={20} color="#E74C3C" />
+              <Ionicons name="trash-outline" size={20} color={colors.error} />
             </TouchableOpacity>
           </TouchableOpacity>
         )}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="bookmark-outline" size={80} color="#ECF0F1" />
-            <Text style={styles.emptyTitle}>No tienes favoritos</Text>
-            <Text style={styles.emptySubtitle}>
+            <Ionicons name="bookmark-outline" size={80} color={colors.border} />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No tienes favoritos</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               Toca el ícono de estrella al leer versículos para guardarlos aquí
             </Text>
           </View>

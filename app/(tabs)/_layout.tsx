@@ -1,16 +1,19 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function TabLayout() {
+  const { colors, isDark } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#4A90E2',
-        tabBarInactiveTintColor: '#95A5A6',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#ECF0F1',
+          borderTopColor: colors.border,
           paddingBottom: 5,
           paddingTop: 5,
           height: 60,
@@ -20,7 +23,7 @@ export default function TabLayout() {
           fontWeight: '600',
         },
         headerStyle: {
-          backgroundColor: '#4A90E2',
+          backgroundColor: colors.primary,
         },
         headerTintColor: '#FFFFFF',
         headerTitleStyle: {
@@ -81,6 +84,17 @@ export default function TabLayout() {
             <Ionicons name="create" size={size} color={color} />
           ),
           headerTitle: 'Mis Notas',
+        }}
+      />
+
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Ajustes',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings" size={size} color={color} />
+          ),
+          headerTitle: 'Configuración',
         }}
       />
     </Tabs>
