@@ -12,14 +12,17 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useBibleVersion } from '../../src/hooks/useBibleVersion';
+import { useLanguage } from '../../src/hooks/useLanguage';
 import { resetBibleData } from '../../src/lib/database/data-loader';
 import * as Haptics from 'expo-haptics';
+import type { Language } from '../../src/i18n/translations';
 
 type ThemeOption = 'light' | 'dark' | 'auto';
 
 export default function SettingsScreen() {
   const { mode, setThemeMode, isDark, colors } = useTheme();
   const { selectedVersion, setVersion, availableVersions } = useBibleVersion();
+  const { language, setLanguage, t } = useLanguage();
   const [isResetting, setIsResetting] = useState(false);
 
   async function handleThemeChange(newMode: ThemeOption) {
