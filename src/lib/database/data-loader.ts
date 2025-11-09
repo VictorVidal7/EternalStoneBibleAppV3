@@ -88,7 +88,10 @@ export async function checkDataStatus(): Promise<{
   return { isLoaded: false };
 }
 
-export async function resetBibleData(): Promise<void> {
+export async function resetBibleData(options?: {
+  includeNotes?: boolean;
+  includeBookmarks?: boolean;
+}): Promise<void> {
   console.log('🔄 Resetting Bible data...');
 
   // Limpiar flag de AsyncStorage
@@ -97,11 +100,28 @@ export async function resetBibleData(): Promise<void> {
   // Limpiar la base de datos
   try {
     const db = await bibleDB.getDatabase();
+
+    // Siempre borrar versículos
     await db.execAsync('DELETE FROM verses;');
     await db.execAsync('DELETE FROM verses_fts;');
+    console.log('✅ Verses cleared');
+
+    // Opcionalmente borrar notas
+    if (options?.includeNotes) {
+      await db.execAsync('DELETE FROM notes;');
+      console.log('✅ Notes cleared');
+    }
+
+    // Opcionalmente borrar favoritos
+    if (options?.includeBookmarks) {
+      await db.execAsync('DELETE FROM bookmarks;');
+      console.log('✅ Bookmarks cleared');
+    }
+
     console.log('✅ Database cleared successfully');
   } catch (error) {
     console.error('❌ Error clearing database:', error);
+    throw error;
   }
 
   console.log('✅ Bible data reset complete - app will reload data on next launch');

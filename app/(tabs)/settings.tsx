@@ -30,10 +30,43 @@ export default function SettingsScreen() {
     await setThemeMode(newMode);
   }
 
-  async function handleResetData() {
+  function handleResetData() {
+    // Primer diálogo: Elegir qué borrar
+    Alert.alert(
+      t.settings.resetOptionsTitle,
+      t.settings.resetOptionsMessage,
+      [
+        { text: t.cancel, style: 'cancel' },
+        {
+          text: t.settings.resetOnlyVerses,
+          onPress: () => confirmReset({ includeNotes: false, includeBookmarks: false }),
+        },
+        {
+          text: t.settings.resetWithNotes,
+          onPress: () => confirmReset({ includeNotes: true, includeBookmarks: false }),
+        },
+        {
+          text: t.settings.resetWithBookmarks,
+          onPress: () => confirmReset({ includeNotes: false, includeBookmarks: true }),
+        },
+        {
+          text: t.settings.resetEverything,
+          style: 'destructive',
+          onPress: () => confirmReset({ includeNotes: true, includeBookmarks: true }),
+        },
+      ]
+    );
+  }
+
+  function confirmReset(options: { includeNotes: boolean; includeBookmarks: boolean }) {
+    // Segundo diálogo: Confirmación final
+    const itemsToDelete = ['Versículos'];
+    if (options.includeNotes) itemsToDelete.push('Notas');
+    if (options.includeBookmarks) itemsToDelete.push('Favoritos');
+
     Alert.alert(
       t.settings.resetTitle,
-      t.settings.resetMessage,
+      `${t.settings.resetMessage}\n\nSe borrarán: ${itemsToDelete.join(', ')}`,
       [
         { text: t.cancel, style: 'cancel' },
         {
@@ -42,7 +75,7 @@ export default function SettingsScreen() {
           onPress: async () => {
             setIsResetting(true);
             try {
-              await resetBibleData();
+              await resetBibleData(options);
               Alert.alert(
                 t.settings.resetSuccess,
                 t.settings.resetSuccessMessage,
