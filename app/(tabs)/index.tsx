@@ -6,24 +6,26 @@ import bibleDB from '../../src/lib/database';
 import { BibleVerse, ReadingProgress } from '../../src/types/bible';
 import { READING_PLANS } from '../../src/constants/reading-plans';
 import { useTheme } from '../../src/hooks/useTheme';
+import { useBibleVersion } from '../../src/hooks/useBibleVersion';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { selectedVersion } = useBibleVersion();
   const [dailyVerse, setDailyVerse] = useState<BibleVerse | null>(null);
   const [lastRead, setLastRead] = useState<ReadingProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadHomeData();
-  }, []);
+  }, [selectedVersion.id]);
 
   async function loadHomeData() {
     try {
       await bibleDB.initialize();
 
       // Get daily verse (random for now, can be improved with actual daily logic)
-      const verse = await bibleDB.getRandomVerse();
+      const verse = await bibleDB.getRandomVerse(selectedVersion.id);
       setDailyVerse(verse);
 
       // Get last reading position

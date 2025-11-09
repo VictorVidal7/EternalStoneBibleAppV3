@@ -11,13 +11,18 @@ import {
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/hooks/useTheme';
+import { useBibleVersion } from '../../src/hooks/useBibleVersion';
+import { useLanguage } from '../../src/hooks/useLanguage';
 import { resetBibleData } from '../../src/lib/database/data-loader';
 import * as Haptics from 'expo-haptics';
+import type { Language } from '../../src/i18n/translations';
 
 type ThemeOption = 'light' | 'dark' | 'auto';
 
 export default function SettingsScreen() {
   const { mode, setThemeMode, isDark, colors } = useTheme();
+  const { selectedVersion, setVersion, availableVersions } = useBibleVersion();
+  const { language, setLanguage, t } = useLanguage();
   const [isResetting, setIsResetting] = useState(false);
 
   async function handleThemeChange(newMode: ThemeOption) {
@@ -27,24 +32,24 @@ export default function SettingsScreen() {
 
   async function handleResetData() {
     Alert.alert(
-      'Resetear Datos',
-      '¿Estás seguro de que quieres resetear todos los datos de la Biblia? La app se recargará automáticamente.',
+      t.settings.resetTitle,
+      t.settings.resetMessage,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Resetear',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             setIsResetting(true);
             try {
               await resetBibleData();
               Alert.alert(
-                'Datos Reseteados',
-                'Por favor, cierra y vuelve a abrir la aplicación para recargar los datos.',
+                t.settings.resetSuccess,
+                t.settings.resetSuccessMessage,
                 [{ text: 'OK' }]
               );
             } catch (error) {
-              Alert.alert('Error', 'Hubo un error al resetear los datos.');
+              Alert.alert(t.error, 'Error resetting data.');
             } finally {
               setIsResetting(false);
             }
@@ -66,13 +71,13 @@ export default function SettingsScreen() {
       <View style={themedStyles.section}>
         <View style={themedStyles.sectionHeader}>
           <Ionicons name="color-palette-outline" size={22} color={colors.primary} />
-          <Text style={themedStyles.sectionTitle}>Apariencia</Text>
+          <Text style={themedStyles.sectionTitle}>{t.settings.appearance}</Text>
         </View>
 
         <View style={themedStyles.card}>
-          <Text style={themedStyles.settingLabel}>Tema</Text>
+          <Text style={themedStyles.settingLabel}>{t.settings.theme}</Text>
           <Text style={themedStyles.settingDescription}>
-            Elige el tema de la aplicación
+            {t.settings.themeDescription}
           </Text>
 
           <View style={themedStyles.themeOptions}>
@@ -94,7 +99,7 @@ export default function SettingsScreen() {
                   mode === 'light' && themedStyles.themeOptionTextActive,
                 ]}
               >
-                Claro
+                {t.settings.themeLight}
               </Text>
             </TouchableOpacity>
 
@@ -116,7 +121,7 @@ export default function SettingsScreen() {
                   mode === 'dark' && themedStyles.themeOptionTextActive,
                 ]}
               >
-                Oscuro
+                {t.settings.themeDark}
               </Text>
             </TouchableOpacity>
 
@@ -138,7 +143,7 @@ export default function SettingsScreen() {
                   mode === 'auto' && themedStyles.themeOptionTextActive,
                 ]}
               >
-                Auto
+                {t.settings.themeAuto}
               </Text>
             </TouchableOpacity>
           </View>
@@ -149,25 +154,155 @@ export default function SettingsScreen() {
       <View style={themedStyles.section}>
         <View style={themedStyles.sectionHeader}>
           <Ionicons name="book-outline" size={22} color={colors.primary} />
-          <Text style={themedStyles.sectionTitle}>Versión de la Biblia</Text>
+          <Text style={themedStyles.sectionTitle}>{t.settings.bibleVersion}</Text>
         </View>
 
         <View style={themedStyles.card}>
-          <View style={themedStyles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={themedStyles.settingLabel}>Versión Actual</Text>
-              <Text style={themedStyles.settingValue}>RVR1960</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
-          </View>
+          <Text style={themedStyles.settingLabel}>{t.settings.selectVersion}</Text>
           <Text style={themedStyles.settingDescription}>
-            Reina-Valera 1960
+            {t.settings.versionDescription}
           </Text>
-          <View style={themedStyles.comingSoon}>
-            <Ionicons name="time-outline" size={16} color={colors.warning} />
-            <Text style={themedStyles.comingSoonText}>
-              Próximamente: NTV (Nueva Traducción Viviente) y NLT (New Living Translation)
-            </Text>
+
+          <View style={themedStyles.versionOptions}>
+            {availableVersions.map((version) => (
+              <TouchableOpacity
+                key={version.id}
+                style={[
+                  themedStyles.versionOption,
+                  selectedVersion.id === version.id && themedStyles.versionOptionActive,
+                ]}
+                onPress={async () => {
+                  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  await setVersion(version.id);
+                }}
+              >
+                <View style={styles.versionOptionContent}>
+                  <View style={styles.versionHeader}>
+                    <Text
+                      style={[
+                        themedStyles.versionAbbr,
+                        selectedVersion.id === version.id && themedStyles.versionAbbrActive,
+                      ]}
+                    >
+                      {version.abbreviation}
+                    </Text>
+                    {selectedVersion.id === version.id && (
+                      <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      themedStyles.versionName,
+                      selectedVersion.id === version.id && themedStyles.versionNameActive,
+                    ]}
+                  >
+                    {version.name}
+                  </Text>
+                  <View style={styles.versionMeta}>
+                    <Ionicons
+                      name="language-outline"
+                      size={12}
+                      color={selectedVersion.id === version.id ? colors.primary : colors.textTertiary}
+                    />
+                    <Text
+                      style={[
+                        themedStyles.versionMetaText,
+                        selectedVersion.id === version.id && themedStyles.versionMetaActive,
+                      ]}
+                    >
+                      {version.language === 'es' ? 'Español' : 'English'}
+                    </Text>
+                    {version.year && (
+                      <>
+                        <Text style={themedStyles.versionMetaText}> • </Text>
+                        <Text
+                          style={[
+                            themedStyles.versionMetaText,
+                            selectedVersion.id === version.id && themedStyles.versionMetaActive,
+                          ]}
+                        >
+                          {version.year}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                  {version.id !== 'RVR1960' && (
+                    <View style={themedStyles.comingSoonBadge}>
+                      <Text style={themedStyles.comingSoonBadgeText}>{t.settings.comingSoon}</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+
+      {/* Language Section */}
+      <View style={themedStyles.section}>
+        <View style={themedStyles.sectionHeader}>
+          <Ionicons name="language-outline" size={22} color={colors.primary} />
+          <Text style={themedStyles.sectionTitle}>{t.settings.language}</Text>
+        </View>
+
+        <View style={themedStyles.card}>
+          <Text style={themedStyles.settingLabel}>{t.settings.selectLanguage}</Text>
+          <Text style={themedStyles.settingDescription}>
+            {t.settings.languageDescription}
+          </Text>
+
+          <View style={themedStyles.languageOptions}>
+            <TouchableOpacity
+              style={[
+                themedStyles.languageOption,
+                language === 'es' && themedStyles.languageOptionActive,
+              ]}
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                await setLanguage('es');
+              }}
+            >
+              <View style={styles.languageContent}>
+                <Text style={themedStyles.languageFlag}>🇪🇸</Text>
+                <Text
+                  style={[
+                    themedStyles.languageName,
+                    language === 'es' && themedStyles.languageNameActive,
+                  ]}
+                >
+                  Español
+                </Text>
+                {language === 'es' && (
+                  <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                themedStyles.languageOption,
+                language === 'en' && themedStyles.languageOptionActive,
+              ]}
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                await setLanguage('en');
+              }}
+            >
+              <View style={styles.languageContent}>
+                <Text style={themedStyles.languageFlag}>🇺🇸</Text>
+                <Text
+                  style={[
+                    themedStyles.languageName,
+                    language === 'en' && themedStyles.languageNameActive,
+                  ]}
+                >
+                  English
+                </Text>
+                {language === 'en' && (
+                  <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                )}
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -176,7 +311,7 @@ export default function SettingsScreen() {
       <View style={themedStyles.section}>
         <View style={themedStyles.sectionHeader}>
           <Ionicons name="server-outline" size={22} color={colors.primary} />
-          <Text style={themedStyles.sectionTitle}>Datos</Text>
+          <Text style={themedStyles.sectionTitle}>{t.settings.data}</Text>
         </View>
 
         <TouchableOpacity
@@ -187,10 +322,10 @@ export default function SettingsScreen() {
           <View style={themedStyles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={[themedStyles.settingLabel, { color: colors.error }]}>
-                {isResetting ? 'Reseteando...' : 'Resetear Datos de la Biblia'}
+                {isResetting ? t.settings.resetting : t.settings.resetData}
               </Text>
               <Text style={themedStyles.settingDescription}>
-                Elimina y recarga todos los versículos
+                {t.settings.resetDescription}
               </Text>
             </View>
             <Ionicons name="trash-outline" size={20} color={colors.error} />
@@ -202,24 +337,24 @@ export default function SettingsScreen() {
       <View style={themedStyles.section}>
         <View style={themedStyles.sectionHeader}>
           <Ionicons name="information-circle-outline" size={22} color={colors.primary} />
-          <Text style={themedStyles.sectionTitle}>Acerca de</Text>
+          <Text style={themedStyles.sectionTitle}>{t.settings.about}</Text>
         </View>
 
         <View style={themedStyles.card}>
           <View style={themedStyles.aboutRow}>
             <Text style={themedStyles.settingLabel}>Eternal Bible</Text>
-            <Text style={themedStyles.settingValue}>v3.0.0</Text>
+            <Text style={themedStyles.settingValue}>{t.settings.version} 3.0.0</Text>
           </View>
 
           <View style={themedStyles.aboutRow}>
             <Text style={themedStyles.settingDescription}>
-              Una aplicación de lectura de la Biblia diseñada para acercarte a la Palabra de Dios.
+              {t.settings.description}
             </Text>
           </View>
 
           <TouchableOpacity style={themedStyles.linkButton} onPress={handleOpenGitHub}>
             <Ionicons name="logo-github" size={20} color={colors.primary} />
-            <Text style={themedStyles.linkText}>Ver en GitHub</Text>
+            <Text style={themedStyles.linkText}>{t.settings.viewGitHub}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -227,11 +362,10 @@ export default function SettingsScreen() {
       {/* Footer */}
       <View style={themedStyles.footer}>
         <Text style={themedStyles.footerText}>
-          Hecho con ❤️ para la gloria de Dios
+          {t.settings.footerText}
         </Text>
         <Text style={themedStyles.footerVerse}>
-          "Toda la Escritura es inspirada por Dios"{'\n'}
-          - 2 Timoteo 3:16
+          {t.settings.footerVerse}
         </Text>
       </View>
     </ScrollView>
@@ -244,6 +378,25 @@ const styles = StyleSheet.create({
   },
   settingInfo: {
     flex: 1,
+  },
+  versionOptionContent: {
+    flex: 1,
+  },
+  versionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  versionMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  languageContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
 });
 
@@ -338,6 +491,86 @@ function createThemedStyles(colors: any, isDark: boolean) {
       marginLeft: 8,
       flex: 1,
       lineHeight: 18,
+    },
+    versionOptions: {
+      marginTop: 16,
+      gap: 12,
+    },
+    versionOption: {
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: colors.surfaceVariant,
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    versionOptionActive: {
+      backgroundColor: colors.primaryLight,
+      borderColor: colors.primary,
+    },
+    versionAbbr: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    versionAbbrActive: {
+      color: colors.primary,
+    },
+    versionName: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    versionNameActive: {
+      color: colors.text,
+      fontWeight: '500',
+    },
+    versionMetaText: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      marginLeft: 4,
+    },
+    versionMetaActive: {
+      color: colors.primary,
+    },
+    comingSoonBadge: {
+      marginTop: 10,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      backgroundColor: colors.warning + '20',
+      borderRadius: 6,
+      alignSelf: 'flex-start',
+    },
+    comingSoonBadgeText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.warning,
+    },
+    languageOptions: {
+      marginTop: 16,
+      gap: 12,
+    },
+    languageOption: {
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: colors.surfaceVariant,
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    languageOptionActive: {
+      backgroundColor: colors.primaryLight,
+      borderColor: colors.primary,
+    },
+    languageFlag: {
+      fontSize: 28,
+    },
+    languageName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      flex: 1,
+    },
+    languageNameActive: {
+      color: colors.primary,
     },
     aboutRow: {
       marginBottom: 12,
