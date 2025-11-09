@@ -3,26 +3,40 @@ import bibleDB from './index';
 
 const DATA_LOADED_KEY = '@bible_data_loaded_v2'; // v2 to support multiple versions
 
-// Available Bible versions with their data files
+// Helper function to load version data
+// Metro bundler doesn't support dynamic imports with variables,
+// so we need to use explicit imports
+async function loadVersionData(versionId: string) {
+  switch (versionId) {
+    case 'RVR1960':
+      const { RVR1960_DATA } = await import('./bible-data-rvr1960');
+      return RVR1960_DATA;
+    case 'NLT':
+      const { NLT_DATA } = await import('./bible-data-nlt');
+      return NLT_DATA;
+    // Add more versions here as needed
+    // case 'KJV':
+    //   const { KJV_DATA } = await import('./bible-data-kjv');
+    //   return KJV_DATA;
+    default:
+      throw new Error(`Unknown version: ${versionId}`);
+  }
+}
+
+// Available Bible versions
 const BIBLE_VERSIONS = [
   {
     id: 'RVR1960',
     name: 'Reina Valera 1960',
-    dataFile: './bible-data-rvr1960',
-    exportName: 'RVR1960_DATA',
   },
   {
     id: 'NLT',
     name: 'New Living Translation',
-    dataFile: './bible-data-nlt',
-    exportName: 'NLT_DATA',
   },
   // Add more versions here as data files become available
   // {
   //   id: 'KJV',
   //   name: 'King James Version',
-  //   dataFile: './bible-data-kjv',
-  //   exportName: 'KJV_DATA',
   // },
 ];
 
@@ -50,9 +64,8 @@ export async function initializeBibleData(
       try {
         console.log(`📖 Loading ${version.name} (${version.id})...`);
 
-        // Importación dinámica para evitar cargar MB innecesariamente
-        const module = await import(version.dataFile);
-        const versionData = module[version.exportName];
+        // Load version data using explicit imports
+        const versionData = await loadVersionData(version.id);
 
         if (!versionData || !Array.isArray(versionData)) {
           console.warn(`⚠️  Skipping ${version.id}: Invalid data format`);
