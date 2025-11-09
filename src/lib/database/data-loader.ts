@@ -1,6 +1,7 @@
 ﻿import AsyncStorage from '@react-native-async-storage/async-storage';
 import { bibleDB } from './index';
 
+// Force Metro to rebuild this module
 const DATA_LOADED_KEY = '@bible_data_loaded_rvr1960';
 
 export async function initializeBibleData(
