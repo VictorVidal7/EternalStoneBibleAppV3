@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import bibleDB from '../../src/lib/database';
 import { BibleVerse, ReadingProgress } from '../../src/types/bible';
+import { READING_PLANS } from '../../src/constants/reading-plans';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -104,6 +105,47 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
       )}
+
+      {/* Reading Plans */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="calendar-outline" size={20} color="#9B59B6" />
+          <Text style={styles.cardTitle}>Planes de Lectura</Text>
+        </View>
+
+        <Text style={styles.sectionDescription}>
+          Sigue un plan estructurado para leer la Biblia
+        </Text>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.plansScrollView}
+          contentContainerStyle={styles.plansScrollContent}
+        >
+          {READING_PLANS.map((plan) => (
+            <TouchableOpacity
+              key={plan.id}
+              style={[styles.planCard, { borderLeftColor: plan.color }]}
+              onPress={() => {
+                // TODO: Navigate to plan details
+                router.push(`/chapter/${plan.days[0].readings[0].book}` as any);
+              }}
+            >
+              <View style={[styles.planIcon, { backgroundColor: plan.color + '20' }]}>
+                <Ionicons name={plan.icon as any} size={24} color={plan.color} />
+              </View>
+              <Text style={styles.planName} numberOfLines={2}>
+                {plan.name}
+              </Text>
+              <Text style={styles.planDuration}>{plan.duration} días</Text>
+              <Text style={styles.planDescription} numberOfLines={2}>
+                {plan.description}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       {/* Quick Access */}
       <View style={styles.card}>
@@ -295,6 +337,54 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 8,
     textAlign: 'center',
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#7F8C8D',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  plansScrollView: {
+    marginHorizontal: -20,
+    marginBottom: -10,
+  },
+  plansScrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  planCard: {
+    width: 200,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    marginRight: 12,
+    borderLeftWidth: 4,
+  },
+  planIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  planName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2C3E50',
+    marginBottom: 6,
+    minHeight: 40,
+  },
+  planDuration: {
+    fontSize: 13,
+    color: '#7F8C8D',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  planDescription: {
+    fontSize: 13,
+    color: '#95A5A6',
+    lineHeight: 18,
   },
   footerQuote: {
     alignItems: 'center',
