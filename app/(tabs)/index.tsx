@@ -5,9 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import bibleDB from '../../src/lib/database';
 import { BibleVerse, ReadingProgress } from '../../src/types/bible';
 import { READING_PLANS } from '../../src/constants/reading-plans';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [dailyVerse, setDailyVerse] = useState<BibleVerse | null>(null);
   const [lastRead, setLastRead] = useState<ReadingProgress | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,73 +49,75 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4A90E2" />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
+  const themedStyles = createThemedStyles(colors);
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.contentContainer}>
       {/* Welcome Section */}
-      <View style={styles.welcomeCard}>
-        <Text style={styles.welcomeTitle}>Bienvenido a Eternal Bible</Text>
-        <Text style={styles.welcomeSubtitle}>
+      <View style={themedStyles.welcomeCard}>
+        <Text style={themedStyles.welcomeTitle}>Bienvenido a Eternal Bible</Text>
+        <Text style={themedStyles.welcomeSubtitle}>
           Que la Palabra de Dios ilumine tu día
         </Text>
       </View>
 
       {/* Daily Verse */}
       {dailyVerse && (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="sparkles" size={20} color="#F39C12" />
-            <Text style={styles.cardTitle}>Versículo del Día</Text>
+        <View style={themedStyles.card}>
+          <View style={themedStyles.cardHeader}>
+            <Ionicons name="sparkles" size={20} color={colors.warning} />
+            <Text style={themedStyles.cardTitle}>Versículo del Día</Text>
           </View>
 
-          <Text style={styles.verseText}>"{dailyVerse.text}"</Text>
+          <Text style={themedStyles.verseText}>"{dailyVerse.text}"</Text>
 
-          <Text style={styles.verseReference}>
+          <Text style={themedStyles.verseReference}>
             {dailyVerse.book} {dailyVerse.chapter}:{dailyVerse.verse}
           </Text>
 
           <TouchableOpacity
-            style={styles.verseButton}
+            style={themedStyles.verseButton}
             onPress={() => router.push(`/verse/${dailyVerse.book}/${dailyVerse.chapter}` as any)}
           >
-            <Text style={styles.verseButtonText}>Leer Capítulo Completo</Text>
-            <Ionicons name="arrow-forward" size={16} color="#4A90E2" />
+            <Text style={themedStyles.verseButtonText}>Leer Capítulo Completo</Text>
+            <Ionicons name="arrow-forward" size={16} color={colors.primary} />
           </TouchableOpacity>
         </View>
       )}
 
       {/* Continue Reading */}
       {lastRead && (
-        <TouchableOpacity style={styles.card} onPress={goToLastRead}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="book-outline" size={20} color="#27AE60" />
-            <Text style={styles.cardTitle}>Continuar Leyendo</Text>
+        <TouchableOpacity style={themedStyles.card} onPress={goToLastRead}>
+          <View style={themedStyles.cardHeader}>
+            <Ionicons name="book-outline" size={20} color={colors.success} />
+            <Text style={themedStyles.cardTitle}>Continuar Leyendo</Text>
           </View>
 
-          <Text style={styles.continueText}>
+          <Text style={themedStyles.continueText}>
             {lastRead.book} {lastRead.chapter}:{lastRead.verse}
           </Text>
 
-          <View style={styles.continueButton}>
-            <Text style={styles.continueButtonText}>Continuar</Text>
+          <View style={themedStyles.continueButton}>
+            <Text style={themedStyles.continueButtonText}>Continuar</Text>
             <Ionicons name="play-circle" size={24} color="#FFFFFF" />
           </View>
         </TouchableOpacity>
       )}
 
       {/* Reading Plans */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="calendar-outline" size={20} color="#9B59B6" />
-          <Text style={styles.cardTitle}>Planes de Lectura</Text>
+      <View style={themedStyles.card}>
+        <View style={themedStyles.cardHeader}>
+          <Ionicons name="calendar-outline" size={20} color={colors.accent} />
+          <Text style={themedStyles.cardTitle}>Planes de Lectura</Text>
         </View>
 
-        <Text style={styles.sectionDescription}>
+        <Text style={themedStyles.sectionDescription}>
           Sigue un plan estructurado para leer la Biblia
         </Text>
 
@@ -126,7 +130,7 @@ export default function HomeScreen() {
           {READING_PLANS.map((plan) => (
             <TouchableOpacity
               key={plan.id}
-              style={[styles.planCard, { borderLeftColor: plan.color }]}
+              style={[themedStyles.planCard, { borderLeftColor: plan.color }]}
               onPress={() => {
                 // TODO: Navigate to plan details
                 router.push(`/chapter/${plan.days[0].readings[0].book}` as any);
@@ -135,11 +139,11 @@ export default function HomeScreen() {
               <View style={[styles.planIcon, { backgroundColor: plan.color + '20' }]}>
                 <Ionicons name={plan.icon as any} size={24} color={plan.color} />
               </View>
-              <Text style={styles.planName} numberOfLines={2}>
+              <Text style={themedStyles.planName} numberOfLines={2}>
                 {plan.name}
               </Text>
-              <Text style={styles.planDuration}>{plan.duration} días</Text>
-              <Text style={styles.planDescription} numberOfLines={2}>
+              <Text style={themedStyles.planDuration}>{plan.duration} días</Text>
+              <Text style={themedStyles.planDescription} numberOfLines={2}>
                 {plan.description}
               </Text>
             </TouchableOpacity>
@@ -148,66 +152,66 @@ export default function HomeScreen() {
       </View>
 
       {/* Quick Access */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="flash" size={20} color="#E74C3C" />
-          <Text style={styles.cardTitle}>Acceso Rápido</Text>
+      <View style={themedStyles.card}>
+        <View style={themedStyles.cardHeader}>
+          <Ionicons name="flash" size={20} color={colors.error} />
+          <Text style={themedStyles.cardTitle}>Acceso Rápido</Text>
         </View>
 
         <View style={styles.quickAccessGrid}>
           <TouchableOpacity
-            style={styles.quickAccessItem}
+            style={themedStyles.quickAccessItem}
             onPress={() => goToBook('Génesis')}
           >
             <Ionicons name="star" size={28} color="#3498DB" />
-            <Text style={styles.quickAccessText}>Génesis</Text>
+            <Text style={themedStyles.quickAccessText}>Génesis</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.quickAccessItem}
+            style={themedStyles.quickAccessItem}
             onPress={() => goToBook('Salmos')}
           >
             <Ionicons name="musical-notes" size={28} color="#9B59B6" />
-            <Text style={styles.quickAccessText}>Salmos</Text>
+            <Text style={themedStyles.quickAccessText}>Salmos</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.quickAccessItem}
+            style={themedStyles.quickAccessItem}
             onPress={() => goToBook('Proverbios')}
           >
             <Ionicons name="bulb" size={28} color="#F39C12" />
-            <Text style={styles.quickAccessText}>Proverbios</Text>
+            <Text style={themedStyles.quickAccessText}>Proverbios</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.quickAccessItem}
+            style={themedStyles.quickAccessItem}
             onPress={() => goToBook('Juan')}
           >
             <Ionicons name="heart" size={28} color="#E74C3C" />
-            <Text style={styles.quickAccessText}>Juan</Text>
+            <Text style={themedStyles.quickAccessText}>Juan</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.quickAccessItem}
+            style={themedStyles.quickAccessItem}
             onPress={() => goToBook('Romanos')}
           >
             <Ionicons name="book" size={28} color="#1ABC9C" />
-            <Text style={styles.quickAccessText}>Romanos</Text>
+            <Text style={themedStyles.quickAccessText}>Romanos</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.quickAccessItem}
+            style={themedStyles.quickAccessItem}
             onPress={() => goToBook('Apocalipsis')}
           >
             <Ionicons name="flame" size={28} color="#E67E22" />
-            <Text style={styles.quickAccessText}>Apocalipsis</Text>
+            <Text style={themedStyles.quickAccessText}>Apocalipsis</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Footer Quote */}
       <View style={styles.footerQuote}>
-        <Text style={styles.footerQuoteText}>
+        <Text style={themedStyles.footerQuoteText}>
           "Tu palabra es verdad" - Juan 17:17
         </Text>
       </View>
@@ -215,10 +219,155 @@ export default function HomeScreen() {
   );
 }
 
+function createThemedStyles(colors: any) {
+  return StyleSheet.create({
+    welcomeCard: {
+      backgroundColor: colors.primary,
+      borderRadius: 16,
+      padding: 24,
+      marginBottom: 16,
+      alignItems: 'center' as const,
+    },
+    welcomeTitle: {
+      fontSize: 24,
+      fontWeight: 'bold' as const,
+      color: '#FFFFFF',
+      marginBottom: 8,
+      textAlign: 'center' as const,
+    },
+    welcomeSubtitle: {
+      fontSize: 16,
+      color: '#ECF0F1',
+      textAlign: 'center' as const,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 20,
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    cardHeader: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      marginBottom: 16,
+    },
+    cardTitle: {
+      fontSize: 18,
+      fontWeight: 'bold' as const,
+      color: colors.text,
+      marginLeft: 8,
+    },
+    verseText: {
+      fontSize: 16,
+      lineHeight: 26,
+      color: colors.text,
+      fontStyle: 'italic' as const,
+      marginBottom: 12,
+    },
+    verseReference: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '600' as const,
+      marginBottom: 16,
+    },
+    verseButton: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      paddingVertical: 10,
+    },
+    verseButtonText: {
+      fontSize: 15,
+      color: colors.primary,
+      fontWeight: '600' as const,
+      marginRight: 6,
+    },
+    continueText: {
+      fontSize: 20,
+      color: colors.text,
+      fontWeight: '600' as const,
+      marginBottom: 16,
+    },
+    continueButton: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: colors.success,
+      borderRadius: 8,
+      paddingVertical: 12,
+    },
+    continueButtonText: {
+      fontSize: 16,
+      color: '#FFFFFF',
+      fontWeight: 'bold' as const,
+      marginRight: 8,
+    },
+    sectionDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 16,
+      lineHeight: 20,
+    },
+    planCard: {
+      width: 200,
+      backgroundColor: colors.surfaceVariant,
+      borderRadius: 12,
+      padding: 16,
+      marginRight: 12,
+      borderLeftWidth: 4,
+    },
+    planName: {
+      fontSize: 16,
+      fontWeight: 'bold' as const,
+      color: colors.text,
+      marginBottom: 6,
+      minHeight: 40,
+    },
+    planDuration: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '600' as const,
+      marginBottom: 8,
+    },
+    planDescription: {
+      fontSize: 13,
+      color: colors.textTertiary,
+      lineHeight: 18,
+    },
+    quickAccessItem: {
+      width: '30%',
+      margin: '1.66%' as any,
+      aspectRatio: 1,
+      backgroundColor: colors.surfaceVariant,
+      borderRadius: 12,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    quickAccessText: {
+      fontSize: 12,
+      color: colors.text,
+      fontWeight: '600' as const,
+      marginTop: 8,
+      textAlign: 'center' as const,
+    },
+    footerQuoteText: {
+      fontSize: 13,
+      color: colors.textTertiary,
+      fontStyle: 'italic' as const,
+    },
+  });
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   contentContainer: {
     padding: 16,
@@ -229,120 +378,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  welcomeCard: {
-    backgroundColor: '#4A90E2',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#ECF0F1',
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2C3E50',
-    marginLeft: 8,
-  },
-  verseText: {
-    fontSize: 16,
-    lineHeight: 26,
-    color: '#34495E',
-    fontStyle: 'italic',
-    marginBottom: 12,
-  },
-  verseReference: {
-    fontSize: 14,
-    color: '#7F8C8D',
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  verseButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-  },
-  verseButtonText: {
-    fontSize: 15,
-    color: '#4A90E2',
-    fontWeight: '600',
-    marginRight: 6,
-  },
-  continueText: {
-    fontSize: 20,
-    color: '#2C3E50',
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  continueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#27AE60',
-    borderRadius: 8,
-    paddingVertical: 12,
-  },
-  continueButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    marginRight: 8,
-  },
   quickAccessGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginHorizontal: -6,
-  },
-  quickAccessItem: {
-    width: '30%',
-    margin: '1.66%',
-    aspectRatio: 1,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ECF0F1',
-  },
-  quickAccessText: {
-    fontSize: 12,
-    color: '#2C3E50',
-    fontWeight: '600',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  sectionDescription: {
-    fontSize: 14,
-    color: '#7F8C8D',
-    marginBottom: 16,
-    lineHeight: 20,
   },
   plansScrollView: {
     marginHorizontal: -20,
@@ -352,14 +391,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 10,
   },
-  planCard: {
-    width: 200,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 16,
-    marginRight: 12,
-    borderLeftWidth: 4,
-  },
   planIcon: {
     width: 48,
     height: 48,
@@ -368,31 +399,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  planName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2C3E50',
-    marginBottom: 6,
-    minHeight: 40,
-  },
-  planDuration: {
-    fontSize: 13,
-    color: '#7F8C8D',
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  planDescription: {
-    fontSize: 13,
-    color: '#95A5A6',
-    lineHeight: 18,
-  },
   footerQuote: {
     alignItems: 'center',
     marginTop: 20,
-  },
-  footerQuoteText: {
-    fontSize: 13,
-    color: '#95A5A6',
-    fontStyle: 'italic',
   },
 });
