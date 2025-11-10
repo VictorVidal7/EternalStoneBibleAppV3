@@ -7,7 +7,7 @@ import DailyVerse from '../components/DailyVerse';
 import { useTranslation } from 'react-i18next';
 import { AnalyticsService } from '../services/AnalyticsService';
 import { useReadingProgress } from '../context/ReadingProgressContext';
-import LinearGradient from 'react-native-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import HapticFeedback from '../services/HapticFeedback';
 
 const { width } = Dimensions.get('window');

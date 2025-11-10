@@ -28,7 +28,9 @@ const iconPaths = {
 
 const CustomIcon = ({ name, size = 24, color = '#000000', style }) => {
   if (!iconPaths[name]) {
-    console.warn(`Icon "${name}" not found. Using default icon.`);
+    if (__DEV__) {
+      console.warn(`Icon "${name}" not found. Using default icon.`);
+    }
     return (
       <Svg height={size} width={size} viewBox="0 0 24 24" style={style}>
         <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" fill="none" />
@@ -43,4 +45,5 @@ const CustomIcon = ({ name, size = 24, color = '#000000', style }) => {
   );
 };
 
-export default CustomIcon;
+// Optimize re-renders with React.memo
+export default React.memo(CustomIcon);

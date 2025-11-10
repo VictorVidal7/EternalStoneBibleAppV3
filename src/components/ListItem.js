@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import CustomIcon from './CustomIcon';
 
 const ListItem = ({ title, subtitle, onPress, iconName, rightIconName, theme }) => {
-  console.log('Theme in ListItem:', theme); // Depuración
-
-  const styles = StyleSheet.create({
+  // Memoize styles to avoid recreation on every render
+  const styles = useMemo(() => StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -30,20 +29,21 @@ const ListItem = ({ title, subtitle, onPress, iconName, rightIconName, theme }) 
       color: theme.colors.secondary,
       marginTop: 4,
     },
-  });
+  }), [theme.colors.card, theme.colors.border, theme.colors.text, theme.colors.secondary]);
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.iconContainer}>
-        <Icon name={iconName} size={24} color={theme.colors.primary} />
+        <CustomIcon name={iconName} size={24} color={theme.colors.primary} />
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{title}</Text>
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       </View>
-      <Icon name={rightIconName || 'chevron-right'} size={24} color={theme.colors.secondary} />
+      <CustomIcon name={rightIconName || 'chevron-right'} size={24} color={theme.colors.secondary} />
     </TouchableOpacity>
   );
 };
 
-export default ListItem;
+// Optimize re-renders with React.memo
+export default React.memo(ListItem);

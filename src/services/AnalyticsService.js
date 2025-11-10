@@ -1,10 +1,28 @@
-import analytics from '@react-native-firebase/analytics';
+// Firebase Analytics is optional
+// To enable Firebase Analytics:
+// 1. Install: npm install @react-native-firebase/app @react-native-firebase/analytics
+// 2. Configure Firebase in your app
+// 3. Set ENABLE_FIREBASE_ANALYTICS to true
+
+const ENABLE_FIREBASE_ANALYTICS = false;
+
+let analytics = null;
+
+if (ENABLE_FIREBASE_ANALYTICS) {
+  try {
+    analytics = require('@react-native-firebase/analytics').default;
+  } catch (error) {
+    console.warn('Firebase Analytics not available. Using mock analytics.');
+  }
+}
 
 export const AnalyticsService = {
   logEvent: async (eventName, params = {}) => {
     try {
-      await analytics().logEvent(eventName, params);
-      console.log(`Logged event: ${eventName}`, params);
+      if (analytics) {
+        await analytics().logEvent(eventName, params);
+      }
+      console.log(`[Analytics] Event: ${eventName}`, params);
     } catch (error) {
       console.error('Error logging event:', error);
     }
@@ -12,8 +30,10 @@ export const AnalyticsService = {
 
   setUserProperty: async (name, value) => {
     try {
-      await analytics().setUserProperty(name, value);
-      console.log(`Set user property: ${name} = ${value}`);
+      if (analytics) {
+        await analytics().setUserProperty(name, value);
+      }
+      console.log(`[Analytics] User property: ${name} = ${value}`);
     } catch (error) {
       console.error('Error setting user property:', error);
     }

@@ -14,7 +14,7 @@ import {
   StyleSheet,
   AccessibilityInfo
 } from 'react-native';
-import Clipboard from '@react-native-clipboard/clipboard';
+import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Slider from '@react-native-community/slider';
@@ -275,8 +275,8 @@ const VerseScreen = ({ route, theme }) => {
     }
   }, [book, chapter, t]);
 
-  const copyVerse = useCallback((verse) => {
-    Clipboard.setString(`${verse.text} - ${book} ${chapter}:${verse.number}`);
+  const copyVerse = useCallback(async (verse) => {
+    await Clipboard.setStringAsync(`${verse.text} - ${book} ${chapter}:${verse.number}`);
     if (Platform.OS === 'android') {
       ToastAndroid.show(t('verseCopied'), ToastAndroid.SHORT);
     } else {

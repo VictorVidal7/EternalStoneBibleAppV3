@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
@@ -62,7 +62,8 @@ const DailyVerse = () => {
     }
   }, [navigation, verse]);
 
-  const styles = StyleSheet.create({
+  // Memoize styles to avoid recreation on every render
+  const styles = useMemo(() => StyleSheet.create({
     container: {
       backgroundColor: colors.card,
       padding: 16,
@@ -106,7 +107,7 @@ const DailyVerse = () => {
       color: colors.background,
       fontWeight: 'bold',
     },
-  });
+  }), [colors, roundness]);
 
   if (loading) {
     return (

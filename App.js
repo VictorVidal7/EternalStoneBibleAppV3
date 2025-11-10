@@ -12,6 +12,7 @@ import { NotesProvider } from './src/context/NotesContext';
 import { ErrorProvider } from './src/context/ErrorContext';
 import { resetDatabase, initializeBibleData, closeBibleDatabase, preloadFrequentlyAccessedData } from './src/services/bibleDataManager';
 import AppNavigator from './src/navigation/AppNavigator';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import './src/i18n';
 
 const App = () => {
@@ -50,25 +51,27 @@ const App = () => {
   }
 
   return (
-    <ErrorProvider>
-      <SafeAreaProvider>
-        <UserPreferencesProvider>
-          <ThemeProvider>
-            <ReadingProgressProvider>
-              <BookmarksProvider>
-                <ReadingPlanProvider>
-                  <NotesProvider>
-                    <NavigationContainer>
-                      <AppNavigator />
-                    </NavigationContainer>
-                  </NotesProvider>
-                </ReadingPlanProvider>
-              </BookmarksProvider>
-            </ReadingProgressProvider>
-          </ThemeProvider>
-        </UserPreferencesProvider>
-      </SafeAreaProvider>
-    </ErrorProvider>
+    <ErrorBoundary>
+      <ErrorProvider>
+        <SafeAreaProvider>
+          <UserPreferencesProvider>
+            <ThemeProvider>
+              <ReadingProgressProvider>
+                <BookmarksProvider>
+                  <ReadingPlanProvider>
+                    <NotesProvider>
+                      <NavigationContainer>
+                        <AppNavigator />
+                      </NavigationContainer>
+                    </NotesProvider>
+                  </ReadingPlanProvider>
+                </BookmarksProvider>
+              </ReadingProgressProvider>
+            </ThemeProvider>
+          </UserPreferencesProvider>
+        </SafeAreaProvider>
+      </ErrorProvider>
+    </ErrorBoundary>
   );
 };
 

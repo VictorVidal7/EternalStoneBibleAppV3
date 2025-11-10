@@ -1,21 +1,22 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, StyleSheet, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import CustomIcon from './CustomIcon';
 
-const CustomIconButton = ({ 
-  name, 
-  size = 24, 
-  color, 
-  onPress, 
-  style, 
+const CustomIconButton = ({
+  name,
+  size = 24,
+  color,
+  onPress,
+  style,
   disabled = false,
   accessibilityLabel,
   accessibilityHint
 }) => {
   const { colors } = useTheme();
 
-  const styles = StyleSheet.create({
+  // Memoize styles to avoid recreation on every render
+  const styles = useMemo(() => StyleSheet.create({
     button: {
       width: 40,
       height: 40,
@@ -41,7 +42,9 @@ const CustomIconButton = ({
       backgroundColor: colors.primary,
       opacity: 0.1,
     },
-  });
+  }), [colors.card, colors.primary, disabled]);
+
+  const iconColor = useMemo(() => color || colors.primary, [color, colors.primary]);
 
   return (
     <TouchableOpacity
@@ -54,14 +57,15 @@ const CustomIconButton = ({
       accessibilityHint={accessibilityHint}
     >
       <View style={styles.ripple} />
-      <CustomIcon 
-        name={name} 
-        size={size} 
-        color={color || colors.primary} 
+      <CustomIcon
+        name={name}
+        size={size}
+        color={iconColor}
         style={styles.icon}
       />
     </TouchableOpacity>
   );
 };
 
-export default CustomIconButton;
+// Optimize re-renders with React.memo
+export default React.memo(CustomIconButton);
