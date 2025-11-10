@@ -1,41 +1,80 @@
 import { Platform } from 'react-native';
-import ReactNativeHapticFeedback from "react-native-haptic-feedback";
+import * as Haptics from 'expo-haptics';
 
-const options = {
-  enableVibrateFallback: true,
-  ignoreAndroidSystemSettings: false
-};
-
+/**
+ * HapticFeedback service using Expo Haptics
+ * Provides cross-platform haptic feedback for user interactions
+ */
 const HapticFeedback = {
-  light: () => {
-    if (Platform.OS === 'ios') {
-      ReactNativeHapticFeedback.trigger("impactLight", options);
-    } else {
-      ReactNativeHapticFeedback.trigger("effectClick", options);
+  light: async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Haptic feedback not available:', error);
+      }
     }
   },
-  medium: () => {
-    if (Platform.OS === 'ios') {
-      ReactNativeHapticFeedback.trigger("impactMedium", options);
-    } else {
-      ReactNativeHapticFeedback.trigger("effectDoubleClick", options);
+
+  medium: async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Haptic feedback not available:', error);
+      }
     }
   },
-  heavy: () => {
-    if (Platform.OS === 'ios') {
-      ReactNativeHapticFeedback.trigger("impactHeavy", options);
-    } else {
-      ReactNativeHapticFeedback.trigger("effectHeavyClick", options);
+
+  heavy: async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Haptic feedback not available:', error);
+      }
     }
   },
-  success: () => {
-    ReactNativeHapticFeedback.trigger("notificationSuccess", options);
+
+  success: async () => {
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Haptic feedback not available:', error);
+      }
+    }
   },
-  warning: () => {
-    ReactNativeHapticFeedback.trigger("notificationWarning", options);
+
+  warning: async () => {
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Haptic feedback not available:', error);
+      }
+    }
   },
-  error: () => {
-    ReactNativeHapticFeedback.trigger("notificationError", options);
+
+  error: async () => {
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Haptic feedback not available:', error);
+      }
+    }
+  },
+
+  // Additional useful methods
+  selection: async () => {
+    try {
+      await Haptics.selectionAsync();
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Haptic feedback not available:', error);
+      }
+    }
   }
 };
 
