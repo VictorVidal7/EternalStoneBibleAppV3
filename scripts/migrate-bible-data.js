@@ -153,7 +153,7 @@ export const RVR1960_DATA = ${JSON.stringify(allVerses, null, 2)};
 }
 
 // Run migration
-const sourceDir = '/home/user/EternalStoneBibleApp/src/data/bible_books';
+const sourceDir = path.join(__dirname, '../src/data/bible_books');
 const outputFile = path.join(__dirname, '../src/lib/database/bible-data-rvr1960.ts');
 
 if (!fs.existsSync(sourceDir)) {
