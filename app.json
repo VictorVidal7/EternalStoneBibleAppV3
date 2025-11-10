@@ -9,7 +9,6 @@
     "scheme": "eternalbible",
     "newArchEnabled": true,
     "plugins": [
-      "expo-router",
       "expo-sqlite"
     ],
     "splash": {
