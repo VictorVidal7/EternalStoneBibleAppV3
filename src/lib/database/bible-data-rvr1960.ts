@@ -1,6 +1,6 @@
 // Auto-generated Bible data for RVR1960
 // Generated on: 2025-11-08T05:06:28.140Z
-// Total verses: 31041
+// Total verses: 31096
 
 export const RVR1960_DATA = [
   {
@@ -65369,6 +65369,446 @@ export const RVR1960_DATA = [
     "chapter": 32,
     "verse": 38,
     "text": "Que comían la grosura de sus sacrificios, Y bebían el vino de sus libaciones?",
+    "version": "RVR1960"
+  },,
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 39,
+    "text": "Ved ahora que yo, yo soy, Y no hay dioses conmigo; Yo hago morir, y yo hago vivir; Yo hiero, y yo sano; Y no hay quien pueda librar de mi mano.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 40,
+    "text": "Porque yo alzo a los cielos mi mano, Y digo: Vivo yo para siempre,",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 41,
+    "text": "Si afilare mi reluciente espada, Y echare mano del juicio, Yo tomaré venganza de mis enemigos, Y daré la retribución a los que me aborrecen.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 42,
+    "text": "Embriagaré de sangre mis saetas, Y mi espada devorará carne; En la sangre de los muertos y de los cautivos, En las cabezas de larga cabellera del enemigo.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 43,
+    "text": "Alabad, naciones, a su pueblo, Porque él vengará la sangre de sus siervos, Y tomará venganza de sus enemigos, Y hará expiación por la tierra de su pueblo.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 44,
+    "text": "Vino Moisés y recitó todas las palabras de este cántico a oídos del pueblo, él y Josué hijo de Nun.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 45,
+    "text": "Y acabó Moisés de recitar todas estas palabras a todo Israel,",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 46,
+    "text": "y les dijo: Aplicad vuestro corazón a todas las palabras que yo os testifico hoy, para que las mandéis a vuestros hijos, a fin de que cuiden de cumplir todas las palabras de esta ley.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 47,
+    "text": "Porque no os es cosa vana; es vuestra vida, y por medio de esta ley haréis prolongar vuestros días sobre la tierra adonde vais, pasando el Jordán, para tomar posesión de ella.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 48,
+    "text": "Aquel mismo día habló Jehová a Moisés, diciendo:",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 49,
+    "text": "Sube a este monte de Abarim, al monte Nebo, que está en la tierra de Moab que está frente a Jericó, y mira la tierra de Canaán, que yo doy por heredad a los hijos de Israel;",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 50,
+    "text": "y muere en el monte al cual subes, y sé unido a tu pueblo, así como murió Aarón tu hermano en el monte de Hor, y fue unido a su pueblo;",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 51,
+    "text": "por cuanto prevaricasteis contra mí en medio de los hijos de Israel en las aguas de Meriba de Cades, en el desierto de Zin; porque no me santificasteis en medio de los hijos de Israel.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 32,
+    "verse": 52,
+    "text": "Verás, por tanto, delante de ti la tierra; mas no entrarás allá, a la tierra que doy a los hijos de Israel.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 1,
+    "text": "Esta es la bendición con la cual bendijo Moisés varón de Dios a los hijos de Israel, antes que muriese.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 2,
+    "text": "Dijo: Jehová vino de Sinaí, Y de Seir les esclareció; Resplandeció desde el monte de Parán, Y vino de entre diez millares de santos, Con la ley de fuego a su mano derecha.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 3,
+    "text": "Aun amó a su pueblo; Todos los consagrados a él están en tu mano; Por tanto, ellos siguieron tus pasos, Recibiendo dirección de ti.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 4,
+    "text": "Moisés nos dio ley, Heredad a la congregación de Jacob.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 5,
+    "text": "Y fue rey en Jesurún, Cuando se congregaron los jefes del pueblo Con las tribus de Israel.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 6,
+    "text": "Viva Rubén, y no muera; Y sean sus varones en número.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 7,
+    "text": "Y esta bendición profirió para Judá. Dijo así: Oye, oh Jehová, la voz de Judá, Y llévalo a su pueblo; Sus manos le basten, Y tú seas su ayuda contra sus enemigos.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 8,
+    "text": "A Leví dijo: Tu Tumim y tu Urim sean para tu varón piadoso, Que probaste en Masah, Con quien contendiste en las aguas de Meriba;",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 9,
+    "text": "El que dijo de su padre y de su madre: Nunca los he visto; Y no reconoció a sus hermanos, Ni a sus hijos conoció; Pues ellos guardaron tus palabras, Y cumplieron tu pacto.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 10,
+    "text": "Ellos enseñarán tus juicios a Jacob, Y tu ley a Israel; Pondrán el incienso delante de ti, Y el holocausto sobre tu altar.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 11,
+    "text": "Bendice, oh Jehová, lo que hicieren, Y recibe con agrado la obra de sus manos; Hiere los lomos de sus enemigos, Y de los que le aborrecieren, para que nunca se levanten.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 12,
+    "text": "A Benjamín dijo: El amado de Jehová habitará confiado cerca de él; Lo cubrirá siempre, Y entre sus hombros morará.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 13,
+    "text": "A José dijo: Bendita de Jehová sea su tierra, Con lo mejor de los cielos, con el rocío, Y con el abismo que está abajo,",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 14,
+    "text": "Con los más escogidos frutos del sol, Con el rico producto de la luna,",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 15,
+    "text": "Con el fruto más fino de los montes antiguos, Y con la abundancia de los collados eternos,",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 16,
+    "text": "Y con las mejores dádivas de la tierra y su plenitud; Y la gracia del que habitó en la zarza Venga sobre la cabeza de José, Y sobre la frente del que es príncipe entre sus hermanos.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 17,
+    "text": "Como el primogénito de su toro es su gloria, Y sus cuernos como cuernos de búfalo; Con ellos acorneará a los pueblos juntos hasta los fines de la tierra; Estos son los diez millares de Efraín, Y estos son los millares de Manasés.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 18,
+    "text": "A Zabulón dijo: Alégrate, Zabulón, cuando salgas; Y tú, Isacar, en tus tiendas.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 19,
+    "text": "Llamarán a los pueblos a su monte; Allí sacrificarán sacrificios de justicia, Por lo cual chuparán la abundancia de los mares, Y los tesoros escondidos de la arena.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 20,
+    "text": "A Gad dijo: Bendito el que hizo ensanchar a Gad; Como león reposa, Y arrebata brazo y testa.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 21,
+    "text": "Escogió lo mejor de la tierra para sí, Porque allí le fue reservada la porción del legislador, Y vino en la delantera del pueblo; Con Israel ejecutó los mandatos Y los decretos de Jehová.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 22,
+    "text": "A Dan dijo: Dan es cachorro de león Que salta desde Basán.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 23,
+    "text": "A Neftalí dijo: Neftalí, saciado de favores, Y lleno de la bendición de Jehová, Posee el occidente y el sur.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 24,
+    "text": "A Aser dijo: Bendito sobre los hijos sea Aser; Sea el amado de sus hermanos, Y moje en aceite su pie.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 25,
+    "text": "Hierro y bronce serán tus cerrojos, Y como tus días serán tus fuerzas.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 26,
+    "text": "No hay como el Dios de Jesurún, Quien cabalga sobre los cielos para tu ayuda, Y sobre las nubes con su grandeza.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 27,
+    "text": "El eterno Dios es tu refugio, Y acá abajo los brazos eternos; El echó de delante de ti al enemigo, Y dijo: Destruye.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 28,
+    "text": "E Israel, la fuente de Jacob, habitará confiado Solo en tierra de grano y de vino; También sus cielos destilarán rocío.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 33,
+    "verse": 29,
+    "text": "Bienaventurado tú, oh Israel. ¿Quién como tú, Pueblo salvo por Jehová, Escudo de tu socorro, Y espada de tu triunfo? Así que tus enemigos serán humillados, Y tú hollarás sobre sus alturas.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 1,
+    "text": "Subió Moisés de los campos de Moab al monte Nebo, a la cumbre del Pisga, que está enfrente de Jericó; y le mostró Jehová toda la tierra de Galaad hasta Dan,",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 2,
+    "text": "todo Neftalí, y la tierra de Efraín y de Manasés, toda la tierra de Judá hasta el mar occidental,",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 3,
+    "text": "el Neguev, y la llanura, la vega de Jericó, ciudad de las palmeras, hasta Zoar.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 4,
+    "text": "Y le dijo Jehová: Esta es la tierra de que juré a Abraham, a Isaac y a Jacob, diciendo: A tu descendencia la daré. Te he permitido verla con tus ojos, mas no pasarás allá.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 5,
+    "text": "Y murió allí Moisés siervo de Jehová, en la tierra de Moab, conforme a la palabra de Jehová.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 6,
+    "text": "Y lo enterró en el valle, en la tierra de Moab, enfrente de Bet-peor; y ninguno conoce hasta hoy el lugar de su sepultura.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 7,
+    "text": "Era Moisés de edad de ciento veinte años cuando murió; sus ojos nunca se oscurecieron, ni perdió su vigor.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 8,
+    "text": "Y lloraron los hijos de Israel a Moisés en los campos de Moab treinta días; y así se cumplieron los días del lloro del luto de Moisés.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 9,
+    "text": "Y Josué hijo de Nun fue lleno del espíritu de sabiduría, porque Moisés había puesto sus manos sobre él; y los hijos de Israel le obedecieron, e hicieron como Jehová mandó a Moisés.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 10,
+    "text": "Y nunca más se levantó profeta en Israel como Moisés, a quien haya conocido Jehová cara a cara;",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 11,
+    "text": "nadie como él en todas las señales y prodigios que Jehová le envió a hacer en tierra de Egipto, a Faraón y a todos sus siervos y a toda su tierra,",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 5,
+    "book_name": "Deuteronomio",
+    "chapter": 34,
+    "verse": 12,
+    "text": "y en el gran poder y en los hechos grandiosos y terribles que Moisés hizo a la vista de todo Israel.",
     "version": "RVR1960"
   },
   {
