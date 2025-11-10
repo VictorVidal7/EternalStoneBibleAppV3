@@ -1,116 +1,131 @@
-import { Platform, PermissionsAndroid } from 'react-native';
-import PushNotification from 'react-native-push-notification';
+import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+/**
+ * NotificationService using Expo Notifications
+ * Provides scheduled daily reminders for Bible reading
+ */
+
+// Configure notification behavior
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 class NotificationService {
   constructor() {
     this.configure();
-    this.createChannel();
   }
 
-  configure = () => {
-    PushNotification.configure({
-      onRegister: function (token) {
-        console.log("TOKEN:", token);
-      },
-      onNotification: function (notification) {
-        console.log("NOTIFICATION:", notification);
-      },
-      permissions: {
-        alert: true,
-        badge: true,
-        sound: true,
-      },
-      popInitialNotification: true,
-      requestPermissions: true,
-    });
-  }
-
-  createChannel = () => {
-    PushNotification.createChannel(
-      {
-        channelId: "daily-reminder",
-        channelName: "Daily Reminder",
-        channelDescription: "A channel to categorise your notifications",
-        playSound: false,
-        soundName: "default",
-        importance: 4,
-        vibrate: true,
-      },
-      (created) => console.log(`createChannel returned '${created}'`)
-    );
+  configure = async () => {
+    // Set notification channel for Android
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('daily-reminder', {
+        name: 'Daily Reminder',
+        description: 'Recordatorios diarios de lectura bíblica',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        enableVibrate: true,
+        enableLights: true,
+        lightColor: '#4A90E2',
+      });
+    }
   }
 
   requestPermissions = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-          {
-            title: "Permiso de Notificaciones",
-            message: "La app necesita permiso para enviar notificaciones.",
-            buttonNeutral: "Preguntar luego",
-            buttonNegative: "Cancelar",
-            buttonPositive: "OK"
-          }
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("Permiso de notificación concedido");
-        } else {
-          console.log("Permiso de notificación denegado");
-        }
-      } catch (err) {
-        console.warn("Error al solicitar permisos:", err);
+    try {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
       }
+
+      if (finalStatus !== 'granted') {
+        if (__DEV__) {
+          console.log('Permiso de notificación denegado');
+        }
+        return false;
+      }
+
+      if (__DEV__) {
+        console.log('Permiso de notificación concedido');
+      }
+      return true;
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Error al solicitar permisos:', error);
+      }
+      return false;
     }
   }
 
   scheduleNotification = async (hour, minute) => {
     try {
-      await this.requestPermissions();
-
-      const date = new Date();
-      date.setHours(hour);
-      date.setMinutes(minute);
-
-      if (Platform.OS === 'android' && Platform.Version >= 31) {
-        // Para Android 12 y superiores
-        PushNotification.localNotification({
-          channelId: 'daily-reminder',
-          title: "Recordatorio de lectura diaria",
-          message: "Es hora de tu lectura bíblica diaria",
-          date: date,
-          allowWhileIdle: true,
-          repeatType: 'day',
-          repeatTime: 24 * 60 * 60 * 1000, // Repetir cada 24 horas
-        });
-      } else {
-        // Para versiones anteriores de Android e iOS
-        PushNotification.localNotificationSchedule({
-          channelId: 'daily-reminder',
-          title: "Recordatorio de lectura diaria",
-          message: "Es hora de tu lectura bíblica diaria",
-          date: date,
-          allowWhileIdle: true,
-          repeatType: 'day',
-          repeatTime: 24 * 60 * 60 * 1000, // Repetir cada 24 horas
-        });
+      const hasPermission = await this.requestPermissions();
+      if (!hasPermission) {
+        throw new Error('No se obtuvo permiso para notificaciones');
       }
 
+      // Cancel any existing notifications first
+      await Notifications.cancelAllScheduledNotificationsAsync();
+
+      // Create trigger for daily notification
+      const trigger = {
+        hour: hour,
+        minute: minute,
+        repeats: true,
+      };
+
+      // Schedule the notification
+      const identifier = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "📖 Recordatorio de lectura diaria",
+          body: "Es hora de tu lectura bíblica diaria",
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          ...(Platform.OS === 'android' && {
+            channelId: 'daily-reminder',
+          }),
+        },
+        trigger,
+      });
+
       await AsyncStorage.setItem('notificationTime', JSON.stringify({ hour, minute }));
-      console.log(`Notification scheduled for ${hour}:${minute}`);
+      await AsyncStorage.setItem('notificationId', identifier);
+
+      if (__DEV__) {
+        console.log(`Notification scheduled for ${hour}:${minute} with id: ${identifier}`);
+      }
+
+      return identifier;
     } catch (error) {
-      console.error('Error scheduling notification:', error);
+      if (__DEV__) {
+        console.error('Error scheduling notification:', error);
+      }
+      throw error;
     }
   }
 
   cancelAllNotifications = async () => {
     try {
-      PushNotification.cancelAllLocalNotifications();
+      await Notifications.cancelAllScheduledNotificationsAsync();
       await AsyncStorage.removeItem('notificationTime');
-      console.log('All notifications cancelled');
+      await AsyncStorage.removeItem('notificationId');
+
+      if (__DEV__) {
+        console.log('All notifications cancelled');
+      }
     } catch (error) {
-      console.error('Error cancelling notifications:', error);
+      if (__DEV__) {
+        console.error('Error cancelling notifications:', error);
+      }
+      throw error;
     }
   }
 
@@ -119,8 +134,23 @@ class NotificationService {
       const time = await AsyncStorage.getItem('notificationTime');
       return time ? JSON.parse(time) : null;
     } catch (error) {
-      console.error('Error getting scheduled notification time:', error);
+      if (__DEV__) {
+        console.error('Error getting scheduled notification time:', error);
+      }
       return null;
+    }
+  }
+
+  // Get all scheduled notifications
+  getAllScheduledNotifications = async () => {
+    try {
+      const notifications = await Notifications.getAllScheduledNotificationsAsync();
+      return notifications;
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Error getting scheduled notifications:', error);
+      }
+      return [];
     }
   }
 }

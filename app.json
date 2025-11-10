@@ -9,7 +9,15 @@
     "scheme": "eternalbible",
     "newArchEnabled": true,
     "plugins": [
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#4A90E2",
+          "sounds": []
+        }
+      ]
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
