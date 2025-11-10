@@ -65370,7 +65370,7 @@ export const RVR1960_DATA = [
     "verse": 38,
     "text": "Que comían la grosura de sus sacrificios, Y bebían el vino de sus libaciones?",
     "version": "RVR1960"
-  },,
+  },
   {
     "book_id": 5,
     "book_name": "Deuteronomio",
