@@ -1,6 +1,6 @@
 // Auto-generated Bible data for RVR1960
-// Generated on: 2025-11-08T05:06:28.140Z
-// Total verses: 31096
+// Generated on: 2025-11-10T02:35:44.219Z
+// Total verses: 31102
 
 export const RVR1960_DATA = [
   {
@@ -42300,6 +42300,22 @@ export const RVR1960_DATA = [
     "version": "RVR1960"
   },
   {
+    "book_id": 12,
+    "book_name": "2 Reyes",
+    "chapter": 25,
+    "verse": 29,
+    "text": "Y le hizo mudar las vestiduras de prisionero, y comió siempre delante de él todos los días de su vida.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 12,
+    "book_name": "2 Reyes",
+    "chapter": 25,
+    "verse": 30,
+    "text": "Y diariamente le fue dada su comida de parte del rey, de continuo, todos los días de su vida.",
+    "version": "RVR1960"
+  },
+  {
     "book_id": 10,
     "book_name": "2 Samuel",
     "chapter": 1,
@@ -49008,15 +49024,7 @@ export const RVR1960_DATA = [
     "book_name": "3 Juan",
     "chapter": 1,
     "verse": 14,
-    "text": "porque espero verte en breve, y hablaremos cara a cara.",
-    "version": "RVR1960"
-  },
-  {
-    "book_id": 64,
-    "book_name": "3 Juan",
-    "chapter": 1,
-    "verse": 15,
-    "text": "La paz sea contigo. Los amigos te saludan. Saluda tú a los amigos, a cada uno en particular.",
+    "text": "porque espero verte en breve, y hablaremos cara a cara. La paz sea contigo. Los amigos te saludan. Saluda tú a los amigos, a cada uno en particular.",
     "version": "RVR1960"
   },
   {
@@ -65384,7 +65392,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 32,
     "verse": 40,
-    "text": "Porque yo alzo a los cielos mi mano, Y digo: Vivo yo para siempre,",
+    "text": "Porque yo alzaré a los cielos mi mano, Y diré: Vivo yo para siempre,",
     "version": "RVR1960"
   },
   {
@@ -65424,7 +65432,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 32,
     "verse": 45,
-    "text": "Y acabó Moisés de recitar todas estas palabras a todo Israel,",
+    "text": "Y acabó Moisés de recitar todas estas palabras a todo Israel;",
     "version": "RVR1960"
   },
   {
@@ -65448,7 +65456,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 32,
     "verse": 48,
-    "text": "Aquel mismo día habló Jehová a Moisés, diciendo:",
+    "text": "Y habló Jehová a Moisés aquel mismo día, diciendo:",
     "version": "RVR1960"
   },
   {
@@ -65456,7 +65464,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 32,
     "verse": 49,
-    "text": "Sube a este monte de Abarim, al monte Nebo, que está en la tierra de Moab que está frente a Jericó, y mira la tierra de Canaán, que yo doy por heredad a los hijos de Israel;",
+    "text": "Sube a este monte de Abarim, al monte Nebo, situado en la tierra de Moab que está frente a Jericó, y mira la tierra de Canaán, que yo doy por heredad a los hijos de Israel;",
     "version": "RVR1960"
   },
   {
@@ -65472,7 +65480,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 32,
     "verse": 51,
-    "text": "por cuanto prevaricasteis contra mí en medio de los hijos de Israel en las aguas de Meriba de Cades, en el desierto de Zin; porque no me santificasteis en medio de los hijos de Israel.",
+    "text": "por cuanto pecasteis contra mí en medio de los hijos de Israel en las aguas de Meriba de Cades, en el desierto de Zin; porque no me santificasteis en medio de los hijos de Israel.",
     "version": "RVR1960"
   },
   {
@@ -65504,7 +65512,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 3,
-    "text": "Aun amó a su pueblo; Todos los consagrados a él están en tu mano; Por tanto, ellos siguieron tus pasos, Recibiendo dirección de ti.",
+    "text": "Aun amó a su pueblo; Todos los consagrados a él estaban en su mano; Por tanto, ellos siguieron tus pasos, Recibiendo dirección de ti.",
     "version": "RVR1960"
   },
   {
@@ -65512,7 +65520,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 4,
-    "text": "Moisés nos dio ley, Heredad a la congregación de Jacob.",
+    "text": "Nos dio la ley Moisés, Heredad para la congregación de Jacob.",
     "version": "RVR1960"
   },
   {
@@ -65544,7 +65552,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 8,
-    "text": "A Leví dijo: Tu Tumim y tu Urim sean para tu varón piadoso, Que probaste en Masah, Con quien contendiste en las aguas de Meriba;",
+    "text": "A Leví dijo: Tu Tumim y tu Urim sean para tu varón piadoso, A quien probaste en Masah, Con quien contendiste en las aguas de Meriba;",
     "version": "RVR1960"
   },
   {
@@ -65568,7 +65576,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 11,
-    "text": "Bendice, oh Jehová, lo que hicieren, Y recibe con agrado la obra de sus manos; Hiere los lomos de sus enemigos, Y de los que le aborrecieren, para que nunca se levanten.",
+    "text": "Bendice, oh Jehová, lo que hicieren, Y recibe con agrado la obra de sus manos; Hiere los lomos de sus enemigos, Y de los que lo aborrecieren, para que nunca se levanten.",
     "version": "RVR1960"
   },
   {
@@ -65600,7 +65608,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 15,
-    "text": "Con el fruto más fino de los montes antiguos, Y con la abundancia de los collados eternos,",
+    "text": "Con el fruto más fino de los montes antiguos, Con la abundancia de los collados eternos,",
     "version": "RVR1960"
   },
   {
@@ -65616,7 +65624,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 17,
-    "text": "Como el primogénito de su toro es su gloria, Y sus cuernos como cuernos de búfalo; Con ellos acorneará a los pueblos juntos hasta los fines de la tierra; Estos son los diez millares de Efraín, Y estos son los millares de Manasés.",
+    "text": "Como primogénito de su toro es su gloria, Y sus cuernos como cuernos de búfalo; Con ellos acorneará a los pueblos juntos hasta los fines de la tierra; Ellos son los diez millares de Efraín, Y ellos los millares de Manasés.",
     "version": "RVR1960"
   },
   {
@@ -65648,7 +65656,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 21,
-    "text": "Escogió lo mejor de la tierra para sí, Porque allí le fue reservada la porción del legislador, Y vino en la delantera del pueblo; Con Israel ejecutó los mandatos Y los decretos de Jehová.",
+    "text": "Escogió lo mejor de la tierra para sí, Porque allí le fue reservada la porción del legislador, Y vino en la delantera del pueblo; Con Israel ejecutó los mandatos y los decretos de Jehová.",
     "version": "RVR1960"
   },
   {
@@ -65680,7 +65688,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 25,
-    "text": "Hierro y bronce serán tus cerrojos, Y como tus días serán tus fuerzas.",
+    "text": "Hierro y bronce será tu calzado, Y como tus días será tu fuerza.",
     "version": "RVR1960"
   },
   {
@@ -65704,7 +65712,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 28,
-    "text": "E Israel, la fuente de Jacob, habitará confiado Solo en tierra de grano y de vino; También sus cielos destilarán rocío.",
+    "text": "E Israel habitó confiado, la fuente de Jacob habitó sola En tierra de grano y de vino; También sus cielos destilarán rocío.",
     "version": "RVR1960"
   },
   {
@@ -65712,7 +65720,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 33,
     "verse": 29,
-    "text": "Bienaventurado tú, oh Israel. ¿Quién como tú, Pueblo salvo por Jehová, Escudo de tu socorro, Y espada de tu triunfo? Así que tus enemigos serán humillados, Y tú hollarás sobre sus alturas.",
+    "text": "Bienaventurado tú, oh Israel. ¿Quién como tú, Pueblo salvado por Jehová, Escudo de tu socorro, Y espada de tu triunfo? Así que tus enemigos serán humillados, Y tú hollarás sobre sus alturas.",
     "version": "RVR1960"
   },
   {
@@ -65728,7 +65736,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 34,
     "verse": 2,
-    "text": "todo Neftalí, y la tierra de Efraín y de Manasés, toda la tierra de Judá hasta el mar occidental,",
+    "text": "todo Neftalí, y la tierra de Efraín y de Manasés, toda la tierra de Judá hasta el mar occidental;",
     "version": "RVR1960"
   },
   {
@@ -65752,7 +65760,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 34,
     "verse": 5,
-    "text": "Y murió allí Moisés siervo de Jehová, en la tierra de Moab, conforme a la palabra de Jehová.",
+    "text": "Y murió allí Moisés siervo de Jehová, en la tierra de Moab, conforme al dicho de Jehová.",
     "version": "RVR1960"
   },
   {
@@ -65760,7 +65768,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 34,
     "verse": 6,
-    "text": "Y lo enterró en el valle, en la tierra de Moab, enfrente de Bet-peor; y ninguno conoce hasta hoy el lugar de su sepultura.",
+    "text": "Y lo enterró en el valle, en la tierra de Moab, enfrente de Bet-peor; y ninguno conoce el lugar de su sepultura hasta hoy.",
     "version": "RVR1960"
   },
   {
@@ -65776,7 +65784,7 @@ export const RVR1960_DATA = [
     "book_name": "Deuteronomio",
     "chapter": 34,
     "verse": 8,
-    "text": "Y lloraron los hijos de Israel a Moisés en los campos de Moab treinta días; y así se cumplieron los días del lloro del luto de Moisés.",
+    "text": "Y lloraron los hijos de Israel a Moisés en los campos de Moab treinta días; y así se cumplieron los días del lloro en el luto de Moisés.",
     "version": "RVR1960"
   },
   {
@@ -183983,6 +183991,14 @@ export const RVR1960_DATA = [
     "book_id": 41,
     "book_name": "Marcos",
     "chapter": 1,
+    "verse": 1,
+    "text": "Principio del evangelio de Jesucristo, Hijo de Dios.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 41,
+    "book_name": "Marcos",
+    "chapter": 1,
     "verse": 2,
     "text": "Como está escrito en Isaías el profeta: He aquí yo envío mi mensajero delante de tu faz, El cual preparará tu camino delante de ti.",
     "version": "RVR1960"
@@ -247249,6 +247265,38 @@ export const RVR1960_DATA = [
     "chapter": 1,
     "verse": 17,
     "text": "Clama aún, diciendo: Así dice Jehová de los ejércitos: Aún rebosarán mis ciudades con la abundancia del bien; y aún consolará Jehová a Sion, y escogerá todavía a Jerusalén.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 38,
+    "book_name": "Zacarías",
+    "chapter": 1,
+    "verse": 18,
+    "text": "Después alcé mis ojos y miré, y he aquí cuatro cuernos.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 38,
+    "book_name": "Zacarías",
+    "chapter": 1,
+    "verse": 19,
+    "text": "Y dije al ángel que hablaba conmigo: ¿Qué son éstos? Y me respondió: Estos son los cuernos que dispersaron a Judá, a Israel y a Jerusalén.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 38,
+    "book_name": "Zacarías",
+    "chapter": 1,
+    "verse": 20,
+    "text": "Me mostró luego Jehová cuatro carpinteros.",
+    "version": "RVR1960"
+  },
+  {
+    "book_id": 38,
+    "book_name": "Zacarías",
+    "chapter": 1,
+    "verse": 21,
+    "text": "Y yo dije: ¿Qué vienen éstos a hacer? Y me respondió, diciendo: Aquéllos son los cuernos que dispersaron a Judá, tanto que ninguno alzó su cabeza; mas éstos han venido para aterrarlos, para derribar los cuernos de las naciones que alzaron el cuerno sobre la tierra de Judá para dispersarla.",
     "version": "RVR1960"
   },
   {
